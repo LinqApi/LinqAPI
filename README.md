@@ -15,6 +15,7 @@
 - [Usage](#usage)
   - [Creating Your API Controllers](#creating-your-api-controllers)
   - [Automatic Mapping](#automatic-mapping)
+  - [Filtering and Paging](#filtering-and-paging)
 - [Demo Project](#demo-project)
 - [Testing](#testing)
 - [Contributing](#contributing)
@@ -29,19 +30,7 @@
 - **LINQ-Based Filtering & Paging**: Supports dynamic filtering using LINQ expressions and returns paginated results.
 - **Automatic Mapping**: Uses AutoMapper with a dynamic mapping profile to map between your entities and DTOs without manual configuration.
 - **Generic & Extensible**: Works with any entity/DTO pair that derives from `BaseEntity<TId>` and `BaseDto<TId>`.
-- **DI Registration Helper**: Simplifies dependency injection configuration via a single extension method (`builder.Services.AddLinqApi()`).
-
----
-
-## Introduction
-
-Developing RESTful APIs in ASP.NET Core can involve a lot of repetitive code—especially when dealing with CRUD operations, filtering, and pagination. **LinqAPI** abstracts much of this complexity by providing a generic, reusable framework. It leverages the power of LINQ to allow dynamic filtering and paging while automatically mapping between your domain entities and Data Transfer Objects (DTOs).
-
-The core components include:
-- **Generic Controller (`LinqController`)**: Provides endpoints for CRUD, filtering, and paging.
-- **Repository (`LinqRepository`)**: Implements common data access operations using Entity Framework Core.
-- **Service (`LinqService`)**: Orchestrates repository calls and mapping between entities and DTOs.
-- **Dynamic AutoMapper Registration**: Scans controllers and automatically creates mapping profiles between corresponding entity and DTO types.
+- **DI Registration Helper**: Simplifies dependency injection configuration via a single extension method (`builder.Services.AddLinqApi<DbContext>()`).
 
 ---
 
@@ -50,7 +39,7 @@ The core components include:
 ### Prerequisites
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download)
-- ASP.NET Core (for building Web APIs)
+- ASP.NET Core  (for building Web APIs)
 - Entity Framework Core (for data access)
 - AutoMapper (for object mapping)
 - Optional: [Microsoft.EntityFrameworkCore.InMemory](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore.InMemory) for demo or testing purposes
@@ -74,12 +63,12 @@ using LinqAPI;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Register your DbContext (example using InMemory database for demo purposes)
-builder.Services.AddDbContext<YourDbContext>(options =>
+// Register your DbContext
+builder.Services.AddDbContext<DemoDbContext>(options =>
     options.UseInMemoryDatabase("DemoDb"));
 
 // Register LinqAPI dependencies, including repository, service, and automatic mapping
-builder.Services.AddLinqApi();
+builder.Services.AddLinqApi<DemoDbContext>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -102,118 +91,126 @@ app.Run();
 
 ---
 
-## Usage
+## Filtering and Paging
 
-### Creating Your API Controllers
+LinqAPI provides powerful filtering and paging capabilities using dynamic LINQ queries. You can perform filtering using expressions such as `StartsWith`, `EndsWith`, `Contains`, and logical operators like `and`, `or`, `>`, `<`, `>=`, `<=`.
 
-LinqAPI offers a generic controller that you can extend to create your API endpoints. For example, if you have a product API:
+### **Example Request for `filterpaged` Endpoint**
+
+```json
+{
+  "filter": "name.StartsWith(\"Product C\")",
+  "pager": {
+    "pageNumber": 1,
+    "pageSize": 50
+  },
+  "orderby": "id",
+  "desc": true
+}
+```
+
+### **How Filtering Works**
+The `filter` field is a **dynamic LINQ expression** that is executed against the database.
+
+- `StartsWith("value")` – Matches strings that start with the given value.
+- `EndsWith("value")` – Matches strings that end with the given value.
+- `Contains("value")` – Matches strings that contain the given value.
+- `>` `<` `>=` `<=` – Comparison operators.
+- `and`, `or` – Logical operators.
+- `1=1` – Used to retrieve all records without filtering.
+
+#### **Example Queries:**
+
+Retrieve products where price is greater than 20 and name contains "Product":
+```json
+{
+  "filter": "price > 20 and name.Contains(\"Product\")"
+}
+```
+Retrieve items where ID is less than 5 or the name starts with "Item":
+```json
+{
+  "filter": "id < 5 or name.StartsWith(\"Item\")"
+}
+```
+
+---
+
+## **Paging System**
+Paging is controlled using the `Pager` class:
 
 ```csharp
-using LinqAPI;
-using YourProject.Entities;
-using YourProject.DTOs;
-using Microsoft.AspNetCore.Mvc;
-
-namespace YourProject.Controllers
+public class Pager
 {
-    public class ProductsController : LinqController<ProductEntity, ProductDto, int>
+    private int _pageNumber = 1;
+    private int _pageSize = 50;
+
+    public int PageNumber
     {
-        public ProductsController(ILinqService<ProductEntity, ProductDto, int> service) : base(service)
-        {
-        }
+        get => _pageNumber;
+        set => _pageNumber = value < 1 ? 1 : value > int.MaxValue ? int.MaxValue : value;
+    }
+
+    public int PageSize
+    {
+        get => _pageSize;
+        set => _pageSize = value < 1 ? 1 : value > 500 ? 500 : value;
     }
 }
 ```
 
-Your entities and DTOs should adhere to the following patterns:
+- `PageNumber`: Defines the current page (default = 1).
+- `PageSize`: Defines the number of results per page (min = 1, max = 500).
 
-```csharp
-// Entities/ProductEntity.cs
-public class ProductEntity : BaseEntity<int>
+Retrieve all records without filtering:
+```json
 {
-    public string Name { get; set; }
-    public decimal Price { get; set; }
-}
-
-// DTOs/ProductDto.cs
-public class ProductDto : BaseDto<int>
-{
-    public string Name { get; set; }
-    public decimal Price { get; set; }
+  "filter": "1=1",
+  "pager": {
+    "pageNumber": 1,
+    "pageSize": 50
+  }
 }
 ```
 
-### Automatic Mapping
-
-LinqAPI leverages AutoMapper to automatically map between your entity and DTO types. The library scans your assemblies for controllers that derive from `LinqController<T1, T2, TId>` and creates bi-directional mappings for the provided types.
+### **Sorting with `orderby` & `desc`**
+- `orderby`: The property name to sort results by.
+- `desc`: Boolean flag for descending order (`true` for descending, `false` for ascending).
 
 ---
 
-## Demo Project
-
-A demo ASP.NET Core Web API project is provided to illustrate how to integrate LinqAPI.
-
-### Example: Demo DbContext & Data Seeding
+## **Including Navigation Properties**
+The `Includes` field allows eager loading of related navigation properties.
 
 ```csharp
-// Data/DemoDbContext.cs
-using YourProject.Entities;
-using Microsoft.EntityFrameworkCore;
-
-namespace YourProject.Data
+public class LinqFilterModel
 {
-    public class DemoDbContext : DbContext
-    {
-        public DemoDbContext(DbContextOptions<DemoDbContext> options) : base(options) { }
-
-        public DbSet<ProductEntity> Products { get; set; }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<ProductEntity>().HasData(
-                new ProductEntity { Id = 1, Name = "Product A", Price = 10.99m },
-                new ProductEntity { Id = 2, Name = "Product B", Price = 20.50m },
-                new ProductEntity { Id = 3, Name = "Product C", Price = 15.75m }
-            );
-        }
-    }
+    public string Filter { get; set; }
+    public Pager Pager { get; set; }
+    public List<string> Includes { get; set; }
+    public string Orderby { get; set; }
+    public bool Desc { get; set; }
 }
 ```
 
----
-
-## Testing
-
-LinqAPI supports unit testing at the repository, service, and controller levels.
-
----
-
-## Contributing
-
-Contributions are welcome! Please review our [CONTRIBUTING.md](CONTRIBUTING.md) for details.
-
----
-
-## License
-
-This project is licensed under the MIT License – see the [LICENSE](LICENSE) file for details.
+#### **Example Request with Includes:**
+```json
+{
+  "filter": "1=1",
+  "pager": {
+    "pageNumber": 1,
+    "pageSize": 50
+  },
+  "includes": ["Category", "Supplier"]
+}
+```
+This will include **Category** and **Supplier** navigation properties in the response.
 
 ---
 
-## Acknowledgements
-
-- [AutoMapper](https://automapper.org/)
-- [Entity Framework Core](https://docs.microsoft.com/en-us/ef/core/)
-- [ASP.NET Core](https://dotnet.microsoft.com/apps/aspnet)
-- The open-source community for valuable contributions.
-
----
-
-## Final Notes
-
-LinqAPI aims to reduce repetitive coding in API development by leveraging generics, LINQ filtering, and automatic mapping. With minimal configuration, you can rapidly set up a fully functional API.
+## **Conclusion**
+LinqAPI simplifies API development by providing **automated filtering, paging, and sorting using LINQ expressions**. With minimal setup, you can create powerful, dynamic APIs.
 
 For any issues, feature requests, or questions, please open an issue in the repository or contact the maintainers.
 
-Happy coding!
-
+Happy coding! 🚀
