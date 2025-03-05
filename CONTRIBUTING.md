@@ -22,7 +22,7 @@ To get started with contributing:
 1. **Fork the repository** on GitHub.
 2. **Clone your fork** to your local machine:
    ```sh
-   git clone https://github.com/your-username/LinqAPI.git
+   git clone https://github.com/cikdibest/LinqAPI.git
    cd LinqAPI
    ```
 3. **Create a new branch** for your feature or bugfix:
