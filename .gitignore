@@ -1,0 +1,41 @@
+# Genel Dotnet ve Visual Studio Dosyaları
+bin/
+obj/
+.vscode/
+*.user
+*.suo
+*.cache
+*.vs/
+
+# Paket Yönetimi ve Build Dosyaları
+packages/
+*.nupkg
+*.snupkg
+.nuget/
+
+# Test ve Log Dosyaları
+TestResults/
+coverage/
+*.log
+*.trx
+*.coverage
+*.session
+*.replay
+*.testsettings
+
+# Config Dosyaları
+appsettings.json
+appsettings.Development.json
+secrets.json
+.env
+
+# VSIX ve Extension Özel Dosyaları
+*.vsix
+.vsixmanifest
+.vsixpkg/
+*.vsixproj.user
+*.exp/
+*.exe
+
+# Mac ve Linux Özel
+.DS_Store
