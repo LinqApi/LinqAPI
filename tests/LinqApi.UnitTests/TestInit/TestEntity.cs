@@ -1,8 +1,9 @@
-﻿namespace LinqApi.UnitTests.TestInit
+﻿using LinqApi.Model;
+
+namespace LinqApi.UnitTests.TestInit
 {
-    public class TestEntity
+    public class TestEntity : BaseEntity<int>
     {
-        public int Id { get; set; }
         public string Name { get; set; }
     }
 }

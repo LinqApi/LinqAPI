@@ -14,15 +14,15 @@ namespace LinqApi.Controller
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    public class LinqController<T1, T2, TId> : ControllerBase
-        where T1 : class
-        where T2 : BaseDto<TId>
+    public class LinqController<TEntity, TDto, TId> : ControllerBase
+        where TEntity : BaseEntity<TId>
+        where TDto : BaseDto<TId>
     {
-        private readonly ILinqService<T1, T2, TId> _service;
-        private static readonly ConcurrentDictionary<string, Expression<Func<T1, bool>>> _filterCache = new();
+        private readonly ILinqService<TEntity, TDto, TId> _service;
+        private static readonly ConcurrentDictionary<string, Expression<Func<TEntity, bool>>> _filterCache = new();
         private static readonly ConcurrentDictionary<string, List<object>> _propertyCache = new();
 
-        public LinqController(ILinqService<T1, T2, TId> service)
+        public LinqController(ILinqService<TEntity, TDto, TId> service)
         {
             _service = service;
         }
@@ -33,7 +33,7 @@ namespace LinqApi.Controller
         [HttpGet("properties")]
         public IActionResult GetAllProperties()
         {
-            var type = typeof(T2);
+            var type = typeof(TDto);
             var cacheKey = $"Properties_{type.FullName}";
 
             if (_propertyCache.TryGetValue(cacheKey, out var cachedProperties))
@@ -80,7 +80,7 @@ namespace LinqApi.Controller
         /// Yeni bir DTO ekler.
         /// </summary>
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] T2 dto)
+        public async Task<IActionResult> Create([FromBody] TDto dto)
         {
             var createdDto = await _service.InsertAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = createdDto.Id }, createdDto);
@@ -90,7 +90,7 @@ namespace LinqApi.Controller
         /// Var olan bir DTO’yu günceller.
         /// </summary>
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(TId id, [FromBody] T2 dto)
+        public async Task<IActionResult> Update(TId id, [FromBody] TDto dto)
         {
             if (!id.Equals(dto.Id))
                 return BadRequest("ID mismatch.");
@@ -120,7 +120,7 @@ namespace LinqApi.Controller
 
             if (!_filterCache.TryGetValue(filterModel.Filter, out var predicate))
             {
-                predicate = DynamicExpressionParser.ParseLambda<T1, bool>(null, false, filterModel.Filter);
+                predicate = DynamicExpressionParser.ParseLambda<TEntity, bool>(null, false, filterModel.Filter);
                 _filterCache.TryAdd(filterModel.Filter, predicate);
             }
 
@@ -139,14 +139,14 @@ namespace LinqApi.Controller
 
             if (!_filterCache.TryGetValue(filterPageModel.Filter, out var predicate))
             {
-                predicate = DynamicExpressionParser.ParseLambda<T1, bool>(null, false, filterPageModel.Filter);
+                predicate = DynamicExpressionParser.ParseLambda<TEntity, bool>(null, false, filterPageModel.Filter);
                 _filterCache.TryAdd(filterPageModel.Filter, predicate);
             }
 
-            Expression<Func<T1, object>> orderBy = null;
+            Expression<Func<TEntity, object>> orderBy = null;
             if (!string.IsNullOrWhiteSpace(filterPageModel.Orderby))
             {
-                orderBy = (Expression<Func<T1, object>>)DynamicExpressionParser.ParseLambda<T1, object>(null, false, filterPageModel.Orderby);
+                orderBy = (Expression<Func<TEntity, object>>)DynamicExpressionParser.ParseLambda<TEntity, object>(null, false, filterPageModel.Orderby);
             }
 
             var pagedResult = await _service.GetPagedFilteredAsync(
