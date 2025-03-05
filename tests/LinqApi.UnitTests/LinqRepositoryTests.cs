@@ -20,7 +20,7 @@ namespace LinqAPI.Tests.RepositoryTests
         {
             // Arrange
             using var context = new TestDbContext(_options);
-            var repository = new LinqRepository<TestEntity, int>(context);
+            var repository = new LinqRepository<TestDbContext, TestEntity, int>(context);
             var entity = new TestEntity { Id = 1, Name = "Test" };
 
             // Act

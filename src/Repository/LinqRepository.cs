@@ -4,13 +4,14 @@ using System.Linq.Expressions;
 
 namespace LinqApi.Repository
 {
-    public class LinqRepository<TEntity, TId> : ILinqRepository<TEntity, TId>
-     where TEntity : class
+    public class LinqRepository<TDbContext, TEntity, TId> : ILinqRepository<TEntity, TId>
+      where TDbContext : DbContext
+      where TEntity : class
     {
-        protected readonly DbContext DbContext;
+        protected readonly TDbContext DbContext;
         protected readonly DbSet<TEntity> DbSet;
 
-        public LinqRepository(DbContext dbContext)
+        public LinqRepository(TDbContext dbContext)
         {
             DbContext = dbContext;
             DbSet = dbContext.Set<TEntity>();
@@ -93,5 +94,6 @@ namespace LinqApi.Repository
             return new PaginationModel<TEntity> { Items = items, TotalRecords = totalCount };
         }
     }
+
 
 }
