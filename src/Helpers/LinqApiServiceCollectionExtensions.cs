@@ -7,9 +7,7 @@ namespace LinqApi.Helpers
 {
     public static class LinqApiServiceCollectionExtensions
     {
-        /// <summary>
-        /// ILinqRepository ve ILinqService arayüzleri için açık generik kayıt ekler.
-        /// </summary>
+      
         public static IServiceCollection AddLinqApi(this IServiceCollection services)
         {
             // Repository ve Service kayıtları

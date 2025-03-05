@@ -8,10 +8,10 @@ namespace LinqApi.Controller
     using System.Linq.Expressions;
     using Microsoft.AspNetCore.Mvc;
     using System.Threading.Tasks;
+    using System.Collections.Generic;
+    using System;
 
-    /// <summary>
-    /// Dinamik LINQ filtreleme ve CRUD işlemleri sağlayan API Controller.
-    /// </summary>
+    
     [ApiController]
     [Route("api/[controller]")]
     public class LinqController<TEntity, TDto, TId> : ControllerBase
@@ -27,9 +27,7 @@ namespace LinqApi.Controller
             _service = service;
         }
 
-        /// <summary>
-        /// Dönüştürülebilir T2 tipi için property listesini getirir.
-        /// </summary>
+       
         [HttpGet("properties")]
         public IActionResult GetAllProperties()
         {
@@ -63,9 +61,7 @@ namespace LinqApi.Controller
             return type.Name;
         }
 
-        /// <summary>
-        /// Belirtilen ID’ye sahip DTO’yu getirir.
-        /// </summary>
+       
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(TId id)
         {
@@ -86,9 +82,7 @@ namespace LinqApi.Controller
             return CreatedAtAction(nameof(GetById), new { id = createdDto.Id }, createdDto);
         }
 
-        /// <summary>
-        /// Var olan bir DTO’yu günceller.
-        /// </summary>
+       
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(TId id, [FromBody] TDto dto)
         {
@@ -99,9 +93,7 @@ namespace LinqApi.Controller
             return Ok(updatedDto);
         }
 
-        /// <summary>
-        /// Belirtilen ID’ye sahip DTO’yu siler.
-        /// </summary>
+       
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(TId id)
         {
@@ -109,9 +101,7 @@ namespace LinqApi.Controller
             return NoContent();
         }
 
-        /// <summary>
-        /// Dinamik LINQ filtre ifadesine göre DTO’ları getirir.
-        /// </summary>
+       
         [HttpPost("filter")]
         public async Task<IActionResult> GetByFilter([FromBody] LinqFilterModel filterModel)
         {
@@ -128,9 +118,7 @@ namespace LinqApi.Controller
             return Ok(dtos);
         }
 
-        /// <summary>
-        /// Dinamik LINQ filtre ifadesi ve sıralama ile sayfalı sonuç getirir.
-        /// </summary>
+      
         [HttpPost("filterpaged")]
         public async Task<IActionResult> GetByFilterPaged([FromBody] LinqFilterModel filterPageModel)
         {

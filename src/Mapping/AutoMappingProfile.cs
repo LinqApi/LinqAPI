@@ -29,7 +29,7 @@ public class AutoLinqMappingProfile : Profile
 
     private bool IsLinqController(Type type)
     {
-        // Türemiş olduğu sınıfın LinqController olup olmadığını kontrol et.
+       
         var baseType = type.BaseType;
         while (baseType != null)
         {
