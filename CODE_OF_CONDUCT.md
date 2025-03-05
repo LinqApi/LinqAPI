@@ -36,7 +36,7 @@ This Code of Conduct applies within all project spaces, including GitHub reposit
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the project maintainers at **[your-email@example.com]**. All complaints will be reviewed and investigated promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the project maintainers at **[cihan.dalgicdir@gmail.com]**. All complaints will be reviewed and investigated promptly and fairly.
 
 Maintainers who do not follow or enforce the Code of Conduct in good faith may face temporary or permanent repercussions as determined by the project leadership.
 
