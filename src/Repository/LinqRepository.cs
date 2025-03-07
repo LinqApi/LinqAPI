@@ -1,5 +1,6 @@
 ﻿using LinqApi.Model;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 
 namespace LinqApi.Repository
@@ -61,30 +62,92 @@ namespace LinqApi.Repository
             return await DbContext.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<PaginationModel<TEntity>> GetPagedFilteredAsync(
-            Expression<Func<TEntity, bool>> predicate,
-            int pageNumber,
-            int pageSize,
-            Expression<Func<TEntity, object>> orderBy = null,
-            bool descending = false,
-            CancellationToken cancellationToken = default)
+        public async Task<PaginationModel<dynamic>> GetFilterPagedAsync(
+      LinqFilterModel filterModel,
+      CancellationToken cancellationToken = default)
         {
-            var query = DbSet.Where(predicate);
+            // 1️⃣ DbSet üzerinden IQueryable<TEntity> oluşturuyoruz.
+            IQueryable<TEntity> query = DbSet.AsQueryable();
 
-
-            if (orderBy != null)
+            // 2️⃣ Dinamik Where (Filter) uygulaması
+            if (!string.IsNullOrWhiteSpace(filterModel.Filter))
             {
-                query = descending ? query.OrderByDescending(orderBy) : query.OrderBy(orderBy);
+                var predicate = DynamicExpressionParser.ParseLambda<TEntity, bool>(null, false, filterModel.Filter);
+                query = query.Where((Expression<Func<TEntity, bool>>)predicate);
             }
 
-            var totalCount = await query.CountAsync(cancellationToken);
-            var items = await query.Skip((pageNumber - 1) * pageSize)
-                                   .Take(pageSize)
-                                   .AsNoTracking()
-                                   .ToListAsync(cancellationToken);
+            // 3️⃣ Include ve ThenInclude işlemleri (navigation paging EF Core’da direkt desteklenmediğinden sadece include path ekliyoruz)
+            if (filterModel.Includes != null && filterModel.Includes.Any())
+            {
+                foreach (var include in filterModel.Includes)
+                {
+                    string includePath = include.PropertyName;
+                    if (include.ThenIncludes != null && include.ThenIncludes.Any())
+                    {
+                        foreach (var thenInclude in include.ThenIncludes)
+                        {
+                            foreach (var childInclude in thenInclude.ChildIncludes)
+                            {
+                                string fullInclude = $"{includePath}.{childInclude.PropertyName}";
+                                query = query.Include(fullInclude);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        query = query.Include(includePath);
+                    }
+                }
+            }
 
-            return new PaginationModel<TEntity> { Items = items, TotalRecords = totalCount };
+            // 4️⃣ Sorguyu dinamik işlemleri destekleyecek non-generic IQueryable'a dönüştürüyoruz.
+            IQueryable dynamicQuery = query;
+
+            // 5️⃣ GroupBy uygulaması (varsa)
+            if (!string.IsNullOrWhiteSpace(filterModel.GroupBy))
+            {
+                // GroupBy sonrası sunucu tarafı çeviri desteklenmediğinden,
+                // grouping sonucu client side'a çekmek için AsEnumerable() kullanıyoruz.
+                dynamicQuery = dynamicQuery.GroupBy(filterModel.GroupBy)
+                                           .AsQueryable();
+            }
+
+            // 6️⃣ Select/projection uygulaması (varsa)
+            if (!string.IsNullOrWhiteSpace(filterModel.Select))
+            {
+                dynamicQuery = dynamicQuery.Select(filterModel.Select);
+            }
+
+            // 7️⃣ OrderBy uygulaması (dinamik)
+            if (!string.IsNullOrWhiteSpace(filterModel.OrderBy))
+            {
+                string orderExpr = filterModel.Desc ? $"{filterModel.OrderBy} descending" : filterModel.OrderBy;
+                dynamicQuery = dynamicQuery.OrderBy(orderExpr);
+            }
+
+            // 8️⃣ IQueryable'ı generic hale getiriyoruz.
+            var castQuery = dynamicQuery.Cast<dynamic>();
+
+            // 9️⃣ Toplam kayıt sayısını alıyoruz (client-side count, grouping sonrası zaten in-memory)
+            int totalCount = castQuery.Count();
+
+            // 10️⃣ Paging uygulaması (ana sorgu için)
+            int skip = (filterModel.Pager.PageNumber - 1) * filterModel.Pager.PageSize;
+            var pagedQuery = castQuery.Skip(skip).Take(filterModel.Pager.PageSize);
+
+            // 11️⃣ Sorguyu çalıştırıp sonuçları listeliyoruz
+            // Not: Bu noktada sorgu in-memory olduğu için asenkron fayda sağlamayabilir.
+            var items = pagedQuery.ToList();
+
+            return new PaginationModel<dynamic>
+            {
+                Items = items,
+                TotalRecords = totalCount
+            };
         }
+
+
+
     }
 
 

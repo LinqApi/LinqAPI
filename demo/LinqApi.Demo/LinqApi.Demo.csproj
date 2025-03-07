@@ -15,4 +15,8 @@
     <ProjectReference Include="..\..\src\LinqApi.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Controllers\" />
+  </ItemGroup>
+
 </Project>

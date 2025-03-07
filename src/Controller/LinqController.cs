@@ -102,27 +102,10 @@ namespace LinqApi.Controller
             if (string.IsNullOrWhiteSpace(filterPageModel.Filter))
                 return BadRequest("Invalid filter expression.");
 
-            if (!_filterCache.TryGetValue(filterPageModel.Filter, out var predicate))
-            {
-                predicate = DynamicExpressionParser.ParseLambda<TEntity, bool>(null, false, filterPageModel.Filter);
-                _filterCache.TryAdd(filterPageModel.Filter, predicate);
-            }
-
-            Expression<Func<TEntity, object>> orderBy = null;
-            if (!string.IsNullOrWhiteSpace(filterPageModel.Orderby))
-            {
-                orderBy = (Expression<Func<TEntity, object>>)DynamicExpressionParser.ParseLambda<TEntity, object>(null, false, filterPageModel.Orderby);
-            }
-
-            var pagedResult = await _repo.GetPagedFilteredAsync(
-                predicate,
-                filterPageModel.Pager.PageNumber,
-                filterPageModel.Pager.PageSize,
-                orderBy,
-                filterPageModel.Desc
-            );
-
+            // Tüm dinamik sorgu seçeneklerini işleyen repository metodunu çağırıyoruz.
+            var pagedResult = await _repo.GetFilterPagedAsync(filterPageModel);
             return Ok(pagedResult);
         }
+
     }
 }

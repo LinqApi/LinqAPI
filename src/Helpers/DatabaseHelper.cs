@@ -36,7 +36,10 @@ namespace LinqApi.Helpers
             using (var conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                using (var cmd = new SqlCommand("SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS", conn))
+                // IS_NULLABLE kolonunu ekledik
+                using (var cmd = new SqlCommand(
+                    @"SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, DATA_TYPE, IS_NULLABLE 
+              FROM INFORMATION_SCHEMA.COLUMNS", conn))
                 {
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -46,10 +49,22 @@ namespace LinqApi.Helpers
                             string table = reader.GetString(1);
                             string column = reader.GetString(2);
                             string sqlType = reader.GetString(3);
+                            string isNullableStr = reader.GetString(4); // "YES" veya "NO"
+                            bool isNullable = isNullableStr.Equals("YES", StringComparison.OrdinalIgnoreCase);
+
+                            // SQL tipini .NET tipine çeviriyoruz
                             Type dotnetType = ConvertSqlTypeToDotNet(sqlType);
+
+                            // Eğer değer tipi ve null olabilir ise Nullable hale getiriyoruz
+                            if (isNullable && dotnetType.IsValueType)
+                            {
+                                dotnetType = typeof(Nullable<>).MakeGenericType(dotnetType);
+                            }
+
                             string key = $"{schema}.{table}";
                             if (!result.ContainsKey(key))
                                 result[key] = new Dictionary<string, Type>();
+
                             result[key][column] = dotnetType;
                         }
                     }
@@ -83,7 +98,7 @@ namespace LinqApi.Helpers
             return result;
         }
 
-        private static Type ConvertSqlTypeToDotNet(string sqlType)
+        public static Type ConvertSqlTypeToDotNet(string sqlType)
         {
             // SQL tipini küçük harfe çeviriyoruz
             return sqlType.ToLower() switch
@@ -105,6 +120,7 @@ namespace LinqApi.Helpers
                 _ => typeof(string)
             };
         }
+
 
         public static Dictionary<string, Type> GetTableSchema(string connectionString, string schema, string tableName)
         {

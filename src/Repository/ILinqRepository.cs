@@ -13,13 +13,9 @@ namespace LinqApi.Repository
         Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken = default);
         Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
-        Task<PaginationModel<TEntity>> GetPagedFilteredAsync(
-             Expression<Func<TEntity, bool>> predicate,
-             int pageNumber,
-             int pageSize,
-             Expression<Func<TEntity, object>> orderBy = null,
-             bool descending = false,
-             CancellationToken cancellationToken = default);
+        Task<PaginationModel<dynamic>> GetFilterPagedAsync(
+      LinqFilterModel filterModel,
+      CancellationToken cancellationToken = default);
     }
 
 }
