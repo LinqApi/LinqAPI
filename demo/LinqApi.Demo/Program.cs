@@ -10,9 +10,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Dinamik API controller'larınızı ekleyin
-builder.Services.AddLinqMsApi("tiriviri","Data Source=TSTLSNSQL;Database=testmoka_db;User ID=DevMokaUser;Password=MokaPass2532;TrustServerCertificate=Yes");
+//builder.Services.AddLinqMsApi("tiriviri","Data Source=TSTLSNSQL;Database=testmoka_db;User ID=DevMokaUser;Password=MokaPass2532;TrustServerCertificate=Yes");
 
-builder.Services.AddLinqMsApi("/api","Data Source=TSTLSNSQL;Database=TESTXFER;User ID=DevMokaUser;Password=MokaPass2532;TrustServerCertificate=Yes");
+builder.Services.AddLinqMsApi("");
 
 // MVC'yi view desteğiyle birlikte ekleyin
 builder.Services.AddControllersWithViews()
