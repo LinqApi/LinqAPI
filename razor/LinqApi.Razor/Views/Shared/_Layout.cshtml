@@ -1,0 +1,27 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] - My Dynamic App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" />
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <header class="bg-primary text-white p-3">
+        <div class="container">
+            <h1>Dynamic Data Explorer</h1>
+        </div>
+    </header>
+    <main class="container-fluid p-0">
+        @RenderBody() <!-- Burada view içeriği yerleştirilecek -->
+    </main>
+    <footer class="bg-light text-center p-3">
+        <div class="container">
+            <span>&copy; @DateTime.Now.Year - My Dynamic App</span>
+        </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

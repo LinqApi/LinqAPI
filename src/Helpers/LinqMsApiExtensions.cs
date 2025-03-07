@@ -3,8 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using System.Collections.Concurrent;
-using System.Linq;
-using System;
 using LinqApi.Context;
 
 namespace LinqApi.Helpers
@@ -52,7 +50,7 @@ namespace LinqApi.Helpers
                 options.UseSqlServer(connectionString);
             });
 
-            var featureProvider = new DynamicLinqmsControllerFeatureProvider(dynamicEntities);
+            var featureProvider = new DynamicLinqApiControllerFeatureProvider(dynamicEntities);
             services.AddSingleton(featureProvider);
             services.AddSingleton<IApplicationFeatureProvider<ControllerFeature>>(featureProvider);
 

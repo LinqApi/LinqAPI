@@ -26,6 +26,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.3.0">
 		  <TreatAsUsed>true</TreatAsUsed>
 		</PackageReference>
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.3.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.0" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1">
 		  <TreatAsUsed>true</TreatAsUsed>
@@ -37,6 +38,11 @@
 
 	<ItemGroup>
 	  <Folder Include="Mapping\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\LinqApi.Shared\LinqApi.Shared.csproj" />
+	  <ProjectReference Include="..\razor\LinqApi.Razor\LinqApi.Razor.csproj" />
 	</ItemGroup>
 
 </Project>

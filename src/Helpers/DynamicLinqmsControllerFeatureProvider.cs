@@ -8,11 +8,11 @@ using System.Collections.Concurrent;
 
 namespace LinqApi.Helpers
 {
-    public class DynamicLinqmsControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
+    public class DynamicLinqApiControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
     {
         private readonly ConcurrentDictionary<string, Type> _entities;
 
-        public DynamicLinqmsControllerFeatureProvider(ConcurrentDictionary<string, Type> entities)
+        public DynamicLinqApiControllerFeatureProvider(ConcurrentDictionary<string, Type> entities)
         {
             _entities = entities;
         }

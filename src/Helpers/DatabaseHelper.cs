@@ -71,7 +71,7 @@ namespace LinqApi.Helpers
                 }
             }
             return result;
-        }
+         }
 
         public static Dictionary<string, string> GetAllPrimaryKeys(string connectionString)
         {
@@ -106,6 +106,7 @@ namespace LinqApi.Helpers
                 "int" => typeof(int),
                 "bigint" => typeof(long),
                 "smallint" => typeof(short),
+                "tinyint" => typeof(byte), // Burada kısa yerine byte döndürüyoruz.
                 "nvarchar" => typeof(string),
                 "varchar" => typeof(string),
                 "char" => typeof(string),
