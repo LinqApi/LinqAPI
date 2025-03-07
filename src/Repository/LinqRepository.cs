@@ -65,20 +65,12 @@ namespace LinqApi.Repository
             Expression<Func<TEntity, bool>> predicate,
             int pageNumber,
             int pageSize,
-            List<string> includes = null,
             Expression<Func<TEntity, object>> orderBy = null,
             bool descending = false,
             CancellationToken cancellationToken = default)
         {
             var query = DbSet.Where(predicate);
 
-            if (includes != null)
-            {
-                foreach (var include in includes)
-                {
-                    query = query.Include(include);
-                }
-            }
 
             if (orderBy != null)
             {

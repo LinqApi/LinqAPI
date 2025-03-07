@@ -1,0 +1,72 @@
+﻿using LinqApi.Controller;
+using System.Reflection;
+using System.Reflection.Emit;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using System.Collections.Concurrent;
+
+namespace LinqApi.Helpers
+{
+    public class DynamicLinqmsControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
+    {
+        private readonly ConcurrentDictionary<string, Type> _entities;
+
+        public DynamicLinqmsControllerFeatureProvider(ConcurrentDictionary<string, Type> entities)
+        {
+            _entities = entities;
+        }
+
+        public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
+        {
+            foreach (var kvp in _entities)
+            {
+                string fullKey = kvp.Key; // "schema.table"
+                var entityType = kvp.Value;
+                var idType = entityType.BaseType?.GetGenericArguments()[0] ?? typeof(long);
+                var controllerType = typeof(LinqController<,>).MakeGenericType(entityType, idType);
+
+                // Parse schema and table from key
+                var partsArr = fullKey.Split('.');
+                string schema = partsArr[0];
+                string table = partsArr[1];
+
+                // Eğer schema "dbo" ise, controller adı sadece tablo adını, değilse "schema_tablenameController"
+                string controllerName = (schema.ToLower() == "dbo" ? table : schema + "_" + table) + "Controller";
+
+                if (feature.Controllers.Any(c => c.Name == controllerName))
+                    continue;
+
+                var customControllerType = BuildCustomControllerType(controllerType, controllerName);
+                feature.Controllers.Add(customControllerType.GetTypeInfo());
+            }
+        }
+
+        private Type BuildCustomControllerType(Type baseControllerType, string customName)
+        {
+            var typeBuilder = CreateTypeBuilder(customName);
+            typeBuilder.SetParent(baseControllerType);
+
+            var baseCtor = baseControllerType.GetConstructors().FirstOrDefault();
+            if (baseCtor != null)
+            {
+                var paramTypes = baseCtor.GetParameters().Select(p => p.ParameterType).ToArray();
+                var ctorBuilder = typeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, paramTypes);
+                var il = ctorBuilder.GetILGenerator();
+                il.Emit(OpCodes.Ldarg_0);
+                for (int i = 0; i < paramTypes.Length; i++)
+                {
+                    il.Emit(OpCodes.Ldarg, i + 1);
+                }
+                il.Emit(OpCodes.Call, baseCtor);
+                il.Emit(OpCodes.Ret);
+            }
+            return typeBuilder.CreateType();
+        }
+
+        private TypeBuilder CreateTypeBuilder(string controllerName)
+        {
+            return DynamicAssemblyHolder.ControllerModuleBuilder.DefineType(controllerName, TypeAttributes.Public | TypeAttributes.Class, typeof(ControllerBase));
+        }
+    }
+}

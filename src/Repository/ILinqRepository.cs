@@ -17,7 +17,6 @@ namespace LinqApi.Repository
              Expression<Func<TEntity, bool>> predicate,
              int pageNumber,
              int pageSize,
-             List<string> includes = null,
              Expression<Func<TEntity, object>> orderBy = null,
              bool descending = false,
              CancellationToken cancellationToken = default);
