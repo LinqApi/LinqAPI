@@ -1,7 +1,4 @@
 ﻿using LinqApi.Helpers;
-using LinqApi.Razor;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
-using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,10 +6,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Dinamik API controller'larınızı ekleyin
-//builder.Services.AddLinqMsApi("tiriviri","Data Source=TSTLSNSQL;Database=testmoka_db;User ID=DevMokaUser;Password=MokaPass2532;TrustServerCertificate=Yes");
+string connectionString = "";
 
-builder.Services.AddLinqMsApi("");
+builder.Services.AddLinqApi("api", connectionString);
+//builder.Services.AddLinqApi("api", connectionString);
 
 // MVC'yi view desteğiyle birlikte ekleyin
 builder.Services.AddControllersWithViews()
@@ -22,10 +19,7 @@ builder.Services.AddControllersWithViews()
         var dynamicProvider = builder.Services.BuildServiceProvider().GetRequiredService<DynamicLinqApiControllerFeatureProvider>();
         apm.FeatureProviders.Add(dynamicProvider);
 
-        // RCL (Razor Class Library) assembly'sini de ApplicationPart olarak ekleyin.
-        // Örneğin, RCL içerisindeki herhangi bir tipin Assembly'sini kullanabilirsiniz:
-        var razorAssembly = typeof(RclMarker).GetTypeInfo().Assembly;
-        apm.ApplicationParts.Add(new AssemblyPart(razorAssembly));
+        LinqApi.Razor.MvcHelpers.CreateViews(apm);
     });
 
 var app = builder.Build();
@@ -43,8 +37,11 @@ app.UseStaticFiles();
 app.UseRouting();
 
 // Varsayılan route'u ayarlıyoruz, örneğin MSController'daki Index action'ı çalışacak.
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=LinqMS}/{action=Index}/{id?}");
+//app.MapControllerRoute(
+//    name: "default",
+//    pattern: "{controller=LinqMvc}/{action=Index}/{id?}");
 
+
+app.MapDefaultControllerRoute();
 app.Run();
+

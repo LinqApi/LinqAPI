@@ -4,57 +4,84 @@ using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using System.Collections.Concurrent;
 using LinqApi.Context;
+using LinqApi.Model;
 
 namespace LinqApi.Helpers
 {
     public static class ServiceExtensions
     {
-        public static IServiceCollection AddLinqMsApi(this IServiceCollection services, string connectionString)
+        public static IServiceCollection AddLinqApi(this IServiceCollection services, string areaName, string connectionString)
         {
-            // Tüm tablo (schema, table) bilgilerini toplu sorguyla alalım
+            // 1. Tabloları ve şema bilgilerini alıyoruz.
             var tables = DatabaseHelper.GetAllTablesWithSchema(connectionString);
-            // ConcurrentDictionary ile paralel eklemelerde lock kullanımını minimize ediyoruz
             var dynamicEntities = new ConcurrentDictionary<string, Type>(Environment.ProcessorCount, tables.Count);
             var primaryKeyMappings = new ConcurrentDictionary<string, string>(Environment.ProcessorCount, tables.Count);
-
-            // Toplu sorgular: tüm tablo şema bilgileri ve primary key bilgilerini alalım
-            var allTableSchemas = DatabaseHelper.GetAllTableSchemas(connectionString);
+            var columnSchemas = DatabaseHelper.GetAllTableSchemas(connectionString);
             var allPrimaryKeys = DatabaseHelper.GetAllPrimaryKeys(connectionString);
+
+            // DI'ya ilgili nesneleri de ekleyelim:
+            services.AddSingleton(dynamicEntities);
+            services.AddSingleton(primaryKeyMappings);
+            IServiceCollection serviceCollection = services.AddSingleton(columnSchemas);
+
 
             Parallel.ForEach(tables, tableInfo =>
             {
                 var (schema, table) = tableInfo;
                 string key = $"{schema}.{table}";
-                if (!allTableSchemas.TryGetValue(key, out Dictionary<string, Type> columns))
+                if (!columnSchemas.TryGetValue(key, out Dictionary<string, ColumnDefinition> columns))
                     return;
                 if (!allPrimaryKeys.TryGetValue(key, out string pkColumn))
                     return;
-                if (!columns.TryGetValue(pkColumn, out Type pkType))
+                if (!columns.TryGetValue(pkColumn, out ColumnDefinition pkColDef))
                     return;
-                if (!IsValidPrimaryKey(pkType))
+                if (!IsValidPrimaryKey(pkColDef.DotNetType))
                     return;
 
-                var primaryKeyPair = new KeyValuePair<string, Type>(pkColumn, pkType);
-                // Eğer schema "dbo" ise entity adı sadece tablo adı, değilse "schema_tablename"
+                var primaryKeyPair = new KeyValuePair<string, Type>(pkColumn, pkColDef.DotNetType);
+                // Entity adını oluştururken; örneğin "Department" veya "schema_Table"
                 string entityName = (schema.ToLower() == "dbo" ? table : $"{schema}_{table}");
-                var entityType = EntityGenerator.GenerateEntity(schema, table, primaryKeyPair, columns, entityName);
+                // EntityGenerator şimdi ColumnDefinition yerine sadece dotnet tiplerini bekliyor; bu nedenle columns'ı dönüştürüyoruz.
+                var columnsForEntity = columns.ToDictionary(x => x.Key, x => x.Value.DotNetType);
+                var entityType = EntityGenerator.GenerateEntity(schema, table, primaryKeyPair, columnsForEntity, entityName);
                 dynamicEntities.TryAdd(key, entityType);
                 primaryKeyMappings.TryAdd(key, pkColumn);
             });
 
-            services.AddSingleton(dynamicEntities);
-            services.AddSingleton(primaryKeyMappings);
-
-            services.AddDbContext<DynamicDbContext>((sp, options) =>
+            // Yeni konfigürasyonu registry'ye ekleyelim.
+            var config = new LinqMsApiConfiguration
             {
-                options.UseSqlServer(connectionString);
-            });
+                AreaName = areaName,
+                ConnectionString = connectionString,
+                DynamicEntities = dynamicEntities,
+                PrimaryKeyMappings = primaryKeyMappings,
+                ColumnSchemas = columnSchemas
+            };
+            LinqMsApiRegistry.Configurations[areaName] = config;
 
-            var featureProvider = new DynamicLinqApiControllerFeatureProvider(dynamicEntities);
+            // DbContext’i ayrı bir türevi olarak kaydetmek için:
+            var dbContextType = DynamicDbContextGenerator.GenerateDbContextType(areaName);
+            services.Add(new ServiceDescriptor(
+                dbContextType,
+                sp =>
+                {
+                    var optionsBuilder = new DbContextOptionsBuilder();
+                    optionsBuilder.UseSqlServer(connectionString);
+                    // GetRequiredService çağrıları, yukarıda register ettiğimiz tipleri getiriyor.
+                    var dynEntities = sp.GetRequiredService<ConcurrentDictionary<string, Type>>();
+                    var pkMappings = sp.GetRequiredService<ConcurrentDictionary<string, string>>();
+                    var colSchemas = sp.GetRequiredService<Dictionary<string, Dictionary<string, ColumnDefinition>>>();
+                    return ActivatorUtilities.CreateInstance(sp, dbContextType, optionsBuilder.Options, dynEntities, pkMappings, colSchemas);
+                },
+                ServiceLifetime.Scoped));
+
+            // Dinamik controller feature provider'ı, areaName’i kullanacak şekilde oluşturun:
+            var featureProvider = new DynamicLinqApiControllerFeatureProvider(dynamicEntities, areaName);
             services.AddSingleton(featureProvider);
             services.AddSingleton<IApplicationFeatureProvider<ControllerFeature>>(featureProvider);
 
-            RepositoryHelper.AddRepositories(services, dynamicEntities);
+            // Repository’leri, oluşturduğumuz dbContext türevi üzerinden kaydedin:
+            RepositoryHelper.AddRepositories(services, dynamicEntities, dbContextType);
 
             return services;
         }
@@ -68,5 +95,7 @@ namespace LinqApi.Helpers
                    keyType == typeof(DateTime) ||
                    keyType == typeof(short);
         }
+
+
     }
 }

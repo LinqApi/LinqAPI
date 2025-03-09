@@ -12,7 +12,7 @@ namespace LinqApi.Controller
     using LinqApi.Repository;
 
     [ApiController]
-    [Route("api/[controller]")]  // Bunu değiştiriyoruz!
+    [Route("[area]/api/[controller]")]
     public class LinqController<TEntity, TId> : ControllerBase
     where TEntity : BaseEntity<TId>
     {

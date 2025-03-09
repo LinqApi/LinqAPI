@@ -1,192 +1,77 @@
 ﻿@model IEnumerable<TableInfo>
-
-<div class="menu-container" style="padding: 0; margin: 0; text-align: left;">
-    <input type="text" id="menuSearch" class="form-control mb-2" placeholder="Search tables..." />
-    <ul class="list-group" id="tableList" style="max-height: 80vh; overflow-y: auto;">
-        @foreach (var table in Model)
-        {
-            <li class="list-group-item table-item" data-key="@table.Key" style="cursor:pointer;">
-                @table.DisplayName
-            </li>
-        }
-    </ul>
+@{
+    // Serialize model to JSON for use in the script.
+    var tableInfosJson = Newtonsoft.Json.JsonConvert.SerializeObject(Model);
+}
+<div id="areaMenuContainer">
+    <h4>Areas</h4>
+    <!-- Global area search input -->
+    <div class="mb-2">
+        <input type="text" id="globalAreaSearch" class="form-control" placeholder="Search areas..." />
+    </div>
+    <!-- Area groups will be rendered via JavaScript -->
+    <div id="areaMenu"></div>
 </div>
+
 <script>
-        var searchInput = document.getElementById('menuSearch');
-    if (searchInput) {
-        searchInput.addEventListener('keyup', function () {
-            var filter = this.value.toLowerCase();
-            var items = document.querySelectorAll('#tableList li');
-            items.forEach(function (item) {
-                item.style.display = item.textContent.toLowerCase().indexOf(filter) > -1 ? "" : "none";
-            });
+    // Parse the TableInfo list from JSON.
+    var tableInfos = @Html.Raw(tableInfosJson);
+
+    // Renders the area menu, grouping tables by area. Each group is collapsible.
+    function renderAreaMenuPartial() {
+        var areaGroups = {};
+        tableInfos.forEach(function(table) {
+            if (!areaGroups[table.Area]) {
+                areaGroups[table.Area] = [];
+            }
+            areaGroups[table.Area].push(table);
         });
+        var html = "";
+        for (var area in areaGroups) {
+            html += '<div class="area-group mb-3" data-area="' + area + '">';
+            html += '<div class="area-title" style="cursor: pointer;">' + area.toUpperCase() + ' <span class="toggle-indicator">[-]</span></div>';
+            html += '<div class="area-content">';
+            html += '<ul class="list-group">';
+            areaGroups[area].forEach(function(table) {
+                html += '<li class="list-group-item table-item" data-key="' + table.Key + '" data-area="' + table.Area + '">' + table.DisplayName + '</li>';
+            });
+            html += '</ul></div></div>';
+        }
+        $("#areaMenu").html(html);
+        attachAreaMenuEventsPartial();
     }
-    (function () {
-        // Global değişkenler: mevcut controller, sıralama ve paging bilgileri.
-        var currentControllerName = "";
-        var currentPayload = {
-            filter: "1=1",
-            pager: { pageNumber: 1, pageSize: 50 },
-            orderBy: "id",
-            desc: true
-        };
 
-        // Tablo key'inden controller adını türeten fonksiyon.
-        // Eğer key "schema.table" ise, endpoint: /api/schema_table/...
-        function getControllerName(key) {
-            var parts = key.split('.');
-            if(parts.length > 1) {
-                if(parts[0] ==="dbo"){
-                    return parts[1];
-                }
-                return parts[0] + "_" + parts[1];
+    // Attaches events for the partial menu: toggling and search.
+    function attachAreaMenuEventsPartial() {
+        // Toggle collapse/expand on area title click.
+        $(".area-title").on("click", function () {
+            $(this).siblings(".area-content").slideToggle();
+            var indicator = $(this).find(".toggle-indicator");
+            if (indicator.text() === "[-]") {
+                indicator.text("[+]");
+            } else {
+                indicator.text("[-]");
             }
-            return key;
-        }
-
-        // Menü öğelerine tıklama: seçili öğeyi aktif yap, API çağrısı başlat.
-        var tableItems = document.querySelectorAll('.table-item');
-        tableItems.forEach(function(item) {
-            item.addEventListener('click', function () {
-                // Seçimi görsel olarak belirtin.
-                tableItems.forEach(i => i.classList.remove("active"));
-                this.classList.add("active");
-
-                var tableKey = this.getAttribute('data-key');
-                currentControllerName = getControllerName(tableKey);
-                // Sıfırlama: sayfa 1, default order vs.
-                currentPayload = {
-                    filter: "1=1",
-                    pager: { pageNumber: 1, pageSize: 50 },
-                    orderBy: "id",
-                    desc: true
-                };
-                // Grid verilerini yükle.
-                loadGridData(currentControllerName, currentPayload);
+        });
+        // Global area search.
+        $("#globalAreaSearch").on("keyup", function () {
+            var searchVal = $(this).val().toLowerCase();
+            $(".area-group").each(function () {
+                var areaName = $(this).data("area").toLowerCase();
+                $(this).toggle(areaName.indexOf(searchVal) > -1);
             });
         });
-
-        // Grid verilerini yüklemek için POST isteği.
-        function loadGridData(controllerName, payload) {
-            fetch('/api/' + controllerName + '/filterpaged', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-            .then(response => response.json())
-            .then(data => updateGridData(data))
-            .catch(error => console.error(error));
-        }
-
-        // Gelen grid verisini, tablo şeklinde ve sayfalama kontrolleriyle render et.
-        function updateGridData(data) {
-            var gridContainer = document.getElementById('gridContainer');
-            if (!gridContainer) return;
-            var pageSize = currentPayload.pager.pageSize;
-            var currentPage = currentPayload.pager.pageNumber;
-            var totalPages = Math.ceil(data.totalRecords / pageSize);
-
-            // Eğer veri varsa, dinamik olarak sütun başlıklarını ve satırları oluşturun.
-            var columns = [];
-            if (data.items.length > 0) {
-                columns = Object.keys(data.items[0]);
-            }
-            var html = '<table class="table table-bordered"><thead><tr>';
-            columns.forEach(function(col) {
-                // Sütun başlıklarına tıklanabilirlik ekleyip, sıralama yönü gösterimi yapıyoruz.
-                html += '<th style="cursor:pointer;" data-col="' + col + '">' + col;
-                if (currentPayload.orderBy === col) {
-                    html += currentPayload.desc ? ' ▼' : ' ▲';
-                }
-                html += '</th>';
+        // Area-specific table search (if needed, can be added inside each area).
+        $(".area-search").on("keyup", function () {
+            var searchVal = $(this).val().toLowerCase();
+            $(this).siblings("ul").children(".table-item").each(function () {
+                $(this).toggle($(this).text().toLowerCase().indexOf(searchVal) > -1);
             });
-            html += '</tr></thead><tbody>';
-            data.items.forEach(function(item) {
-                html += '<tr>' + columns.map(function(col) {
-                    return '<td>' + item[col] + '</td>';
-                }).join('') + '</tr>';
-            });
-            html += '</tbody></table>';
+        });
+        // Attach click event to table items will be done in the main view.
+    }
 
-            // Sayfalama kontrollerini render edin.
-            html += '<div id="paginationControls" class="d-flex justify-content-center align-items-center mt-2">';
-            html += renderPaginationControls(currentPage, totalPages);
-            html += '</div>';
-
-            gridContainer.innerHTML = html;
-
-            // Sütun başlıklarına tıklama olayını ekleyin.
-            var thElements = gridContainer.querySelectorAll('th[data-col]');
-            thElements.forEach(function(th) {
-                th.addEventListener('click', function() {
-                    var col = this.getAttribute('data-col');
-                    if (currentPayload.orderBy === col) {
-                        // Aynı sütun tıklandığında sıralama yönünü toggle et.
-                        currentPayload.desc = !currentPayload.desc;
-                    } else {
-                        currentPayload.orderBy = col;
-                        currentPayload.desc = false; // default: ascending
-                    }
-                    // Sıralama değişikliğinde sayfayı 1'e alıp yeniden yükle.
-                    currentPayload.pager.pageNumber = 1;
-                    loadGridData(currentControllerName, currentPayload);
-                });
-            });
-
-            // Pagination butonlarına olay ekleyin.
-            attachPaginationEvents();
-        }
-
-        // Sayfalama kontrollerini oluşturacak fonksiyon.
-        function renderPaginationControls(currentPage, totalPages) {
-            if (totalPages <= 1) return "";
-            var html = "";
-            // "Previous" butonu
-            if (currentPage > 1) {
-                html += '<button class="btn btn-sm btn-outline-primary mx-1" data-page="' + (currentPage - 1) + '">Previous</button>';
-            }
-            // Sınırlı sayıda sayfa numarası gösterimi (örneğin, mevcut sayfanın çevresinde 5 numara)
-            var start = Math.max(1, currentPage - 2);
-            var end = Math.min(totalPages, currentPage + 2);
-            if (start > 1) {
-                html += '<button class="btn btn-sm btn-outline-primary mx-1" data-page="1">1</button>';
-                if (start > 2) { html += '<span class="mx-1">...</span>'; }
-            }
-            for (var i = start; i <= end; i++) {
-                if (i === currentPage) {
-                    html += '<button class="btn btn-sm btn-primary mx-1 active" data-page="' + i + '">' + i + '</button>';
-                } else {
-                    html += '<button class="btn btn-sm btn-outline-primary mx-1" data-page="' + i + '">' + i + '</button>';
-                }
-            }
-            if (end < totalPages) {
-                if (end < totalPages - 1) { html += '<span class="mx-1">...</span>'; }
-                html += '<button class="btn btn-sm btn-outline-primary mx-1" data-page="' + totalPages + '">' + totalPages + '</button>';
-            }
-            // "Next" butonu
-            if (currentPage < totalPages) {
-                html += '<button class="btn btn-sm btn-outline-primary mx-1" data-page="' + (currentPage + 1) + '">Next</button>';
-            }
-            return html;
-        }
-
-        // Pagination butonlarına tıklama olaylarını ekle.
-        function attachPaginationEvents() {
-            var paginationButtons = document.querySelectorAll('#paginationControls button[data-page]');
-            paginationButtons.forEach(function(button) {
-                button.addEventListener('click', function () {
-                    var newPage = parseInt(this.getAttribute('data-page'));
-                    currentPayload.pager.pageNumber = newPage;
-                    loadGridData(currentControllerName, currentPayload);
-                });
-            });
-        }
-
-
-
-        // İsteğe bağlı: Global olarak loadGridData fonksiyonunu expose edebilirsiniz.
-        window.loadGridData = loadGridData;
-    })();
+    $(document).ready(function () {
+        renderAreaMenuPartial();
+    });
 </script>
-

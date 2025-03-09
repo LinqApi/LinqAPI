@@ -11,10 +11,12 @@ namespace LinqApi.Helpers
     public class DynamicLinqApiControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
     {
         private readonly ConcurrentDictionary<string, Type> _entities;
+        public string AreaName { get; }
 
-        public DynamicLinqApiControllerFeatureProvider(ConcurrentDictionary<string, Type> entities)
+        public DynamicLinqApiControllerFeatureProvider(ConcurrentDictionary<string, Type> entities, string areaName)
         {
             _entities = entities;
+            AreaName = areaName;
         }
 
         public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
@@ -46,6 +48,11 @@ namespace LinqApi.Helpers
         {
             var typeBuilder = CreateTypeBuilder(customName);
             typeBuilder.SetParent(baseControllerType);
+
+            // Area attribute ekleyelim:
+            var areaAttrCtor = typeof(AreaAttribute).GetConstructor(new[] { typeof(string) });
+            var areaAttrBuilder = new CustomAttributeBuilder(areaAttrCtor, new object[] { this.AreaName });
+            typeBuilder.SetCustomAttribute(areaAttrBuilder);
 
             var baseCtor = baseControllerType.GetConstructors().FirstOrDefault();
             if (baseCtor != null)

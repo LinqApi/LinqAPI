@@ -9,6 +9,10 @@ namespace LinqApi.Helpers
         // entityName: benzersiz isim (örneğin, "AppLoginType" veya "sales_Orders")
         public static Type GenerateEntity(string schema, string tableName, KeyValuePair<string, Type> primaryKey, Dictionary<string, Type> columns, string entityName)
         {
+            if(tableName == "Department")
+            {
+
+            }
             // Tek bir dinamik assembly üzerinden tip oluşturuluyor
             TypeBuilder typeBuilder = DynamicAssemblyHolder.EntityModuleBuilder.DefineType($"Entities.{entityName}",
                 TypeAttributes.Public | TypeAttributes.Class, typeof(BaseEntity<>).MakeGenericType(primaryKey.Value));

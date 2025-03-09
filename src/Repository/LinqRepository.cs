@@ -1,7 +1,9 @@
 ﻿using LinqApi.Model;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
+using System.Text.RegularExpressions;
 
 namespace LinqApi.Repository
 {
@@ -63,16 +65,26 @@ namespace LinqApi.Repository
         }
 
         public async Task<PaginationModel<dynamic>> GetFilterPagedAsync(
-      LinqFilterModel filterModel,
-      CancellationToken cancellationToken = default)
+       LinqFilterModel filterModel,
+       CancellationToken cancellationToken = default)
         {
             // 1️⃣ DbSet üzerinden IQueryable<TEntity> oluşturuyoruz.
             IQueryable<TEntity> query = DbSet.AsQueryable();
 
-            // 2️⃣ Dinamik Where (Filter) uygulaması
-            if (!string.IsNullOrWhiteSpace(filterModel.Filter))
+            // Yardımcı: filter string'ini parametreleştiren metod
+            (string paramFilter, List<object> parameters) = ParameterizeFilterString(filterModel.Filter);
+
+            
+
+            // 2️⃣ Dinamik Where (Filter) uygulaması (parametreleştirilmiş filter ve parametreler kullanılıyor)
+            if (!string.IsNullOrWhiteSpace(paramFilter))
             {
-                var predicate = DynamicExpressionParser.ParseLambda<TEntity, bool>(null, false, filterModel.Filter);
+                var predicate = DynamicExpressionParser.ParseLambda<TEntity, bool>(
+                    ParsingConfig.DefaultEFCore21,
+                    false,
+                    paramFilter,
+                    parameters.ToArray()
+                );
                 query = query.Where((Expression<Func<TEntity, bool>>)predicate);
             }
 
@@ -135,7 +147,7 @@ namespace LinqApi.Repository
             int skip = (filterModel.Pager.PageNumber - 1) * filterModel.Pager.PageSize;
             var pagedQuery = castQuery.Skip(skip).Take(filterModel.Pager.PageSize);
 
-            // 11️⃣ Sorguyu çalıştırıp sonuçları listeliyoruz
+            // 11️⃣ Sorguyu çalıştırıp sonuçları listeliyoruz.
             // Not: Bu noktada sorgu in-memory olduğu için asenkron fayda sağlamayabilir.
             var items = pagedQuery.ToList();
 
@@ -146,9 +158,54 @@ namespace LinqApi.Repository
             };
         }
 
+        private (string, List<object>) ParameterizeFilterString(string filter)
+        {
+            var parameters = new List<object>();
+            if (string.IsNullOrWhiteSpace(filter))
+            {
+                return (filter, parameters);
+            }
 
+            // 1. Çift tırnak içindeki literal değerleri bulup, parametreye çeviriyoruz.
+            string newFilter = Regex.Replace(filter, "\"([^\"]+)\"", match =>
+            {
+                string literal = match.Groups[1].Value;
+                // Eğer tarih formatı ise "yyyy-MM-dd" gibi, DateTime'a çeviriyoruz.
+                if (Regex.IsMatch(literal, @"^\d{4}-\d{2}-\d{2}$"))
+                {
+                    parameters.Add(DateTime.ParseExact(literal, "yyyy-MM-dd", CultureInfo.InvariantCulture));
+                }
+                else
+                {
+                    parameters.Add(literal);
+                }
+                return "@" + (parameters.Count - 1);
+            });
+
+            // 2. Sayısal literal değerleri buluyoruz (örn. id > 3 veya 3.14).
+            // Negatif lookbehind (?<!@) ekleyerek, @ ile başlayan placeholder'ları eşlemiyoruz.
+            newFilter = Regex.Replace(newFilter, @"(?<!@)\b\d+(\.\d+)?\b", match =>
+            {
+                if (int.TryParse(match.Value, out int intValue))
+                {
+                    parameters.Add(intValue);
+                }
+                else if (double.TryParse(match.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out double doubleValue))
+                {
+                    parameters.Add(doubleValue);
+                }
+                else
+                {
+                    parameters.Add(match.Value);
+                }
+                return "@" + (parameters.Count - 1);
+            });
+
+            return (newFilter, parameters);
+        }
 
     }
+
 
 
 }
