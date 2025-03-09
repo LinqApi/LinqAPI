@@ -25,9 +25,13 @@
                     <label for="filterInput" class="form-label">Filter</label>
                     <input type="text" id="filterInput" class="form-control" placeholder='e.g., ModifiedDate > "2021-01-01"' />
                 </div>
-                <div class="mb-2">
+                <div class="mb-1">
                     <label for="groupByInput" class="form-label">Group By</label>
                     <input type="text" id="groupByInput" class="form-control" placeholder='e.g., DepartmentID' />
+                </div>
+                <div class="mb-1">
+                    <label for="orderByInput" class="form-label">Order By</label>
+                    <input type="text" id="orderByInput" class="form-control" placeholder='e.g., id' value="id" />
                 </div>
                 <div class="mb-2">
                     <label for="selectInput" class="form-label">Select</label>
@@ -220,6 +224,9 @@
                     currentPayload.orderBy = clickedCol;
                     // Default new column sort direction; you can choose true or false as default.
                     currentPayload.desc = false;
+                    debugger;
+                    $("#orderByInput").val(clickedCol);
+                    
                 }
                 currentPayload.pager.pageNumber = 1;
                 loadGridData(currentControllerName, currentPayload);
@@ -275,7 +282,7 @@
             currentPayload.pager.pageNumber = 1;
             currentPayload.pager.pageSize = parseInt($("#pageSizeSelect").val());
             // Ensure default order is by id descending.
-            currentPayload.orderBy = "id";
+            currentPayload.orderBy = $("#orderByInput").val().trim() || "id";
             currentPayload.desc = true;
             if (currentControllerName) {
                 loadGridData(currentControllerName, currentPayload);
