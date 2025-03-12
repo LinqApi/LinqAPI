@@ -9,7 +9,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 
-var connectionString = "Data Source=TSTLSNSQL;Database=TESTXFER;User ID=DevMokaUser;Password=MokaPass2532;TrustServerCertificate=Yes";
+var connectionString = "";
 builder.Services.AddDynamicLinqApi("api", connectionString);
 
 // MVC'yi view desteğiyle birlikte ekleyin
