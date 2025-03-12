@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\LinqApi.csproj" />
+    <ProjectReference Include="..\..\src\Core\LinqApi.csproj" />
   </ItemGroup>
 
   <ItemGroup>

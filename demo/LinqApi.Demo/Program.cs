@@ -1,4 +1,6 @@
-﻿using LinqApi.Helpers;
+﻿using LinqApi.Dynamic.Controller;
+using LinqApi.Dynamic.Extensions;
+using LinqApi.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,10 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-string connectionString = "";
 
-builder.Services.AddLinqApi("api", connectionString);
-//builder.Services.AddLinqApi("api", connectionString);
+var connectionString = "Data Source=TSTLSNSQL;Database=TESTXFER;User ID=DevMokaUser;Password=MokaPass2532;TrustServerCertificate=Yes";
+builder.Services.AddDynamicLinqApi("api", connectionString);
 
 // MVC'yi view desteğiyle birlikte ekleyin
 builder.Services.AddControllersWithViews()
@@ -18,7 +19,8 @@ builder.Services.AddControllersWithViews()
         // LinqApi içerisindeki dinamik controller'ları ekleyelim:
         var dynamicProvider = builder.Services.BuildServiceProvider().GetRequiredService<DynamicLinqApiControllerFeatureProvider>();
         apm.FeatureProviders.Add(dynamicProvider);
-
+        
+        //adds dynamic api views...
         LinqApi.Razor.MvcHelpers.CreateViews(apm);
     });
 

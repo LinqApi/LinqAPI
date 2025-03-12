@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linq UI</title>
+    <script type="module">
+        import { createLinqTable } from "./core/linq-ui.js";
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const container = document.getElementById("tableContainer");
+            createLinqTable(container, ["Id", "Name", "Age"], "/api/linq/filterpaged");
+        });
+    </script>
+</head>
+<body>
+    <div id="tableContainer"></div>
+</body>
+</html>

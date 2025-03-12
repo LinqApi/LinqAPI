@@ -12,11 +12,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\LinqApi.csproj" />
+    <Folder Include="Controllers\" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
+    <ProjectReference Include="..\..\src\Core\LinqApi.csproj" />
+    <ProjectReference Include="..\..\src\Dynamic\LinqApi.Dynamic\LinqApi.Dynamic.csproj" />
+    <ProjectReference Include="..\..\src\Razor\LinqApi.Razor.csproj" />
   </ItemGroup>
 
 </Project>
