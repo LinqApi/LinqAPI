@@ -1,4 +1,8 @@
-﻿@model IEnumerable<TableInfo>
+﻿
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+
+@model IEnumerable<TableInfo>
 @{
     // Serialize model to JSON for use in the script.
     var tableInfosJson = Newtonsoft.Json.JsonConvert.SerializeObject(Model);

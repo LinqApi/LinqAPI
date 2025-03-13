@@ -1,0 +1,6 @@
+@LinqApi.Dynamic.Demo_HostAddress = http://localhost:5274
+
+GET {{LinqApi.Dynamic.Demo_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

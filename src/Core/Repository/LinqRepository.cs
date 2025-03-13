@@ -205,7 +205,4 @@ namespace LinqApi.Repository
         }
 
     }
-
-
-
 }

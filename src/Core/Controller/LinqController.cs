@@ -12,9 +12,9 @@ namespace LinqApi.Controller
     using LinqApi.Repository;
 
     [ApiController]
-    [Route("[area]/api/[controller]")]
+    [Route("api/[controller]")]
     public class LinqController<TEntity, TId> : ControllerBase
-    where TEntity : BaseEntity<TId>
+     where TEntity : BaseEntity<TId>
     {
         private readonly ILinqRepository<TEntity, TId> _repo;
         private static readonly ConcurrentDictionary<string, Expression<Func<TEntity, bool>>> _filterCache = new();
@@ -45,22 +45,8 @@ namespace LinqApi.Controller
             return Ok(properties);
         }
 
-        private string GetReadableTypeName(Type type)
-        {
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
-                return $"{Nullable.GetUnderlyingType(type)?.Name}?";
-
-            if (type.IsGenericType)
-            {
-                var genericArguments = type.GetGenericArguments().Select(GetReadableTypeName);
-                return $"{type.Name.Split('`')[0]}<{string.Join(", ", genericArguments)}>";
-            }
-            return type.Name;
-        }
-
-
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(TId id)
+        public virtual async Task<IActionResult> GetById(TId id)
         {
             var dto = await _repo.GetByIdAsync(id);
             if (dto == null)
@@ -73,7 +59,7 @@ namespace LinqApi.Controller
         /// Yeni bir DTO ekler.
         /// </summary>
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] TEntity entity)
+        public virtual async Task<IActionResult> Create([FromBody] TEntity entity)
         {
             var createdDto = await _repo.InsertAsync(entity);
             return CreatedAtAction(nameof(GetById), new { id = createdDto.Id }, createdDto);
@@ -81,7 +67,7 @@ namespace LinqApi.Controller
 
 
         [HttpPut]
-        public async Task<IActionResult> Update([FromBody] TEntity entity)
+        public virtual async Task<IActionResult> Update([FromBody] TEntity entity)
         {
             var updatedDto = await _repo.UpdateAsync(entity);
             return Ok(updatedDto);
@@ -89,7 +75,7 @@ namespace LinqApi.Controller
 
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(TId id)
+        public virtual async Task<IActionResult> Delete(TId id)
         {
             await _repo.DeleteAsync(id);
             return NoContent();
@@ -97,7 +83,7 @@ namespace LinqApi.Controller
 
 
         [HttpPost("filterpaged")]
-        public async Task<IActionResult> GetByFilterPaged([FromBody] LinqFilterModel filterPageModel)
+        public virtual async Task<IActionResult> GetByFilterPaged([FromBody] LinqFilterModel filterPageModel)
         {
             if (string.IsNullOrWhiteSpace(filterPageModel.Filter))
                 return BadRequest("Invalid filter expression.");
@@ -107,5 +93,17 @@ namespace LinqApi.Controller
             return Ok(pagedResult);
         }
 
+        private string GetReadableTypeName(Type type)
+        {
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+                return $"{Nullable.GetUnderlyingType(type)?.Name}?";
+
+            if (type.IsGenericType)
+            {
+                var genericArguments = type.GetGenericArguments().Select(GetReadableTypeName);
+                return $"{type.Name.Split('`')[0]}<{string.Join(", ", genericArguments)}>";
+            }
+            return type.Name;
+        }
     }
 }

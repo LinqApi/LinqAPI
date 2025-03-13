@@ -1,28 +1,20 @@
-﻿using LinqApi.Dynamic.Controller;
-using LinqApi.Dynamic.Extensions;
-using LinqApi.Helpers;
+﻿using LinqApi.Demo.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-
 // Swagger eklemeleri (opsiyonel)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+//var controllerModuleBuilder = DynamicAssemblyHolder.ControllerModuleBuilder;
 
+// InMemory bir veritabanı için farklı alanlara özel (area bazlı) DBContext tanımları:
+builder.Services.AddDbContext<ApiDbContext>(options =>
+    options.UseInMemoryDatabase("ApiDatabase"));
 
-var connectionString = "";
-builder.Services.AddDynamicLinqApi("api", connectionString);
+builder.Services.AddRepositoriesFromAssembly<ApiDbContext>();
 
-// MVC'yi view desteğiyle birlikte ekleyin
-builder.Services.AddControllersWithViews()
-    .ConfigureApplicationPartManager(apm =>
-    {
-        // LinqApi içerisindeki dinamik controller'ları ekleyelim:
-        var dynamicProvider = builder.Services.BuildServiceProvider().GetRequiredService<DynamicLinqApiControllerFeatureProvider>();
-        apm.FeatureProviders.Add(dynamicProvider);
-        
-        //adds dynamic api views...
-        LinqApi.Razor.MvcHelpers.CreateViews(apm);
-    });
+builder.Services.AddControllersWithViews();
+
 
 var app = builder.Build();
 
@@ -35,15 +27,8 @@ if (app.Environment.IsDevelopment())
 
 // Statik dosyaları sunmak (CSS, JS, img vs.)
 app.UseStaticFiles();
-
 app.UseRouting();
 
-// Varsayılan route'u ayarlıyoruz, örneğin MSController'daki Index action'ı çalışacak.
-//app.MapControllerRoute(
-//    name: "default",
-//    pattern: "{controller=LinqMvc}/{action=Index}/{id?}");
-
-
+// Varsayılan route'u ayarlıyoruz
 app.MapDefaultControllerRoute();
 app.Run();
-

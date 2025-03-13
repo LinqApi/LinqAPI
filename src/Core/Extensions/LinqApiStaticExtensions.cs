@@ -1,37 +1,50 @@
-﻿//using LinqApi.Helpers;
-//using LinqApi.Model;
-//using Microsoft.EntityFrameworkCore;
-//using Microsoft.Extensions.DependencyInjection;
-//using System;
-//using System.Collections.Concurrent;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Text;
-//using System.Threading.Tasks;
+﻿using LinqApi.Model;
+using LinqApi.Repository;
+using Microsoft.EntityFrameworkCore;
 
-//namespace LinqApi.Extensions
-//{
-//    public static IServiceCollection AddLinqApiStatic<TDbContext>(this IServiceCollection services, string areaName, string connectionString)
-//        where TDbContext : DbContext
-//    {
-//        // DbContext'i connection string ile register ediyoruz.
-//        services.AddDbContext<TDbContext>(options =>
-//            options.UseSqlServer(connectionString));
+namespace Microsoft.Extensions.DependencyInjection;
 
-//        // Statik senaryo için LinqMsApiConfiguration oluşturuyoruz.
-//        var config = new LinqMsApiConfiguration
-//        {
-//            AreaName = areaName,
-//            ConnectionString = connectionString,
-//            // Statik kullanımda dynamic entity sözlüğü kullanılmayacak, boş bir dictionary oluşturuyoruz.
-//            DynamicEntities = new ConcurrentDictionary<string, Type>(),
-//            PrimaryKeyMappings = new ConcurrentDictionary<string, string>(),
-//            ColumnSchemas = new Dictionary<string, Dictionary<string, ColumnDefinition>>()
-//        };
-//        LinqMsApiRegistry.Configurations[areaName] = config;
+public static class RepositoryRegistrationExtensions
+{
+    public static IServiceCollection AddRepositoriesFromAssembly<TDbContext>(this IServiceCollection services)
+      where TDbContext : DbContext
+    {
+        var assembly = typeof(TDbContext).Assembly;
 
-        
+        var entityTypes = assembly.GetTypes()
+            .Where(t => !t.IsAbstract && IsSubclassOfRawGeneric(typeof(BaseEntity<>), t));
 
-//        return services;
-//    }
-//}
+        foreach (var entityType in entityTypes)
+        {
+            var idType = entityType.BaseType.GetGenericArguments().First();
+
+            var repoInterface = typeof(ILinqRepository<,>).MakeGenericType(entityType, idType);
+            var repoImplementation = typeof(LinqRepository<,,>).MakeGenericType(typeof(TDbContext), entityType, idType);
+
+            services.AddScoped(repoInterface, repoImplementation);
+        }
+
+        return services;
+    }
+
+
+    public static IServiceCollection AddRepository<TEntity, TId, TDbContext>(this IServiceCollection services)
+        where TEntity : BaseEntity<TId>
+        where TDbContext : DbContext
+    {
+        services.AddScoped<ILinqRepository<TEntity, TId>, LinqRepository<TDbContext, TEntity, TId>>();
+        return services;
+    }
+
+    private static bool IsSubclassOfRawGeneric(Type generic, Type t)
+    {
+        while (t != null && t != typeof(object))
+        {
+            var cur = t.IsGenericType ? t.GetGenericTypeDefinition() : t;
+            if (cur == generic)
+                return true;
+            t = t.BaseType;
+        }
+        return false;
+    }
+}
