@@ -18,7 +18,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Core\LinqApi.csproj" />
+	  <ProjectReference Include="..\..\Core\LinqApi\LinqApi.csproj" />
 	</ItemGroup>
 
 </Project>
