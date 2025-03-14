@@ -42,7 +42,4 @@ jobs:
         # The PackageVersion is set dynamically using the version extracted from the Git tag
         run: dotnet pack src/Core/LinqApi/LinqApi.csproj --configuration Release --no-build -o ./nupkg /p:PackageVersion=${{ env.VERSION }}
 
-      - name: Push NuGet Package
-        # Push the generated NuGet package to nuget.org
-        # Make sure to add your NuGet API key to your repository secrets as NUGET_API_KEY
-        run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+ 
