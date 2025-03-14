@@ -12,9 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Core\LinqApi.csproj" />
-    <ProjectReference Include="..\..\src\Dynamic\LinqApi.Dynamic\LinqApi.Dynamic.csproj" />
-    <ProjectReference Include="..\..\src\Razor\LinqApi.Razor.csproj" />
+    <ProjectReference Include="..\..\src\Core\LinqApi\LinqApi.csproj" />
   </ItemGroup>
 
 </Project>

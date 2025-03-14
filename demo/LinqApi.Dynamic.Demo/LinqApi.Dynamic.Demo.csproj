@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Dynamic\LinqApi.Dynamic\LinqApi.Dynamic.csproj" />
-    <ProjectReference Include="..\..\src\Razor\LinqApi.Razor.csproj" />
+    <ProjectReference Include="..\..\src\Razor\LinqApi.Razor\LinqApi.Razor.csproj" />
   </ItemGroup>
 
 </Project>
