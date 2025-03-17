@@ -1,34 +1,47 @@
-name: Build and Publish NuGet Package
+name: Build, Pack, and Publish NuGet Package
 
+# Trigger this workflow when a tag starting with "v" is pushed (e.g., v1.0.0)
 on:
   push:
-    branches:
-      - '*'  # Tüm dallarda tetiklenecek şekilde ayarlandı
-    paths:
-      - '**/*'  # Tüm dosya değişikliklerinde tetiklensin
+    tags:
+      - 'v*'  # Herhangi bir 'v' ile başlayan tag ile tetiklenir (v1.0.0 gibi)
 
 jobs:
-  build:
+  build-pack-publish:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout Repository
+        # Repository'yi checkout yaparak workflow'un koda erişmesini sağlıyoruz
+        uses: actions/checkout@v3
 
-    - name: Set up .NET SDK
-      # .NET 8.0 SDK'sını kuruyoruz
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '8.0.x'  # Projeniz .NET 8.0 kullanıyorsa
+      - name: Setup .NET SDK
+        # .NET SDK (8.0.x) kuruyoruz
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'  # Projenizin hedeflediği .NET sürümünü buraya yazdık
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Extract Version from Git Tag
+        id: extract_version
+        run: |
+          # Git tag'den versiyonu çıkartıyoruz (v1.0.0 -> 1.0.0)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Extracted version: $VERSION"
 
-    - name: Build the project
-      run: dotnet build --configuration Release
+      - name: Restore Dependencies
+        # Projenin bağımlılıklarını restore ediyoruz
+        run: dotnet restore src/Core/LinqApi/LinqApi.csproj
 
-    - name: Pack the NuGet package
-      run: dotnet pack --configuration Release --no-build --output ./nupkgs
+      - name: Build LinqApi Project
+        # Projeyi derliyoruz, ancak ekstra restore işlemi yapmıyoruz
+        run: dotnet build src/Core/LinqApi/LinqApi.csproj --configuration Release --no-restore
 
-    - name: Publish NuGet package to GitHub Packages
-      run: dotnet nuget push ./nupkgs/*.nupkg --source "github" --api-key ${{ secrets.GITHUB_TOKEN }}
+      - name: Pack NuGet Package
+        # Projeyi NuGet paketine dönüştürüyoruz, ancak yeniden build yapmıyoruz
+        # Paket versiyonunu, Git tag'inden çıkardığımız versiyonla dinamik olarak belirliyoruz
+        run: dotnet pack src/Core/LinqApi/LinqApi.csproj --configuration Release --no-build -o ./nupkg /p:PackageVersion=${{ env.VERSION }}
+
+      - name: Publish NuGet Package
+        # Oluşturduğumuz NuGet paketini GitHub Packages'a yayımlıyoruz
+        run: dotnet nuget push ./nupkg/*.nupkg --source "github" --api-key ${{ secrets.GITHUB_TOKEN }}
