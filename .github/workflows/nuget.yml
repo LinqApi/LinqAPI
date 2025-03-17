@@ -3,9 +3,9 @@ name: Build and Publish NuGet Package
 on:
   push:
     branches:
-      - main  # Ana dalın adı (değiştirilebilir)
+      - '*'  # Tüm dallarda tetiklenecek şekilde ayarlandı
     paths:
-      - '**/*.csproj'  # Sadece csproj dosyasındaki değişikliklerde tetiklesin
+      - '**/*'  # Tüm dosya değişikliklerinde tetiklensin
 
 jobs:
   build:
