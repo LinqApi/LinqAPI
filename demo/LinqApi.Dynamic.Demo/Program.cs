@@ -8,7 +8,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDynamicLinqApi("api", "Data Source=TSTLSNSQL;Database=TESTXFER;User ID=DevMokaUser;Password=MokaPass2532;TrustServerCertificate=Yes");
+builder.Services.AddDynamicLinqApi("api", "Data Source=.\\SQLEXPRESS;Database=AdventureWorks2022;Trusted_Connection=True;TrustServerCertificate=Yes");
+
 
 
 // MVC'yi view desteðiyle birlikte ekleyin

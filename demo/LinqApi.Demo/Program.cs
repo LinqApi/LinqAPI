@@ -5,7 +5,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Swagger eklemeleri (opsiyonel)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-//var controllerModuleBuilder = DynamicAssemblyHolder.ControllerModuleBuilder;
 
 // InMemory bir veritabanı için farklı alanlara özel (area bazlı) DBContext tanımları:
 builder.Services.AddDbContext<ApiDbContext>(options =>

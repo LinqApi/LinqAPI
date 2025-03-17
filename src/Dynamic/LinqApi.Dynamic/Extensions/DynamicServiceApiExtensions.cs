@@ -35,9 +35,9 @@ namespace LinqApi.Dynamic.Extensions
                 string normalizedSchema = schema.Equals("dbo", StringComparison.OrdinalIgnoreCase) ? "" : schema;
                 string key = string.IsNullOrWhiteSpace(normalizedSchema) ? table : $"{normalizedSchema}.{table}";
 
-            if (!columnSchemas.TryGetValue($"{ schema}.{key}", out Dictionary<string, ColumnDefinition> columns))
+            if (!columnSchemas.TryGetValue($"{key}", out Dictionary<string, ColumnDefinition> columns))
                     return;
-                if (!allPrimaryKeys.TryGetValue($"{schema}.{key}", out string pkColumn))
+                if (!allPrimaryKeys.TryGetValue($"{key}", out string pkColumn))
                     return;
                 if (!columns.TryGetValue(pkColumn, out ColumnDefinition pkColDef))
                     return;
