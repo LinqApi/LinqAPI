@@ -1,0 +1,33 @@
+name: Build and Publish NuGet Package
+
+on:
+  push:
+    branches:
+      - main  # Ana dal (gerekirse farklı bir dal kullanabilirsiniz)
+    paths:
+      - '**/*.csproj'  # Sadece csproj dosyasındaki değişikliklerde tetiklesin
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up .NET SDK
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: '6.0'  # Veya kullanmak istediğiniz .NET sürümünü buraya yazabilirsiniz
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build the project
+      run: dotnet build --configuration Release
+
+    - name: Pack the NuGet package
+      run: dotnet pack --configuration Release --no-build --output ./nupkgs
+
+    - name: Publish NuGet package to GitHub Packages
+      run: dotnet nuget push ./nupkgs/*.nupkg --source "github" --api-key ${{ secrets.GITHUB_TOKEN }}
