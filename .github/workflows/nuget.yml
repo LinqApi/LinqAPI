@@ -3,7 +3,7 @@ name: Build and Publish NuGet Package
 on:
   push:
     branches:
-      - main  # Ana dal (gerekirse farklı bir dal kullanabilirsiniz)
+      - main  # Ana dalın adı (değiştirilebilir)
     paths:
       - '**/*.csproj'  # Sadece csproj dosyasındaki değişikliklerde tetiklesin
 
@@ -18,7 +18,7 @@ jobs:
     - name: Set up .NET SDK
       uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: '6.0'  # Veya kullanmak istediğiniz .NET sürümünü buraya yazabilirsiniz
+        dotnet-version: '6.0'  # Kullanmak istediğiniz .NET sürümünü yazın
 
     - name: Restore dependencies
       run: dotnet restore
