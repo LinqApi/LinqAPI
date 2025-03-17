@@ -10,7 +10,7 @@
 
     namespace LinqApi.Extensions
     {
-        public static class ApiExtensions
+        public static class ApiExtensions 
         {
             public static IServiceCollection AddStaticLinqApi<TDbContext>(this IServiceCollection services, string areaName)
                 where TDbContext : DbContext

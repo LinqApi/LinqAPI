@@ -1,0 +1,45 @@
+name: Build, Pack, and Publish NuGet Package
+
+on:
+  push:
+    branches:
+      - '*'  # Tüm dallarda yapılan push'lar tetikler
+    paths:
+      - '**/*'  # Tüm dosya değişiklikleri workflow'u tetikler
+
+jobs:
+  build-pack-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Extract Version from Git Tag or Branch
+        id: extract_version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}  # Tagden versiyon al
+          elif [[ "${GITHUB_REF}" == refs/heads/main ]]; then
+            VERSION="1.0.0"  # Main branch için
+          else
+            VERSION="dev"  # Diğer branchler için
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Restore Dependencies
+        run: dotnet restore src/Core/LinqApi/LinqApi.csproj
+
+      - name: Build LinqApi Project
+        run: dotnet build src/Core/LinqApi/LinqApi.csproj --configuration Release --no-restore
+
+      - name: Pack NuGet Package
+        run: dotnet pack src/Core/LinqApi/LinqApi.csproj --configuration Release --no-build -o ./nupkg /p:PackageVersion=${{ env.VERSION }}
+
+      - name: Publish NuGet Package
+        run: dotnet nuget push ./nupkg/*.nupkg --source "github" --api-key ${{ secrets.GH_TOKEN }}
