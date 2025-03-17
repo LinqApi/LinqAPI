@@ -1,7 +1,7 @@
 ﻿using LinqApi.Model;
 using Microsoft.Data.SqlClient;
 
-namespace LinqApi.Helpers
+namespace LinqApi.Dynamic.Helpers
 {
     public static class DatabaseHelper
     {
@@ -77,9 +77,9 @@ namespace LinqApi.Helpers
                             string column = reader.GetString(2); // ColumnName
                             string sqlType = reader.GetString(3); // DataType
                             bool isNullable = reader.GetBoolean(4);
-                            int? maxLength = reader.IsDBNull(5) ? (int?)null : reader.GetInt16(5);
-                            int? precision = reader.IsDBNull(6) ? (int?)null : Convert.ToInt32(reader.GetValue(6));
-                            int? scale = reader.IsDBNull(7) ? (int?)null : Convert.ToInt32(reader.GetValue(7));
+                            int? maxLength = reader.IsDBNull(5) ? null : reader.GetInt16(5);
+                            int? precision = reader.IsDBNull(6) ? null : Convert.ToInt32(reader.GetValue(6));
+                            int? scale = reader.IsDBNull(7) ? null : Convert.ToInt32(reader.GetValue(7));
 
                             // Primary key sütunu bilgisi (gerektiğinde kullanılabilir)
                             string primaryKeyColumn = reader.IsDBNull(8) ? null : reader.GetString(8);
