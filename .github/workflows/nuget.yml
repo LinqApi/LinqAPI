@@ -44,4 +44,4 @@ jobs:
 
 
       - name: Publish NuGet Package
-        run: dotnet nuget push //home/runner/work/LinqAPI/LinqAPIoutput/LinqAPI.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_AUTH_TOKEN }} -s ${{ env.NUGET_SOURCE_URL }} --skip-duplicate
+        run: dotnet nuget push /home/runner/work/LinqAPI/LinqAPIoutput/LinqAPI.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_AUTH_TOKEN }} -s ${{ env.NUGET_SOURCE_URL }} --skip-duplicate
