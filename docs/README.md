@@ -1,6 +1,6 @@
 # LinqAPI
 
-**LinqAPI** is a dynamic and generic API generator for ASP.NET Core that leverages LINQ-based filtering, paging, and CRUD operations. It provides a set of reusable controllers, services, and repository implementations to reduce boilerplate code and streamline API development by automatically mapping between your entities and DTOs.
+**LinqAPI** is a dynamic and generic API generator for ASP.NET Core that leverages LINQ-based filtering, paging, and CRUD operations. It provides a set of reusable controllers, services, and repository implementations to reduce boilerplate code and streamline API development by automatically mapping between your entities and DTOs. 
 
 --- 
 
