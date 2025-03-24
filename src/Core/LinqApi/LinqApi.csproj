@@ -16,6 +16,7 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<ImplicitUsings>enable</ImplicitUsings>
+    <PackageVersion>1.0.1</PackageVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
