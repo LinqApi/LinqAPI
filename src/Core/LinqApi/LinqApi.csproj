@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
 		<OutputType>Library</OutputType>
-		<PackageId>LinqAPIDummy</PackageId>
+		<PackageId>LinqAPI</PackageId>
 		<Version>1.0.1</Version>
 		<Authors>Cihan Dalgicdir</Authors>
 		<Description>A dynamic LINQ-based API generator for ASP.NET Core</Description>
@@ -16,7 +16,6 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<ImplicitUsings>enable</ImplicitUsings>
-    <PackageVersion>1.0.1</PackageVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
