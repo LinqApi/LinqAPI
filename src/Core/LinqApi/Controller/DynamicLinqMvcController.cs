@@ -1,9 +1,9 @@
 ﻿using LinqApi.Model;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LinqApi.Controller
+namespace LinqApi.Dynamic.Controller
 {
-    public class LinqMvcController : Microsoft.AspNetCore.Mvc.Controller
+    public abstract class LinqMvcController : Microsoft.AspNetCore.Mvc.Controller
     {
         private readonly Dictionary<string, LinqMsApiConfiguration> _configurations;
 
@@ -13,7 +13,7 @@ namespace LinqApi.Controller
             _configurations = LinqMsApiRegistry.Configurations;
         }
 
-        public IActionResult Index()
+        public virtual IActionResult Index()
         {
             // Tüm konfigürasyonlardaki entity bilgilerini toplayalım.
             var model = _configurations.SelectMany(cfg =>

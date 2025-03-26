@@ -8,7 +8,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDynamicLinqApi("api", "Data Source=.\\SQLEXPRESS;Database=AdventureWorks2022;Trusted_Connection=True;TrustServerCertificate=Yes");
+builder.Services.AddDynamicLinqApi("api", "Data Source=.\\SQLEXPRESS;Database=PosOnlDb;Trusted_Connection=True;TrustServerCertificate=Yes");
 
 
 

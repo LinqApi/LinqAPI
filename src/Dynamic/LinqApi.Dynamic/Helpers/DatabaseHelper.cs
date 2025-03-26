@@ -1,4 +1,4 @@
-﻿using LinqApi.Model;
+using LinqApi.Model;
 using Microsoft.Data.SqlClient;
 
 namespace LinqApi.Dynamic.Helpers
@@ -146,10 +146,9 @@ namespace LinqApi.Dynamic.Helpers
             return result;
         }
 
-        public static Type ConvertSqlTypeToDotNet(string sqlType)
-        {
+        public static Type ConvertSqlTypeToDotNet(string sqlType) =>
             // SQL tipini küçük harfe çeviriyoruz
-            return sqlType.ToLower() switch
+            sqlType.ToLower() switch
             {
                 "int" => typeof(int),
                 "bigint" => typeof(long),
@@ -183,7 +182,6 @@ namespace LinqApi.Dynamic.Helpers
                 "rowversion" => typeof(byte[]),
                 _ => null
             };
-        }
 
 
 

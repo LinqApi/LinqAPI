@@ -1,4 +1,5 @@
 ﻿using LinqApi.Demo.Data;
+using LinqApi.Model;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,7 +11,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApiDbContext>(options =>
     options.UseInMemoryDatabase("ApiDatabase"));
 
-builder.Services.AddRepositoriesFromAssembly<ApiDbContext>();
+//builder.Services.AddRepositoriesFromAssembly<ApiDbContext,Posonl.Domain.BaseEntity,long>();
 
 builder.Services.AddControllersWithViews();
 

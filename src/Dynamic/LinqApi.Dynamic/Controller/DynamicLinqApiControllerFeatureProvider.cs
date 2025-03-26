@@ -1,4 +1,4 @@
-﻿using LinqApi.Controller;
+using LinqApi.Controller;
 using LinqApi.Dynamic.Assembly;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -70,9 +70,6 @@ namespace LinqApi.Dynamic.Controller
             return typeBuilder.CreateType();
         }
 
-        private TypeBuilder CreateTypeBuilder(string controllerName)
-        {
-            return DynamicAssemblyHolder.ControllerModuleBuilder.DefineType(controllerName, TypeAttributes.Public | TypeAttributes.Class, typeof(ControllerBase));
-        }
+        private TypeBuilder CreateTypeBuilder(string controllerName) => DynamicAssemblyHolder.ControllerModuleBuilder.DefineType(controllerName, TypeAttributes.Public | TypeAttributes.Class, typeof(ControllerBase));
     }
 }

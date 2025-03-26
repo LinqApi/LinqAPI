@@ -1,7 +1,6 @@
-﻿using LinqApi.Dynamic.Context;
+using LinqApi.Dynamic.Context;
 using LinqApi.Dynamic.Controller;
 using LinqApi.Dynamic.Helpers;
-using LinqApi.Helpers;
 using LinqApi.Model;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;

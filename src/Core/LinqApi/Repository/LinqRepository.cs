@@ -1,4 +1,4 @@
-﻿using LinqApi.Model;
+using LinqApi.Model;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Linq.Dynamic.Core;
@@ -44,37 +44,29 @@ namespace LinqApi.Repository
             }
         }
 
-        public async Task<TEntity> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
-        {
-            return await DbSet.FindAsync(new object[] { id }, cancellationToken);
-        }
+        public async Task<TEntity> GetByIdAsync(TId id, CancellationToken cancellationToken = default) => await DbSet.FindAsync([id], cancellationToken);
 
-        public async Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken = default)
-        {
-            return await DbSet.ToListAsync(cancellationToken);
-        }
+        public async Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken = default) => await DbSet.ToListAsync(cancellationToken);
 
-        public async Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
-        {
-            return await DbSet.Where(predicate).ToListAsync(cancellationToken);
-        }
+        public async Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default) => await DbSet.Where(predicate).ToListAsync(cancellationToken);
 
-        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        {
-            return await DbContext.SaveChangesAsync(cancellationToken);
-        }
+        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => await DbContext.SaveChangesAsync(cancellationToken);
 
         public async Task<PaginationModel<dynamic>> GetFilterPagedAsync(
        LinqFilterModel filterModel,
        CancellationToken cancellationToken = default)
         {
+            if (filterModel.Pager == null)
+            {
+                filterModel.Pager = new Pager() { PageNumber = 1, PageSize = 1 };
+            }
             // 1️⃣ DbSet üzerinden IQueryable<TEntity> oluşturuyoruz.
             IQueryable<TEntity> query = DbSet.AsQueryable();
 
             // Yardımcı: filter string'ini parametreleştiren metod
             (string paramFilter, List<object> parameters) = ParameterizeFilterString(filterModel.Filter);
 
-            
+
 
             // 2️⃣ Dinamik Where (Filter) uygulaması (parametreleştirilmiş filter ve parametreler kullanılıyor)
             if (!string.IsNullOrWhiteSpace(paramFilter))
@@ -141,7 +133,7 @@ namespace LinqApi.Repository
             var castQuery = dynamicQuery.Cast<dynamic>();
 
             // 9️⃣ Toplam kayıt sayısını alıyoruz (client-side count, grouping sonrası zaten in-memory)
-            int totalCount = castQuery.Count();
+            int totalCount = await castQuery.CountAsync();
 
             // 10️⃣ Paging uygulaması (ana sorgu için)
             int skip = (filterModel.Pager.PageNumber - 1) * filterModel.Pager.PageSize;
@@ -149,7 +141,7 @@ namespace LinqApi.Repository
 
             // 11️⃣ Sorguyu çalıştırıp sonuçları listeliyoruz.
             // Not: Bu noktada sorgu in-memory olduğu için asenkron fayda sağlamayabilir.
-            var items = pagedQuery.ToList();
+            var items = await pagedQuery.ToListAsync(cancellationToken);
 
             return new PaginationModel<dynamic>
             {
@@ -158,7 +150,7 @@ namespace LinqApi.Repository
             };
         }
 
-        private (string, List<object>) ParameterizeFilterString(string filter)
+        private static (string, List<object>) ParameterizeFilterString(string filter)
         {
             var parameters = new List<object>();
             if (string.IsNullOrWhiteSpace(filter))

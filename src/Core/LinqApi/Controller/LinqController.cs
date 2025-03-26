@@ -13,10 +13,10 @@ namespace LinqApi.Controller
 
     [ApiController]
     [Route("api/[controller]")]
-    public class LinqController<TEntity, TId> : ControllerBase
+    public  class LinqController<TEntity, TId> : ControllerBase
      where TEntity : BaseEntity<TId>
     {
-        private readonly ILinqRepository<TEntity, TId> _repo;
+        protected internal readonly ILinqRepository<TEntity, TId> _repo;
         private static readonly ConcurrentDictionary<string, Expression<Func<TEntity, bool>>> _filterCache = new();
         private static readonly ConcurrentDictionary<string, List<object>> _propertyCache = new();
 
