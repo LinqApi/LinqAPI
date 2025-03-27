@@ -7,12 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MassTransit" Version="8.4.0" />
-    <PackageReference Include="MassTransit.RabbitMQ" Version="8.4.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\Core\LinqApi\LinqApi.csproj" />
     <ProjectReference Include="..\..\Logging\LinqApi.Logging\LinqApi.Logging.csproj" />
   </ItemGroup>
 

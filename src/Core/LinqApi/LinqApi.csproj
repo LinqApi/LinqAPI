@@ -33,8 +33,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Core\Correlation\" />
+	  <Folder Include="Controller\" />
+	  <Folder Include="Extensions\" />
 	  <Folder Include="Mapping\" />
+	  <Folder Include="Repository\" />
 	</ItemGroup>
 
 </Project>

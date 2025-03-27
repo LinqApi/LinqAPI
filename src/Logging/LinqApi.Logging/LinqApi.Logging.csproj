@@ -11,9 +11,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Controller\LinqApi.Controller\LinqApi.Controller.csproj" />
     <ProjectReference Include="..\..\Core\LinqApi\LinqApi.csproj" />
-    <ProjectReference Include="..\..\Repository\LinqApi.Repository\LinqApi.Repository.csproj" />
+    <ProjectReference Include="..\..\Correlation\LinqApi.Correlation\LinqApi.Correlation.csproj" />
+    <ProjectReference Include="..\..\Epoch\LinqApi.Epoch\LinqApi.Epoch.csproj" />
   </ItemGroup>
 
 </Project>

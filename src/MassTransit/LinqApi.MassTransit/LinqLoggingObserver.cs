@@ -1,11 +1,10 @@
-using LinqApi.Core;
-using LinqApi.Model;
+using LinqApi.Core.Log;
+using LinqApi.Correlation;
+using LinqApi.Logging;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using System;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace LinqApi.MassTransit
 {
@@ -305,7 +304,7 @@ namespace LinqApi.MassTransit
                 StackTrace = exception.StackTrace,
             };
 
-            await LogAsync(faultLog);
+            await LogAsync(faultLog,context.CancellationToken);
         }
 
         #endregion

@@ -1,4 +1,3 @@
-using LinqApi.Controller;
 using LinqApi.Dynamic.Assembly;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -6,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
 using System.Reflection.Emit;
 using System.Reflection;
+using LinqApi.Controller;
 
 namespace LinqApi.Dynamic.Controller
 {

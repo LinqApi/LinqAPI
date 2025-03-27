@@ -1,5 +1,5 @@
-using LinqApi.Core;
-using LinqApi.Model;
+using LinqApi.Correlation;
+using LinqApi.Logging;
 using MassTransit;
 using Microsoft.Extensions.Options;
 using System.Text.Json;

@@ -1,5 +1,4 @@
-using LinqApi.Core;
-using LinqApi.Model;
+using LinqApi.Logging;
 using MassTransit;
 
 namespace LinqApi.MassTransit
