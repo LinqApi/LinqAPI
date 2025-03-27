@@ -1,4 +1,5 @@
 using LinqApi.Core;
+using LinqApi.Model;
 using MassTransit;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
@@ -17,12 +18,12 @@ namespace LinqApi.MassTransit
         /// <typeparam name="T">The message type being published.</typeparam>
         public class LinqLoggingPublishFilter<T> : IFilter<SendContext<T>> where T : class
         {
-            private readonly ILinqHttpCallLogger _logger;
+            private readonly ILinqLogger _logger;
             private readonly ICorrelationIdGenerator _correlationGenerator;
             private readonly IOptions<LinqLoggingOptions> _options;
 
             public LinqLoggingPublishFilter(
-                ILinqHttpCallLogger logger,
+                ILinqLogger logger,
                 ICorrelationIdGenerator correlationGenerator,
                 IOptions<LinqLoggingOptions> options)
             {
@@ -49,13 +50,9 @@ namespace LinqApi.MassTransit
                     context.Headers.Set(correlationHeader, headerCorrelation);
                 }
 
-                // Generate a new child correlation id (increments the step).
-                string currentStepCorrelation = CorrelationContext.GetNextCorrelationId(_correlationGenerator);
-
                 // Create a pre-send log event using selected SendContext details.
                 var preLog = new LinqEventLog
                 {
-                    CorrelationId = currentStepCorrelation,
                     // Here, OperationName serves as a discriminator; you can include the message type.
                     OperationName = $"Publish-{typeof(T).Name}",
                     RequestPayload = SerializeMessage(context.Message),
@@ -64,10 +61,9 @@ namespace LinqApi.MassTransit
                     QueueName = context.DestinationAddress?.ToString() ?? "Unknown",
                     Success = false, // Pre-send event: not complete yet.
                     CreatedAt = DateTime.UtcNow,
-                    LogType = LogType.Info
                 };
 
-                await _logger.LogAsync(ConvertToHttpCallLog(preLog));
+                await _logger.LogAsync(preLog, context.CancellationToken);
 
                 try
                 {
@@ -76,34 +72,30 @@ namespace LinqApi.MassTransit
                     // Log success event.
                     var successLog = new LinqEventLog
                     {
-                        CorrelationId = currentStepCorrelation,
                         OperationName = $"Publish-{typeof(T).Name}",
                         RequestPayload = SerializeMessage(context.Message),
                         ResponsePayload = "Message published successfully",
                         QueueName = context.DestinationAddress?.ToString() ?? "Unknown",
                         Success = true,
                         CreatedAt = DateTime.UtcNow,
-                        LogType = LogType.Info
                     };
 
-                    await _logger.LogAsync(ConvertToHttpCallLog(successLog));
+                    await _logger.LogAsync(successLog, context.CancellationToken);
                 }
                 catch (Exception ex)
                 {
                     // Log error event.
                     var errorLog = new LinqEventLog
                     {
-                        CorrelationId = currentStepCorrelation,
                         OperationName = $"Publish-{typeof(T).Name}",
                         RequestPayload = SerializeMessage(context.Message),
                         ResponsePayload = ex.ToString(),
                         QueueName = context.DestinationAddress?.ToString() ?? "Unknown",
                         Success = false,
                         CreatedAt = DateTime.UtcNow,
-                        LogType = LogType.Error
                     };
 
-                    await _logger.LogAsync(ConvertToHttpCallLog(errorLog));
+                    await _logger.LogAsync(errorLog, context.CancellationToken);
                     throw;
                 }
             }
@@ -122,22 +114,7 @@ namespace LinqApi.MassTransit
                 }
             }
 
-            // This helper converts a LinqEventLog to a LinqHttpCallLog,
-            // assuming your ILinqHttpCallLogger logs a BaseLogEntity.
-            private LinqHttpCallLog ConvertToHttpCallLog(LinqEventLog ev) => new LinqHttpCallLog
-            {
-                CorrelationId = ev.CorrelationId,
-                ParentCorrelationId = "", // You could map additional fields if needed.
-                Url = ev.QueueName,         // In this context, the "QueueName" holds the destination.
-                Method = ev.OperationName,
-                RequestBody = ev.RequestPayload,
-                ResponseBody = ev.ResponsePayload,
-                DurationMs = 0,
-                Exception = ev.Exception,
-                CreatedAt = ev.CreatedAt,
-                IsInternal = true,
-                LogType = ev.LogType
-            };
+
         }
     }
 

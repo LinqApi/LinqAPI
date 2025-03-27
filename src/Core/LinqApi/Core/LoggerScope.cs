@@ -1,4 +1,4 @@
-﻿namespace LinqApi.Core
+namespace LinqApi.Core
 {
     /// <summary>
     /// Simple disposable scope helper.
@@ -9,7 +9,4 @@
         public LoggerScope(Action onDispose) => _onDispose = onDispose;
         public void Dispose() => _onDispose();
     }
-
-
 }
-

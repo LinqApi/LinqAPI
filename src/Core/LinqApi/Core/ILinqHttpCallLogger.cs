@@ -1,3 +1,4 @@
+using LinqApi.Model;
 using Microsoft.Extensions.Logging;
 
 namespace LinqApi.Core
@@ -5,11 +6,8 @@ namespace LinqApi.Core
     /// <summary>
     /// Interface for logging HTTP call information.
     /// </summary>
-    public interface ILinqHttpCallLogger : ILogger
+    public interface ILinqLogger : ILogger
     {
-        Task LogAsync(LinqHttpCallLog log);
+        Task LogAsync(LinqLogEntity log,CancellationToken cancellationToken);
     }
-
-
 }
-

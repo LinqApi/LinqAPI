@@ -1,9 +1,11 @@
-﻿namespace LinqApi.Core
+using LinqApi.Model;
+
+namespace LinqApi.Core
 {
     /// <summary>
     /// Represents a SQL log entry.
     /// </summary>
-    public class LinqSqlLog : LinqEventLog
+    public class LinqSqlLog : LinqLogEntity
     {
         /// <summary>
         /// The SQL command text that was executed.
@@ -29,6 +31,8 @@
         /// The type of command (e.g. Reader, NonQuery, Scalar).
         /// </summary>
         public string CommandType { get; set; }
+
+        public override string LogType => "Database";
     }
 
 

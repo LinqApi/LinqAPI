@@ -1,4 +1,4 @@
-﻿namespace LinqApi.Core
+namespace LinqApi.Core
 {
     /// <summary>
     /// Represents a correlation identifier.
@@ -8,7 +8,7 @@
         public Guid Value { get; }
         public byte EnvironmentCode => Value.ToByteArray()[0];
         public byte SourceTypeCode => Value.ToByteArray()[1];
-        public long Epoch => BitConverter.ToInt64(Value.ToByteArray().Skip(2).Take(6).Concat(new byte[2]).ToArray(), 0);
+        public long Epoch => LinqEpoch.Now();
 
         public CorrelationId(Guid value) => Value = value;
 
@@ -18,7 +18,7 @@
             guidBytes[0] = env;
             guidBytes[1] = sourceType;
 
-            long epoch = LinqEpoch.Now();
+            long epoch = LinqEpoch.Now(); // Static epoch provider çağrısı
             var epochBytes = BitConverter.GetBytes(epoch).Take(6).ToArray();
             Array.Copy(epochBytes, 0, guidBytes, 2, 6); // 6-byte epoch
 

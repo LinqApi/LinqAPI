@@ -1,8 +1,8 @@
-﻿namespace LinqApi.Model
+namespace LinqApi.Model
 {
     public abstract class BaseEntity<TId>
     {
-        public TId Id { get; set; }
+        public virtual TId Id { get; set; }
     }
 
 

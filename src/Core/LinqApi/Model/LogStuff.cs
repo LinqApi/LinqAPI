@@ -1,29 +1,45 @@
+using LinqApi.Core;
+
 namespace LinqApi.Model
 {
-    public abstract class BaseLogEntity : BaseEntity<string>
+    // Base log model (soyut)
+    public abstract class LinqLogEntity : BaseEntity<long>
     {
-        public string CorrelationId { get; set; }
+
+        protected LinqLogEntity()
+        {
+            CorrelationId = CorrelationContext.GetNextCorrelationId(new DefaultCorrelationIdGenerator());
+        }
+        public string CorrelationId { get; private set; }
+        public string ParentCorrelationId { get; set; }
         public long DurationMs { get; set; }
         public string Exception { get; set; }
-        // Internal flag ile loglama sisteminin kendi loglarını ayırabiliriz.
+        public bool IsException { get; set; }
         public bool IsInternal { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public long Epoch { get; set; }
+
+        // Discriminator olarak kullanılacak; her türetilmiş sınıf override eder.
+        public virtual string LogType { get; set; }
     }
 
-    public class LinqHttpCallLog : BaseLogEntity
+    // HTTP log
+    public class LinqHttpCallLog : LinqLogEntity
     {
-        public string ParentCorrelationId { get; set; }
         public string Url { get; set; }
         public string Method { get; set; }
         public string RequestBody { get; set; }
         public string ResponseBody { get; set; }
-        public DateTime CreatedAt { get; set; }
-        // Ek alanlar: Controller, Action gibi veriler
         public string Controller { get; set; }
         public string Action { get; set; }
         public int StatusCode { get; set; }
+
+        public override string LogType { get; set; } = "HttpCall";
+        public string UserAgent { get; set; }
     }
 
-    public class LinqEventLog : BaseLogEntity
+    // Event log (örneğin MassTransit)
+    public class LinqEventLog : LinqLogEntity
     {
         public string QueueName { get; set; }
         public string OperationName { get; set; }
@@ -31,6 +47,32 @@ namespace LinqApi.Model
         public string ResponsePayload { get; set; }
         public string MachineName { get; set; }
         public bool Success { get; set; }
-        public DateTime CreatedAt { get; set; }
+
+        public override string LogType { get; set; } = "Event";
+    }
+
+    // Hata logları için soyut model (türetilmiş hata tiplerini destekler)
+    public abstract class LinqErrorLog : LinqLogEntity
+    {
+        public string StackTrace { get; set; }
+        // LogType override alt sınıflarda yapılır.
+    }
+
+    // Örneğin, Database error log
+    public class LinqSqlErrorLog : LinqErrorLog
+    {
+        public override string LogType { get; set; } = "DatabaseError";
+    }
+
+    // Örneğin, Publish error log
+    public class LinqPublishErrorLog : LinqErrorLog
+    {
+        public override string LogType { get; set; } = "PublishError";
+    }
+
+    // Örneğin, Consume error log
+    public class LinqConsumeErrorLog : LinqErrorLog
+    {
+        public override string LogType { get; set; } = "ConsumeError";
     }
 }

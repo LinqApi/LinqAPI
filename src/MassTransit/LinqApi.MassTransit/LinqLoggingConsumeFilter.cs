@@ -1,4 +1,5 @@
 using LinqApi.Core;
+using LinqApi.Model;
 using MassTransit;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
@@ -17,12 +18,12 @@ namespace LinqApi.MassTransit
         /// <typeparam name="T">The message type being consumed.</typeparam>
         public class LinqLoggingConsumeFilter<T> : IFilter<ConsumeContext<T>> where T : class
         {
-            private readonly ILinqHttpCallLogger _logger;
+            private readonly ILinqLogger _logger;
             private readonly ICorrelationIdGenerator _correlationGenerator;
             private readonly IOptions<LinqLoggingOptions> _options;
 
             public LinqLoggingConsumeFilter(
-                ILinqHttpCallLogger logger,
+                ILinqLogger logger,
                 ICorrelationIdGenerator correlationGenerator,
                 IOptions<LinqLoggingOptions> options)
             {
@@ -46,26 +47,23 @@ namespace LinqApi.MassTransit
                     headerCorrelation = CorrelationContext.Current?.ParentId.ToString()
                                         ?? _correlationGenerator.Generate(1, 1).ToString();
                     // Use SetHeader if Set is not available:
-                   
+
                 }
 
                 // Generate a new child correlation ID.
-                string currentStepCorrelation = CorrelationContext.GetNextCorrelationId(_correlationGenerator);
 
                 // Log a pre-consume event.
                 var preLog = new LinqEventLog
                 {
-                    CorrelationId = currentStepCorrelation,
                     OperationName = $"Consume-{typeof(T).Name}",
                     RequestPayload = SerializeMessage(context.Message),
                     ResponsePayload = string.Empty,
                     QueueName = context.ReceiveContext.InputAddress?.ToString() ?? "Unknown",
                     Success = false,
                     CreatedAt = DateTime.UtcNow,
-                    LogType = LogType.MassTransitConsume
                 };
 
-                await _logger.LogAsync(ConvertToHttpCallLog(preLog));
+                await _logger.LogAsync(preLog, context.CancellationToken);
 
                 try
                 {
@@ -74,34 +72,30 @@ namespace LinqApi.MassTransit
                     // Log a success event.
                     var successLog = new LinqEventLog
                     {
-                        CorrelationId = currentStepCorrelation,
                         OperationName = $"Consume-{typeof(T).Name}",
                         RequestPayload = SerializeMessage(context.Message),
                         ResponsePayload = "Message consumed successfully",
                         QueueName = context.ReceiveContext.InputAddress?.ToString() ?? "Unknown",
                         Success = true,
                         CreatedAt = DateTime.UtcNow,
-                        LogType = LogType.MassTransitConsume
                     };
 
-                    await _logger.LogAsync(ConvertToHttpCallLog(successLog));
+                    await _logger.LogAsync(ConvertToHttpCallLog(successLog), context.CancellationToken);
                 }
                 catch (Exception ex)
                 {
                     // Log an error event.
                     var errorLog = new LinqEventLog
                     {
-                        CorrelationId = currentStepCorrelation,
                         OperationName = $"Consume-{typeof(T).Name}",
                         RequestPayload = SerializeMessage(context.Message),
                         ResponsePayload = ex.ToString(),
                         QueueName = context.ReceiveContext.InputAddress?.ToString() ?? "Unknown",
                         Success = false,
                         CreatedAt = DateTime.UtcNow,
-                        LogType = LogType.MassTransitConsume
                     };
 
-                    await _logger.LogAsync(ConvertToHttpCallLog(errorLog));
+                    await _logger.LogAsync(errorLog, context.CancellationToken);
                     throw;
                 }
             }
@@ -123,7 +117,6 @@ namespace LinqApi.MassTransit
             // Helper to convert a LinqEventLog to a LinqHttpCallLog.
             private LinqHttpCallLog ConvertToHttpCallLog(LinqEventLog ev) => new LinqHttpCallLog
             {
-                CorrelationId = ev.CorrelationId,
                 ParentCorrelationId = "", // Optionally map if you have one.
                 Url = ev.QueueName,         // Using the queue as an identifier.
                 Method = ev.OperationName,
@@ -133,7 +126,6 @@ namespace LinqApi.MassTransit
                 Exception = ev.Exception,
                 CreatedAt = ev.CreatedAt,
                 IsInternal = true,
-                LogType = ev.LogType,
                 IsException = string.IsNullOrEmpty(ev.Exception),
             };
         }

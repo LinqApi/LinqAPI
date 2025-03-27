@@ -1,25 +1,27 @@
-﻿using LinqApi.Model;
+using System;
+using System.Collections.Concurrent;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using LinqApi.Model;
+using LinqApi.Repository;
+using Microsoft.AspNetCore.Mvc;
 
 namespace LinqApi.Controller
 {
-    using Microsoft.AspNetCore.Mvc;
-    using System.Threading.Tasks;
-    using System;
-    using LinqApi.Repository;
-    using System.Collections.Concurrent;
-    using System.Linq;
-
     /// <summary>
-    /// Base class for read-only LINQ-powered endpoints.
-    /// Provides dynamic filter, paging, ordering, and metadata discovery support.
+    /// Base controller for read-only LINQ-powered endpoints.
+    /// Provides dynamic filtering, paging, ordering, and metadata discovery.
     /// </summary>
+    /// <typeparam name="TEntity">The entity type, which must derive from BaseEntity&lt;TId&gt;.</typeparam>
+    /// <typeparam name="TId">The type of the entity identifier.</typeparam>
     [ApiController]
     [Route("api/[controller]")]
-    public abstract class LinqReadonlyController<TEntity, TId> : ControllerBase
+    public class LinqReadonlyController<TEntity, TId> : ControllerBase
         where TEntity : BaseEntity<TId>
     {
         protected readonly ILinqRepository<TEntity, TId> _repo;
-        private static readonly ConcurrentDictionary<string, List<object>> _propertyCache = new();
+        private static readonly ConcurrentDictionary<string, object> _propertyCache = new();
 
         protected LinqReadonlyController(ILinqRepository<TEntity, TId> repo)
         {
@@ -27,33 +29,38 @@ namespace LinqApi.Controller
         }
 
         [HttpGet("properties")]
+
         public virtual IActionResult GetAllProperties()
         {
-            var type = typeof(TEntity);
-            var cacheKey = $"Properties_{type.FullName}";
-            if (_propertyCache.TryGetValue(cacheKey, out var cached)) return Ok(cached);
-
-            var props = type.GetProperties()
-                .Select(p => new { Name = p.Name, Type = GetReadableTypeName(p.PropertyType) })
-                .Cast<object>()
-                .ToList();
-
-            _propertyCache.TryAdd(cacheKey, props);
-            return Ok(props);
+            var properties = EntitySchemaHelper.GetPropertiesSchema(typeof(TEntity));
+            return Ok(properties);
         }
 
+        /// <summary>
+        /// Gets an entity by its identifier.
+        /// </summary>
+        /// <param name="id">The entity identifier.</param>
+        /// <param name="cancellation">A cancellation token.</param>
+        /// <returns>The entity if found; otherwise, NotFound.</returns>
         [HttpGet("{id}")]
         public virtual async Task<IActionResult> GetById(TId id, CancellationToken cancellation)
         {
-            var entity = await _repo.GetByIdAsync(id,cancellation);
+            var entity = await _repo.GetByIdAsync(id, cancellation);
             return entity == null ? NotFound() : Ok(entity);
         }
 
+        /// <summary>
+        /// Filters the entity collection with paging.
+        /// </summary>
+        /// <param name="model">The filter model.</param>
+        /// <param name="cancellation">A cancellation token.</param>
+        /// <returns>A paged result of entities.</returns>
         [HttpPost("filterpaged")]
         public virtual async Task<IActionResult> GetByFilterPaged([FromBody] LinqFilterModel model, CancellationToken cancellation)
         {
-            if (string.IsNullOrWhiteSpace(model.Filter)) return BadRequest("Filter is required.");
-            var result = await _repo.GetFilterPagedAsync(model,cancellation);
+            if (string.IsNullOrWhiteSpace(model.Filter))
+                return BadRequest("Filter is required.");
+            var result = await _repo.GetFilterPagedAsync(model, cancellation);
             return Ok(result);
         }
 

@@ -19,11 +19,11 @@ namespace LinqApi.Core
             // A thread-safe dictionary to store Stopwatch for each command.
             private readonly ConcurrentDictionary<DbCommand, Stopwatch> _stopwatches = new();
 
-            private readonly ILinqSqlLogger _sqlLogger;
+            private readonly ILinqLogger _linqLogger;
 
-            public LinqSqlLoggingInterceptor(ILinqSqlLogger sqlLogger)
+            public LinqSqlLoggingInterceptor(ILinqLogger linqLogger)
             {
-                _sqlLogger = sqlLogger;
+                _linqLogger = linqLogger;
             }
 
             // Synchronous executing methods:
@@ -41,7 +41,7 @@ namespace LinqApi.Core
        CommandEventData eventData,
        InterceptionResult<int> result)
             {
-                StartStopwatch(command);
+                https://localhost:44382/StartStopwatch(command);
                 return base.NonQueryExecuting(command, eventData, result);
             }
 
@@ -117,7 +117,7 @@ namespace LinqApi.Core
                 return await base.ScalarExecutingAsync(command, eventData, result, cancellationToken);
             }
 
-         
+
 
             // Helper to start a stopwatch for a given command.
             private void StartStopwatch(DbCommand command)
@@ -148,28 +148,12 @@ namespace LinqApi.Core
                     UserId = UserContext.CurrentUserId,  // Replace with your actual user retrieval logic
                     ExecutedAt = DateTime.UtcNow,
                     CommandType = commandType,
-                    LogType = LogType.Database
                 };
 
                 // Fire and forget logging (you might want to await in production)
-                await _sqlLogger.LogSqlAsync(sqlLog, cancellationToken).ConfigureAwait(false);
+                await _linqLogger.LogAsync(sqlLog, cancellationToken).ConfigureAwait(false);
             }
 
-            // Asynchronous logging helper.
-            private async Task LogSqlAsync(DbCommand command, long durationMs, string commandType, CommandExecutedEventData eventData, CancellationToken cancellationToken)
-            {
-                var sqlLog = new LinqSqlLog
-                {
-                    QueryText = command.CommandText,
-                    DurationMs = durationMs,
-                    UserId = UserContext.CurrentUserId,  // Replace with your actual user retrieval logic
-                    ExecutedAt = DateTime.UtcNow,
-                    CommandType = commandType,
-                    LogType = LogType.Database
-                };
-
-                await _sqlLogger.LogSqlAsync(sqlLog,cancellationToken);
-            }
         }
     }
 

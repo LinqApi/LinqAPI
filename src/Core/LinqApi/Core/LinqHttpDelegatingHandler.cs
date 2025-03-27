@@ -1,20 +1,21 @@
-﻿using Microsoft.Extensions.Options;
+using LinqApi.Model;
+using Microsoft.Extensions.Options;
 using System.Diagnostics;
 
 namespace LinqApi.Core
 {
     /// <summary>
-    /// Delegating handler that logs HTTP requests/responses.
+    /// Delegating handler that logs HTTP requests/responses as "Incoming" log entries.
     /// </summary>
-    public class LoggingDelegatingHandler : DelegatingHandler
+    public class LinqHttpDelegatingHandler : DelegatingHandler
     {
-        private readonly ILinqHttpCallLogger _logger;
+        private readonly ILinqLogger _logger;
         private readonly ILinqPayloadMasker _masker;
         private readonly ICorrelationIdGenerator _correlationGenerator;
         private readonly IOptions<LinqLoggingOptions> _options;
 
-        public LoggingDelegatingHandler(
-            ILinqHttpCallLogger logger,
+        public LinqHttpDelegatingHandler(
+            ILinqLogger logger,
             ILinqPayloadMasker masker,
             ICorrelationIdGenerator correlationGenerator,
             IOptions<LinqLoggingOptions> options)
@@ -28,11 +29,11 @@ namespace LinqApi.Core
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var sw = Stopwatch.StartNew();
-            string reqBody = request.Content != null ? await request.Content.ReadAsStringAsync() : null;
+            string reqBody = request.Content != null ? await request.Content.ReadAsStringAsync(cancellationToken) : null;
             string resBody = null;
             Exception ex = null;
 
-            // Use the header name from options instead of a magic string.
+            // Header ismi options'tan alınıyor.
             string correlationHeader = _options.Value.CorrelationHeaderName;
             string headerCorrelation = null;
             if (request.Headers.Contains(correlationHeader))
@@ -46,12 +47,11 @@ namespace LinqApi.Core
                 request.Headers.Add(correlationHeader, headerCorrelation);
             }
 
-            // If no correlation scope exists, create one.
+            // Eğer correlation scope mevcut değilse oluştur.
             if (CorrelationContext.Current == null)
                 CorrelationContext.EnsureCorrelation(_correlationGenerator);
 
-            // Generate a new child correlation id.
-            string currentStepCorrelation = CorrelationContext.GetNextCorrelationId(_correlationGenerator);
+            // Yeni bir child correlation id oluştur.
 
             HttpResponseMessage response = null;
             try
@@ -59,7 +59,7 @@ namespace LinqApi.Core
                 response = await base.SendAsync(request, cancellationToken);
 
                 if (response.Content != null)
-                    resBody = await response.Content.ReadAsStringAsync();
+                    resBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
                 return response;
             }
@@ -71,10 +71,9 @@ namespace LinqApi.Core
             finally
             {
                 sw.Stop();
-                // Create the HTTP call log entry.
+                // HTTP call log entry oluşturuluyor.
                 var logEntry = new LinqHttpCallLog
                 {
-                    CorrelationId = currentStepCorrelation,
                     ParentCorrelationId = headerCorrelation,
                     Url = request.RequestUri.ToString(),
                     Method = request.Method.Method,
@@ -85,24 +84,19 @@ namespace LinqApi.Core
                     IsException = ex != null,
                     CreatedAt = DateTime.UtcNow,
                     IsInternal = false,
-                    // Optionally, set extra analytic fields:
-                    UserAgent = request.Headers.UserAgent.ToString(),
-                    //ClientIP = request.ip, // Extension method to get IP from request
-                    LogType = LogType.Outgoing // for example, distinguish outgoing HTTP calls
+                    UserAgent = request.Headers.UserAgent?.ToString() ?? string.Empty,
+                    // ClientIP gibi ek alanlar eklenebilir, örneğin extension method ile request'ten IP alınabilir.
                 };
 
-                // Optionally, skip logging view (HTML) content if disabled.
-                if (!_options.Value.LogViewContent && logEntry.Url.EndsWith(".html"))
+                // Eğer view (HTML) içeriği loglanmayacaksa filtreleme yapılabilir.
+                if (!_options.Value.LogViewContent && logEntry.Url.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Skip or mask view content
                     logEntry.ResponseBody = "[HTML content not logged]";
                 }
 
-                await _logger.LogAsync(logEntry);
+                await _logger.LogAsync(logEntry, cancellationToken);
             }
         }
     }
 
-
 }
-
