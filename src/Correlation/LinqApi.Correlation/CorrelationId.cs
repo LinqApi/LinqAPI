@@ -16,6 +16,7 @@ namespace LinqApi.Correlation
 
         public static CorrelationId Create(byte env, byte sourceType)
         {
+
             var guidBytes = Guid.NewGuid().ToByteArray();
             guidBytes[0] = env;
             guidBytes[1] = sourceType;
