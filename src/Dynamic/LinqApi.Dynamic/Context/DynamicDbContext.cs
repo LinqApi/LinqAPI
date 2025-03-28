@@ -1,4 +1,4 @@
-﻿using LinqApi.Model;
+using LinqApi.Model;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
 
@@ -63,32 +63,7 @@ namespace LinqApi.Dynamic.Context
                     builder.Property("Id").HasColumnName(primaryKeyColumnName);
                 }
 
-                //// Foreign Key Tanımlama
-                //if (_columnSchemas.TryGetValue(entityKey, out var columnDefs))
-                //{
-                //    foreach (var property in builder.Metadata.GetProperties().ToList())
-                //    {
-                //        if (columnDefs.TryGetValue(property.Name, out var colDef))
-                //        {
-                //            if (!string.IsNullOrWhiteSpace(colDef.ReferencedTable))
-                //            {
-                //                // Foreign key için şema normalizasyonu yapıyoruz.
-                //                string normalizedRefSchema = colDef.ReferencedSchema.Equals("dbo", StringComparison.OrdinalIgnoreCase) ? "" : colDef.ReferencedSchema;
-                //                string referencedEntityKey = string.IsNullOrWhiteSpace(normalizedRefSchema)
-                //                    ? colDef.ReferencedTable
-                //                    : $"{normalizedRefSchema}.{colDef.ReferencedTable}";
-
-                //                if (_dynamicEntities.TryGetValue(referencedEntityKey, out Type referencedEntityType))
-                //                {
-                //                    builder.HasOne(referencedEntityType)
-                //                        .WithMany()
-                //                        .HasForeignKey(property.Name)
-                //                        .HasPrincipalKey("Id");
-                //                }
-                //            }
-                //        }
-                //    }
-                //}
+                
             }
         }
 

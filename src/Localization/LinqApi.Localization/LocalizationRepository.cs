@@ -13,12 +13,12 @@ namespace LinqApi.Repository
             _dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<LocalizationEntity>> GetAllAsync(CancellationToken cancellationToken)
+        public async Task<IEnumerable<LinqLocalizationEntity>> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _dbContext.LocalizationEntries.ToListAsync(cancellationToken);
         }
 
-        public async Task<LocalizationEntity> UpsertAsync(LocalizationEntity entity, CancellationToken cancellationToken)
+        public async Task<LinqLocalizationEntity> UpsertAsync(LinqLocalizationEntity entity, CancellationToken cancellationToken)
         {
             // Simple upsert logic. Extend with proper key checks as needed.
             var existing = await _dbContext.LocalizationEntries.FindAsync(entity.Id);

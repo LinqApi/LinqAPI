@@ -63,25 +63,25 @@ namespace LinqApi.Logging
             //logEntity.Property(x => x.Id).HasMaxLength(50).IsRequired();
             logEntity.Property(x => x.DurationMs).IsRequired();
             logEntity.Property(x => x.CorrelationId).IsRequired();
-            logEntity.Property(x => x.Exception).HasColumnType("nvarchar(max)");
-            logEntity.Property(x => x.ParentCorrelationId).HasColumnType("varchar(50)");
+            logEntity.Property(x => x.Exception).HasColumnType("nvarchar(max)").IsRequired(false);
+            logEntity.Property(x => x.ParentCorrelationId).HasColumnType("varchar(50)").IsRequired(false);
             logEntity.Property(x => x.IsException).IsRequired();
             logEntity.Property(x => x.IsInternal).IsRequired();
             logEntity.Property(x => x.LogType).IsRequired();
 
             // Gölgeli özellikler
             logEntity.Property<string>("ParentCorrelationId").HasMaxLength(100);
-            logEntity.Property<string>("Url").HasMaxLength(500);
-            logEntity.Property<string>("Method").HasMaxLength(50);
-            logEntity.Property<string>("RequestBody").HasColumnType("nvarchar(max)");
-            logEntity.Property<string>("ResponseBody").HasColumnType("nvarchar(max)");
-            logEntity.Property<string>("Controller").HasMaxLength(100);
-            logEntity.Property<string>("Action").HasMaxLength(100);
-            logEntity.Property<string>("UserAgent").HasMaxLength(500);
-            logEntity.Property<string>("ClientIP").HasMaxLength(50);
-            logEntity.Property<string>("QueueName").HasMaxLength(100);
-            logEntity.Property<string>("OperationName").HasMaxLength(100);
-            logEntity.Property<string>("AdditionalData").HasMaxLength(500);
+            logEntity.Property<string>("Url").HasMaxLength(500).IsRequired(false);
+            logEntity.Property<string>("Method").HasMaxLength(50).IsRequired(false);
+            logEntity.Property<string>("RequestBody").HasColumnType("nvarchar(MAX)").IsRequired(false);
+            logEntity.Property<string>("ResponseBody").HasColumnType("nvarchar(MAX)").IsRequired(false);
+            logEntity.Property<string>("Controller").HasMaxLength(100).IsRequired(false);
+            logEntity.Property<string>("Action").HasMaxLength(100).IsRequired(false);
+            logEntity.Property<string>("UserAgent").HasMaxLength(500).IsRequired(false);
+            logEntity.Property<string>("ClientIP").HasMaxLength(50).IsRequired(false);
+            logEntity.Property<string>("QueueName").HasMaxLength(100).IsRequired(false);
+            logEntity.Property<string>("OperationName").HasMaxLength(100).IsRequired(false);
+            logEntity.Property<string>("AdditionalData").HasMaxLength(500).IsRequired(false);
 
             logEntity.Property(x => x.CreatedAt).IsRequired();
 
@@ -93,12 +93,18 @@ namespace LinqApi.Logging
 
             // TPH yapılandırması: Discriminator "LogType"
             logEntity.HasDiscriminator<string>("LogType")
-    .HasValue<LinqEventLog>("Event")
-    .HasValue<LinqHttpCallLog>("HttpCall")
-    .HasValue<LinqSqlLog>("Database")
-    .HasValue<LinqSqlErrorLog>("DatabaseError")
-    .HasValue<LinqConsumeErrorLog>("ConsumeError")
-    .HasValue<LinqPublishErrorLog>("PublishError");
+     .HasValue<LinqEventLog>("Event")
+     .HasValue<InboundHttpCallLog>("HttpCallInbound")
+     .HasValue<OutboundHttpCallLog>("HttpCallOutbound")
+     .HasValue<OutboundHttpCallError>("HttpCallOutboundError")
+     .HasValue<HttpCallInboundError>("HttpCallInboundError")
+     .HasValue<LinqSqlLog>("Database")
+     .HasValue<LinqSqlErrorLog>("DatabaseError")
+     .HasValue<LinqConsumeErrorLog>("ConsumeError")
+     .HasValue<LinqPublishErrorLog>("PublishError");
+
+            logEntity.Property(x => x.CreatedAt).IsRequired();
+            logEntity.Property(x => x.Epoch).IsRequired();
         }
     }
 }

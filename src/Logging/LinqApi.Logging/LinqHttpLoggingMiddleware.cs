@@ -1,6 +1,7 @@
 
 using LinqApi.Correlation;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;
@@ -8,27 +9,36 @@ using System.Text;
 
 namespace LinqApi.Logging
 {
-    public class LinqHttpLoggingMiddleware(
-        RequestDelegate next,
-        ILinqPayloadMasker masker,
-        ICorrelationIdGenerator correlationGenerator,
-        IOptions<LinqLoggingOptions> options,
-        IServiceScopeFactory scopeFactory)
+    public class LinqHttpLoggingMiddleware
     {
-        private readonly RequestDelegate _next = next;
-        private readonly ILinqPayloadMasker _masker = masker;
-        private readonly ICorrelationIdGenerator _correlationGenerator = correlationGenerator;
-        private readonly IOptions<LinqLoggingOptions> _options = options;
-        private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
+        private readonly RequestDelegate _next;
+        private readonly ILinqPayloadMasker _masker;
+        private readonly ICorrelationIdGenerator _correlationGenerator;
+        private readonly IOptions<LinqLoggingOptions> _options;
+        private readonly IServiceScopeFactory _scopeFactory;
+
+        public LinqHttpLoggingMiddleware(
+            RequestDelegate next,
+            ILinqPayloadMasker masker,
+            ICorrelationIdGenerator correlationGenerator,
+            IOptions<LinqLoggingOptions> options,
+            IServiceScopeFactory scopeFactory)
+        {
+            _next = next;
+            _masker = masker;
+            _correlationGenerator = correlationGenerator;
+            _options = options;
+            _scopeFactory = scopeFactory;
+        }
 
         public async Task InvokeAsync(HttpContext context)
         {
             var sw = Stopwatch.StartNew();
             string reqBody = string.Empty;
 
-            // Enable buffering to read the request body
+            // Enable buffering to read the request body.
             context.Request.EnableBuffering();
-            if (context.Request.ContentLength > 0)
+            if (context.Request.ContentLength.GetValueOrDefault() > 0)
             {
                 using (var reader = new StreamReader(context.Request.Body, Encoding.UTF8, leaveOpen: true))
                 {
@@ -37,6 +47,7 @@ namespace LinqApi.Logging
                 }
             }
 
+            // Correlation ID ayarı.
             string correlationHeader = _options.Value.CorrelationHeaderName;
             string headerCorrelation = context.Request.Headers[correlationHeader].FirstOrDefault();
             if (string.IsNullOrEmpty(headerCorrelation))
@@ -45,11 +56,17 @@ namespace LinqApi.Logging
                                     ?? _correlationGenerator.Generate(1, 1).ToString();
                 context.Request.Headers[correlationHeader] = headerCorrelation;
             }
-
             if (CorrelationContext.Current == null)
                 CorrelationContext.EnsureCorrelation(_correlationGenerator);
 
-            // Replace the response body stream to capture the response
+            // Ek route verilerini al (Controller, Action, vb.)
+            var routingFeature = context.Features.Get<IRoutingFeature>();
+            var routeData = routingFeature?.RouteData;
+
+            string controller = routeData?.Values["controller"]?.ToString() ?? string.Empty;
+            string action = routeData?.Values["action"]?.ToString() ?? string.Empty;
+
+            // Response body'yi yakalamak için stream'i değiştir.
             var originalBodyStream = context.Response.Body;
             using var responseBodyStream = new MemoryStream();
             context.Response.Body = responseBodyStream;
@@ -71,19 +88,23 @@ namespace LinqApi.Logging
                 string resBody = await new StreamReader(context.Response.Body).ReadToEndAsync();
                 context.Response.Body.Seek(0, SeekOrigin.Begin);
 
+                // Log entry oluştururken null değerler boş string ile değiştirilir.
                 var logEntry = new LinqHttpCallLog
                 {
-                    ParentCorrelationId = headerCorrelation,
+                    ParentCorrelationId = headerCorrelation ?? string.Empty,
                     Url = $"{context.Request.Scheme}://{context.Request.Host}{context.Request.Path}{context.Request.QueryString}",
-                    Method = context.Request.Method,
-                    RequestBody = _masker.MaskRequest(reqBody),
-                    ResponseBody = _masker.MaskResponse(resBody),
+                    Method = context.Request.Method ?? string.Empty,
+                    RequestBody = _masker.MaskRequest(reqBody) ?? string.Empty,
+                    ResponseBody = _masker.MaskResponse(resBody) ?? string.Empty,
                     DurationMs = sw.ElapsedMilliseconds,
-                    Exception = exception?.ToString(),
+                    Exception = exception?.ToString() ?? string.Empty,
                     IsException = exception != null,
                     CreatedAt = DateTime.UtcNow,
-                    IsInternal = false,
-                    UserAgent = context.Request.Headers["User-Agent"].ToString()
+                    // Inbound çağrı için CallType ayarlanabilir.
+                    LogType = "HttpCallInbound", // Ekstra property; LinqHttpCallLog'a ekleyebilirsiniz.
+                    UserAgent = context.Request.Headers["User-Agent"].ToString() ?? string.Empty,
+                    Controller = controller,
+                    Action = action
                 };
 
                 if (!_options.Value.LogViewContent && logEntry.Url.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
@@ -91,7 +112,7 @@ namespace LinqApi.Logging
                     logEntry.ResponseBody = "[HTML content not logged]";
                 }
 
-                // Create a new scope to resolve ILinqLogger
+                // Yeni scope ile ILinqLogger çözümlemesi.
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var logger = scope.ServiceProvider.GetRequiredService<ILinqLogger>();
@@ -102,6 +123,7 @@ namespace LinqApi.Logging
             }
         }
     }
+
 
 
 }

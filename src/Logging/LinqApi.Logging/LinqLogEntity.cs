@@ -1,4 +1,5 @@
 using LinqApi.Correlation;
+using LinqApi.Logging;
 
 namespace LinqApi.Core.Log
 {
@@ -20,6 +21,16 @@ namespace LinqApi.Core.Log
 
         // Discriminator olarak kullanılacak; her türetilmiş sınıf override eder.
         public virtual string LogType { get; set; }
+    }
+
+    public class InboundHttpCallLog : LinqHttpCallLog
+    {
+        public override string LogType => "InboundHttpCallLog";
+    }
+
+    public class OutboundHttpCallLog : LinqHttpCallLog
+    {
+        public override string LogType => "OutboundHttpCallLog";
     }
 }
 

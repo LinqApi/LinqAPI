@@ -56,7 +56,7 @@ namespace LinqApi.Logging
         /// <summary>
         /// Gets or sets the log type. Defaults to "HttpCall".
         /// </summary>
-        public override string LogType { get; set; } = "HttpCall";
+        public override string LogType { get; set; } = "HttpCallInbound";
     }
 }
 

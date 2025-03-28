@@ -68,10 +68,23 @@ namespace LinqApi.Controller
             return props;
         }
 
-        private static string GetReadableTypeName(Type type)
+        public static string GetReadableTypeName(Type type)
         {
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
-                return $"{Nullable.GetUnderlyingType(type)?.Name}?";
+            if (type.IsGenericType)
+            {
+                var genericTypeDefinition = type.GetGenericTypeDefinition();
+                var genericArgs = type.GetGenericArguments();
+                // Generic tipin adını alıp "`1" kısmını kaldırıyoruz.
+                var typeName = genericTypeDefinition.Name;
+                var backtickIndex = typeName.IndexOf('`');
+                if (backtickIndex > 0)
+                {
+                    typeName = typeName.Substring(0, backtickIndex);
+                }
+                // Generic argümanları da okunabilir hale getiriyoruz.
+                var genericArgNames = string.Join(", ", genericArgs.Select(t => GetReadableTypeName(t)));
+                return $"{typeName}<{genericArgNames}>";
+            }
             return type.Name;
         }
     }

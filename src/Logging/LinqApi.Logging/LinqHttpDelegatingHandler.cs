@@ -4,117 +4,113 @@ using Microsoft.Extensions.Options;
 
 using System.Diagnostics;
 
-/// <summary>
-/// A delegating handler that logs outbound HTTP requests and their corresponding responses,
-/// enriched with correlation ID and payload masking support.
-/// This is useful for observability, diagnostics, and request tracing across distributed services.
-/// </summary>
-public class LinqHttpDelegatingHandler : DelegatingHandler
+namespace LinqApi.Logging
 {
-    private readonly ILinqLogger _logger;
-    private readonly ILinqPayloadMasker _masker;
-    private readonly ICorrelationIdGenerator _correlationGenerator;
-    private readonly IOptions<LinqLoggingOptions> _options;
+
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="LinqHttpDelegatingHandler"/> class.
+    /// A delegating handler that logs outbound HTTP requests and their corresponding responses,
+    /// enriched with correlation ID and payload masking support.
+    /// This is useful for observability, diagnostics, and request tracing across distributed services.
     /// </summary>
-    /// <param name="logger">The logging service for persisting HTTP logs.</param>
-    /// <param name="masker">Payload masker used to obfuscate sensitive request/response data.</param>
-    /// <param name="correlationGenerator">Correlation ID generator for request tracing.</param>
-    /// <param name="options">Logging configuration options.</param>
-    public LinqHttpDelegatingHandler(
-        ILinqLogger logger,
-        ILinqPayloadMasker masker,
-        ICorrelationIdGenerator correlationGenerator,
-        IOptions<LinqLoggingOptions> options)
+    public class LinqHttpDelegatingHandler : DelegatingHandler
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _masker = masker ?? throw new ArgumentNullException(nameof(masker));
-        _correlationGenerator = correlationGenerator ?? throw new ArgumentNullException(nameof(correlationGenerator));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-    }
+        private readonly ILinqLogger _logger;
+        private readonly ILinqPayloadMasker _masker;
+        private readonly ICorrelationIdGenerator _correlationGenerator;
+        private readonly IOptions<LinqLoggingOptions> _options;
 
-    /// <summary>
-    /// Sends an HTTP request asynchronously and logs the request/response details for observability.
-    /// </summary>
-    /// <param name="request">The outgoing HTTP request message.</param>
-    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
-    /// <returns>The HTTP response message.</returns>
-    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        var sw = Stopwatch.StartNew();
-
-        string reqBody = request.Content != null ? await request.Content.ReadAsStringAsync(cancellationToken) : null;
-        string resBody = null;
-        Exception ex = null;
-
-        // Correlation header configuration
-        string correlationHeader = _options.Value.CorrelationHeaderName;
-        string headerCorrelation = null;
-
-        if (request.Headers.Contains(correlationHeader))
+        public LinqHttpDelegatingHandler(
+            ILinqLogger logger,
+            ILinqPayloadMasker masker,
+            ICorrelationIdGenerator correlationGenerator,
+            IOptions<LinqLoggingOptions> options)
         {
-            headerCorrelation = request.Headers.GetValues(correlationHeader).FirstOrDefault();
-        }
-        else
-        {
-            headerCorrelation = CorrelationContext.Current?.ParentId.ToString()
-                ?? _correlationGenerator.Generate(1, 1).ToString();
-            request.Headers.Add(correlationHeader, headerCorrelation);
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _masker = masker ?? throw new ArgumentNullException(nameof(masker));
+            _correlationGenerator = correlationGenerator ?? throw new ArgumentNullException(nameof(correlationGenerator));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
-        // Ensure correlation context exists
-        if (CorrelationContext.Current == null)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            CorrelationContext.EnsureCorrelation(_correlationGenerator);
-        }
+            var sw = Stopwatch.StartNew();
+            string reqBody = request.Content != null ? await request.Content.ReadAsStringAsync(cancellationToken) : string.Empty;
+            string resBody = string.Empty;
+            Exception ex = null;
 
-        HttpResponseMessage response = null;
+            // Correlation header ayarı.
+            string correlationHeader = _options.Value.CorrelationHeaderName;
+            string headerCorrelation = request.Headers.Contains(correlationHeader)
+                ? request.Headers.GetValues(correlationHeader).FirstOrDefault() ?? string.Empty
+                : (_correlationGenerator.Generate(1, 1).ToString() ?? string.Empty);
 
-        try
-        {
-            response = await base.SendAsync(request, cancellationToken);
-
-            if (response.Content != null)
+            if (!request.Headers.Contains(correlationHeader))
             {
-                resBody = await response.Content.ReadAsStringAsync(cancellationToken);
+                request.Headers.Add(correlationHeader, headerCorrelation);
             }
 
-            return response;
-        }
-        catch (Exception e)
-        {
-            ex = e;
-            throw;
-        }
-        finally
-        {
-            sw.Stop();
-
-            var logEntry = new LinqHttpCallLog
+            // Ensure correlation context exists.
+            if (CorrelationContext.Current == null)
             {
-                ParentCorrelationId = headerCorrelation,
-                Url = request.RequestUri?.ToString(),
-                Method = request.Method.Method,
-                RequestBody = _masker.MaskRequest(reqBody),
-                ResponseBody = _masker.MaskResponse(resBody),
-                DurationMs = sw.ElapsedMilliseconds,
-                Exception = ex?.ToString(),
-                IsException = ex != null,
-                CreatedAt = DateTime.UtcNow,
-                IsInternal = false,
-                UserAgent = request.Headers.UserAgent?.ToString() ?? string.Empty
-            };
-
-            // Filter view content if configured
-            if (!_options.Value.LogViewContent &&
-                logEntry.Url?.EndsWith(".html", StringComparison.OrdinalIgnoreCase) == true)
-            {
-                logEntry.ResponseBody = "[HTML content not logged]";
+                CorrelationContext.EnsureCorrelation(_correlationGenerator);
             }
 
-            await _logger.LogAsync(logEntry, cancellationToken);
+            HttpResponseMessage response = null;
+            try
+            {
+                response = await base.SendAsync(request, cancellationToken);
+
+                if (response.Content != null)
+                {
+                    resBody = await response.Content.ReadAsStringAsync(cancellationToken);
+                }
+                return response;
+            }
+            catch (Exception e)
+            {
+                ex = e;
+
+
+                throw;
+            }
+            finally
+            {
+                sw.Stop();
+                OutboundHttpCallError logEntry = null;
+                var url = request.RequestUri?.ToString() ?? string.Empty;
+                var maskedRequest = _masker.MaskRequest(reqBody) ?? string.Empty;
+                string maskedResponse = _masker.MaskResponse(resBody) ?? string.Empty;
+                if (ex!= null)
+                {
+                    
+                    logEntry = new OutboundHttpCallError
+                    {
+                        ParentCorrelationId = headerCorrelation,
+                        Url = request.RequestUri?.ToString() ?? string.Empty,
+                        Method = request.Method.Method ?? string.Empty,
+                        RequestBody = maskedRequest,
+                        ResponseBody = maskedResponse,
+                        DurationMs = sw.ElapsedMilliseconds,
+                        Exception = ex?.ToString() ?? string.Empty,
+                        IsException = ex != null,
+                        CreatedAt = DateTime.UtcNow,
+                        LogType = "OutboundHttpCallError", // Outbound çağrılar için
+                        UserAgent = request.Headers.UserAgent?.ToString() ?? string.Empty,
+                        Controller = string.Empty, // Outbound çağrılarda controller/action yoktur.
+                        Action = string.Empty
+                    };
+                }
+                
+
+                if (!_options.Value.LogViewContent &&
+                    url.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
+                {
+                    logEntry.ResponseBody = "[HTML content not logged]";
+                }
+
+                await _logger.LogAsync(logEntry, cancellationToken);
+            }
         }
     }
 }

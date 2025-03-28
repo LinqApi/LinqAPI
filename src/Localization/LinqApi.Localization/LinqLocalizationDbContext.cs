@@ -6,54 +6,76 @@ namespace LinqApi.Localization
 
 
     /// <summary>
-    /// Represents the Entity Framework Core DbContext for localization entries.
-    /// This context uses Table-per-Hierarchy (TPH) mapping with a discriminator column "LocalizationType"
-    /// to differentiate between various localization entities.
+    /// DbContext for localization entries, including localization entities and supported cultures.
+    /// Uses the "localization" schema.
     /// </summary>
     public class LinqLocalizationDbContext : DbContext
     {
-        private readonly string _schema = "localization";
+        private readonly string _schema;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="LinqLocalizationDbContext"/> class.
-        /// </summary>
-        /// <param name="options">The options to be used by the DbContext.</param>
-        public LinqLocalizationDbContext(DbContextOptions<LinqLocalizationDbContext> options)
+        public LinqLocalizationDbContext(DbContextOptions<LinqLocalizationDbContext> options, string schema)
             : base(options)
         {
+            _schema = schema;
         }
+
 
         /// <summary>
         /// Gets or sets the localization entries.
-        /// All entities inheriting from <see cref="LocalizationEntity"/> are stored in this set.
         /// </summary>
-        public DbSet<LocalizationEntity> LocalizationEntries { get; set; }
+        public DbSet<LinqLocalizationEntity> LocalizationEntries { get; set; }
 
         /// <summary>
-        /// Configures the model for the localization DbContext.
-        /// Uses a discriminator column "LocalizationType" to differentiate between localization types.
-        /// Seeds sample localization entries for demonstration.
+        /// Gets or sets the supported cultures.
         /// </summary>
-        /// <param name="modelBuilder">The model builder used to configure entity mappings.</param>
+        public DbSet<Culture> Cultures { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Map all LocalizationEntity-derived types to a single table "LocalizationEntries" in the "localization" schema.
-            modelBuilder.Entity<LocalizationEntity>(entity =>
+            // Configure Culture entity
+            modelBuilder.Entity<Culture>(entity =>
+            {
+                entity.ToTable("Cultures", _schema);
+
+                // Use the inherited Id as primary key.
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Code)
+                      .HasMaxLength(10)
+                      .IsRequired();
+
+                entity.Property(e => e.DisplayName)
+                      .HasMaxLength(100)
+                      .IsRequired();
+
+                // Seed sample cultures.
+                entity.HasData(
+                    new Culture { Id = 1, Code = "tr-TR", DisplayName = "Türkçe (Türkiye)" },
+                    new Culture { Id = 2, Code = "en-US", DisplayName = "English (United States)" },
+                    new Culture { Id = 3, Code = "de-DE", DisplayName = "Deutsch (Deutschland)" }
+                );
+            });
+
+            // Configure LocalizationEntity and its derived types
+            modelBuilder.Entity<LinqLocalizationEntity>(entity =>
             {
                 entity.ToTable("LocalizationEntries", _schema);
-                // Set primary key (inherited from BaseEntity<long>)
                 entity.HasKey(e => e.Id);
-                // Common properties
                 entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
                 entity.Property(e => e.Description).HasMaxLength(500);
-                entity.Property(e => e.Culture).HasMaxLength(10).IsRequired();
 
-                // Use a discriminator to differentiate localization types.
+                entity.HasOne(e => e.Culture)
+            .WithMany(c => c.LocalizationEntities)
+            .HasForeignKey(e => e.CultureId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+                // Configure TPH discriminator if needed.
                 entity.HasDiscriminator<string>("LocalizationType")
                       .HasValue<LinqHomePageLocalization>("HomePage");
             });
         }
     }
+
 }

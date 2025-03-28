@@ -8,15 +8,15 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDynamicLinqApi("api", "Data Source=.\\SQLEXPRESS;Database=PosOnlDb;Trusted_Connection=True;TrustServerCertificate=Yes");
+builder.Services.AddDynamicLinqApi("api", "Data Source=.\\SQLEXPRESS;Database=ppp4;Trusted_Connection=True;TrustServerCertificate=Yes");
 
 
 
-// MVC'yi view desteðiyle birlikte ekleyin
+// MVC'yi view desteÄŸiyle birlikte ekleyin
 builder.Services.AddControllersWithViews()
     .ConfigureApplicationPartManager(apm =>
     {
-        // LinqApi içerisindeki dinamik controller'larý ekleyelim:
+        // LinqApi iÃ§erisindeki dinamik controller'larÄ± ekleyelim:
         var dynamicProvider = builder.Services.BuildServiceProvider().GetRequiredService<DynamicLinqApiControllerFeatureProvider>();
         apm.FeatureProviders.Add(dynamicProvider);
 
@@ -33,12 +33,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Statik dosyalarý sunmak (CSS, JS, img vs.)
+// Statik dosyalarÄ± sunmak (CSS, JS, img vs.)
 app.UseStaticFiles();
 
 app.UseRouting();
 
-// Varsayýlan route'u ayarlýyoruz, örneðin MSController'daki Index action'ý çalýþacak.
+// VarsayÄ±lan route'u ayarlÄ±yoruz, Ã¶rneÄŸin MSController'daki Index action'Ä± Ã§alÄ±ÅŸacak.
 //app.MapControllerRoute(
 //    name: "default",
 //    pattern: "{controller=LinqMvc}/{action=Index}/{id?}");

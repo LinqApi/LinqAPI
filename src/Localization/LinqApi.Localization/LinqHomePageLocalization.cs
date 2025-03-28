@@ -5,7 +5,7 @@ namespace LinqApi.Localization
     /// <summary>
     /// A concrete localization entity representing homepage localization.
     /// </summary>
-    public class LinqHomePageLocalization : LocalizationEntity
+    public class LinqHomePageLocalization : LinqLocalizationEntity
     {
         // You can add additional properties specific to the homepage localization here.
     }

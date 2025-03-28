@@ -14,7 +14,7 @@ namespace LinqApi.Localization.Extensions
     /// This includes in-memory caching, a database-backed localization repository, and a hosted service
     /// to seed or update localization entries on application startup.
     /// </summary>
-    public static class LinqLocalizationServiceExtensions
+    public static class LinqExtensions
     {
         /// <summary>
         /// Registers the default localization services used by LinqApi.
@@ -32,7 +32,7 @@ namespace LinqApi.Localization.Extensions
 
             // Register a default in-memory localization provider.
             // This provider will first check the cache and then the repository.
-            services.AddSingleton<ILocalizationProvider, DefaultLinqLocalizationProvider>();
+            services.AddSingleton<ILocalizationProvider, DefaultLocalizationProvider>();
 
             // Register a hosted service that seeds/updates localization entries from the database on startup.
             services.AddHostedService<LocalizationSeederHostedService>();
@@ -40,7 +40,7 @@ namespace LinqApi.Localization.Extensions
             // Bind configuration options if necessary.
             services.Configure<LinqLocalizationOptions>(options =>
             {
-                options.DefaultCulture = "en-US";
+                options.DefaultCulture = "tr-TR";
                 options.EnableCaching = true;
             });
             return services;
@@ -49,7 +49,6 @@ namespace LinqApi.Localization.Extensions
         /// <summary>
         /// Provides extension methods for registering repository services based on a DbContext.
         /// </summary>
-
         /// <summary>
         /// Scans the specified DbContext for all DbSet properties and registers repository services
         /// for each entity type that is derived from <typeparamref name="TEntityBase"/>.
@@ -95,6 +94,5 @@ namespace LinqApi.Localization.Extensions
 
             return services;
         }
-
     }
 }

@@ -5,22 +5,45 @@ namespace LinqApi.Localization
 
     namespace LinqApi.Localization
     {
-        public abstract class LocalizationEntity : BaseEntity<long>
+        /// <summary>
+        /// Represents a localized entity with mandatory Name and Description.
+        /// The localization keys are auto-generated as "KeyPrefix.Name" and "KeyPrefix.Description".
+        /// </summary>
+        public abstract class LinqLocalizationEntity : BaseEntity<long>
         {
-            // Her entity için zorunlu Name ve Description alanı,
-            // bunlar otomatik olarak "KeyPrefix.Name" ve "KeyPrefix.Description" şeklinde resx'ten çekilebilir.
             [Required, MaxLength(100)]
             public string Name { get; set; }
 
             [MaxLength(500)]
             public string Description { get; set; }
-            public string Culture { get;  set; }
 
             /// <summary>
-            /// Bu entity'ye ait yerelleştirme key prefix'ini döndürür.
-            /// Örneğin, PosService için "PosService.", PosCompany için "PosCompany." gibi.
+            /// Gets or sets the foreign key referencing the culture for this localization entry.
+            /// </summary>
+            public short CultureId { get; set; }
+
+            /// <summary>
+            /// Navigation property for the associated culture.
+            /// </summary>
+            public Culture Culture { get; set; }
+
+            /// <summary>
+            /// Returns the localization key prefix for this entity.
+            /// For example, for PosService it might return "PosService.", for PosCompany "PosCompany.".
             /// </summary>
             public virtual string GetLocalizationKeyPrefix() => GetType().Name + ".";
         }
+
+        public abstract class BaseViewEntity : LinqLocalizationEntity
+        {
+            public string Slug { get; set; }
+            public string Title { get; set; }
+            public string MetaDescription { get; set; }
+            public string MetaKeywords { get; set; }
+            public DateTime PublishedDate { get; set; }
+            public bool IsPublished { get; set; } = true;
+        }
     }
+
+
 }
