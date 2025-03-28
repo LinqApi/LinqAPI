@@ -3,87 +3,12 @@ namespace LinqApi.Localization
     using global::LinqApi.Repository;
     using Microsoft.EntityFrameworkCore;
     using System.Collections.Concurrent;
-    using System.Text.RegularExpressions;
 
     namespace LinqApi.Localization.Extensions
     {
-        public static class SlugHelper
-        {
-            public static string Slugify(string text)
-            {
-                if (string.IsNullOrWhiteSpace(text)) return "";
 
-                var replacements = new Dictionary<char, string>
-                {
-                    ['ç'] = "c",
-                    ['Ç'] = "c",
-                    ['ğ'] = "g",
-                    ['Ğ'] = "g",
-                    ['ı'] = "i",
-                    ['İ'] = "i",
-                    ['ö'] = "o",
-                    ['Ö'] = "o",
-                    ['ş'] = "s",
-                    ['Ş'] = "s",
-                    ['ü'] = "u",
-                    ['Ü'] = "u"
-                };
 
-                text = string.Concat(text.Select(c => replacements.ContainsKey(c) ? replacements[c] : c.ToString()));
-                text = Regex.Replace(text.ToLowerInvariant(), @"[^a-z0-9\s-]", "");
-                text = Regex.Replace(text, @"\s+", "-").Trim('-');
 
-                return text;
-            }
-
-            public static string SlugifyWithId(string text)
-            {
-                var slug = Slugify(text);
-                var shortGuid = Guid.NewGuid().ToString("N")[..6]; // 6 karakterli suffix
-                return $"{slug}-{shortGuid}";
-            }
-        }
-
-        ///// <summary>
-        ///// Represents the base entity for all localization entries.
-        ///// Inherits from BaseEntity&lt;long&gt;.
-        ///// </summary>
-        //public abstract class LocalizationEntity : BaseEntity<long>
-        //{
-        //    /// <summary>
-        //    /// Gets or sets the localization name.
-        //    /// This value is required and limited to 100 characters.
-        //    /// </summary>
-        //    [Required, MaxLength(100)]
-        //    public string Name { get; set; }
-
-        //    /// <summary>
-        //    /// Gets or sets the localization description.
-        //    /// This value is optional and limited to 500 characters.
-        //    /// </summary>
-        //    [MaxLength(500)]
-        //    public string Description { get; set; }
-
-        //    /// <summary>
-        //    /// Gets or sets the culture code (e.g., "tr-TR", "en-US", "de-DE").
-        //    /// </summary>
-        //    [Required, MaxLength(10)]
-        //    public string Culture { get; set; }
-
-        //    /// <summary>
-        //    /// Returns the localization key prefix used for resource lookup.
-        //    /// By default, it returns the type name plus a dot (e.g. "LinqHomePageLocalization.").
-        //    /// </summary>
-        //    public virtual string GetLocalizationKeyPrefix() => GetType().Name + ".";
-        //}
-
-        /// <summary>
-        /// A concrete localization entity representing homepage localization.
-        /// </summary>
-        public class LinqHomePageLocalization : LocalizationEntity
-        {
-            // You can add additional properties specific to the homepage localization here.
-        }
 
         /// <summary>
         /// Represents the Entity Framework Core DbContext for localization entries.

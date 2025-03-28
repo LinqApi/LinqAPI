@@ -1,4 +1,3 @@
-using LinqApi.Core;
 using LinqApi.Dynamic;
 using LinqApi.Dynamic.Assembly;
 using LinqApi.Dynamic.Configuration;

@@ -1,9 +1,10 @@
 using LinqApi.Localization.LinqApi.Localization;
-using LinqApi.Localization.LinqApi.Localization.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace LinqApi.Localization
 {
+
+
     /// <summary>
     /// Represents the Entity Framework Core DbContext for localization entries.
     /// This context uses Table-per-Hierarchy (TPH) mapping with a discriminator column "LocalizationType"
@@ -52,8 +53,6 @@ namespace LinqApi.Localization
                 // Use a discriminator to differentiate localization types.
                 entity.HasDiscriminator<string>("LocalizationType")
                       .HasValue<LinqHomePageLocalization>("HomePage");
-
-              
             });
         }
     }
