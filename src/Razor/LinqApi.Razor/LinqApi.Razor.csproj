@@ -17,7 +17,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\Core\LinqApi\LinqApi.csproj" />
+	  <ProjectReference Include="..\..\Dynamic\LinqApi.Dynamic\LinqApi.Dynamic.csproj" />
 	</ItemGroup>
 
 </Project>

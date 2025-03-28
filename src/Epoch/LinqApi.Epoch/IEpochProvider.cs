@@ -12,7 +12,4 @@ namespace LinqApi.Epoch
         /// <returns>Hesaplanan epoch değeri.</returns>
         long GetEpoch(DateTime createdAt);
     }
-
-
-   
 }

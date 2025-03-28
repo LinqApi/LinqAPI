@@ -1,5 +1,3 @@
-using LinqApi.Model;
-using System.Linq.Dynamic.Core;
 
 namespace LinqApi.Controller
 {
@@ -9,6 +7,8 @@ namespace LinqApi.Controller
     using System;
     using LinqApi.Repository;
     using System.Reflection;
+    using LinqApi.Core;
+    using System.Collections.Concurrent;
 
     [ApiController]
     [Route("api/[controller]")]
@@ -42,45 +42,36 @@ namespace LinqApi.Controller
     /// <summary>
     /// Provides helper methods to generate a property schema for entity types.
     /// </summary>
-    public static class EntitySchemaHelper
+    public static class ViewModelSchemaHelper
     {
-        /// <summary>
-        /// Generates a list of property descriptors for the specified entity type.
-        /// Each descriptor contains the property name and a readable type name.
-        /// </summary>
-        /// <param name="entityType">The type of the entity.</param>
-        /// <returns>A list of anonymous objects with Name and Type properties.</returns>
-        public static List<object> GetPropertiesSchema(Type entityType)
+        private static readonly ConcurrentDictionary<string, List<object>> _schemaCache = new();
+
+        public static List<object> GetSchema(Type type)
         {
-            return entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            var cacheKey = $"Schema_{type.FullName}";
+            if (_schemaCache.TryGetValue(cacheKey, out var cached))
+                return cached;
+
+            var instance = Activator.CreateInstance(type);
+            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Select(p => new
                 {
                     Name = p.Name,
-                    Type = GetReadableTypeName(p.PropertyType)
+                    Type = GetReadableTypeName(p.PropertyType),
+                    Default = p.GetValue(instance),
+                    IsRequired = p.GetCustomAttributes().Any(a => a.GetType().Name.Contains("Required"))
                 })
                 .Cast<object>()
                 .ToList();
+
+            _schemaCache.TryAdd(cacheKey, props);
+            return props;
         }
 
-        /// <summary>
-        /// Returns a human-friendly name for a given type.
-        /// For example, nullable types will have a trailing "?".
-        /// </summary>
-        /// <param name="type">The type to process.</param>
-        /// <returns>A string representing the type name.</returns>
         private static string GetReadableTypeName(Type type)
         {
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
-            {
                 return $"{Nullable.GetUnderlyingType(type)?.Name}?";
-            }
-
-            if (type.IsGenericType)
-            {
-                var genericArguments = type.GetGenericArguments().Select(GetReadableTypeName);
-                return $"{type.Name.Split('`')[0]}<{string.Join(", ", genericArguments)}>";
-            }
-
             return type.Name;
         }
     }

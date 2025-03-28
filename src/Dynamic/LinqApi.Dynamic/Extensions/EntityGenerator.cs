@@ -1,7 +1,7 @@
-﻿using LinqApi.Dynamic.Assembly;
-using LinqApi.Model;
+using LinqApi.Dynamic.Assembly;
 using System.Reflection.Emit;
 using System.Reflection;
+using LinqApi.Core;
 
 namespace LinqApi.Dynamic.Extensions
 {

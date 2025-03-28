@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LinqApi.Logging
 {
-  
     public class LinqLoggingDbContext : DbContext
     {
         private readonly string _schema;
@@ -61,9 +60,6 @@ namespace LinqApi.Logging
             // CorrelationId'yi primary key olarak ayarlıyoruz ve kolon adını "CorrelationId" yapıyoruz.
             logEntity.HasKey(x => x.Id);
 
-        
-
-
             //logEntity.Property(x => x.Id).HasMaxLength(50).IsRequired();
             logEntity.Property(x => x.DurationMs).IsRequired();
             logEntity.Property(x => x.CorrelationId).IsRequired();
@@ -92,19 +88,17 @@ namespace LinqApi.Logging
             // Epoch artık computed column değil, uygulama tarafından set edilecek normal bir property.
             logEntity.Property(x => x.Epoch).IsRequired();
 
-            logEntity.HasIndex("Epoch")
-                     .IncludeProperties("DurationMs", "CorrelationId", "LogType", "ParentCorrelationId", "Url", "Method", "IsInternal");
+            //logEntity.HasIndex("Epoch").
+            //         .IncludeProperties("DurationMs", "CorrelationId", "LogType", "ParentCorrelationId", "Url", "Method", "IsInternal");
 
             // TPH yapılandırması: Discriminator "LogType"
             logEntity.HasDiscriminator<string>("LogType")
-    .HasValue<LinqEventLog>("MassTransit")
-    .HasValue<LinqHttpCallLog>("Incoming")
-    .HasValue<LinqSqlLog>("Sql")
-    .HasValue<LinqSqlErrorLog>("SqlError")
+    .HasValue<LinqEventLog>("Event")
+    .HasValue<LinqHttpCallLog>("HttpCall")
+    .HasValue<LinqSqlLog>("Database")
+    .HasValue<LinqSqlErrorLog>("DatabaseError")
     .HasValue<LinqConsumeErrorLog>("ConsumeError")
     .HasValue<LinqPublishErrorLog>("PublishError");
         }
     }
-
-
 }

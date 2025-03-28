@@ -10,7 +10,7 @@ namespace LinqApi.Logging
         /// <summary>
         /// The SQL command text that was executed.
         /// </summary>
-        public string QueryText { get; set; }
+        public string? QueryText { get; set; }
 
         /// <summary>
         /// Execution duration in milliseconds.
@@ -20,7 +20,7 @@ namespace LinqApi.Logging
         /// <summary>
         /// The ID of the user who executed the command.
         /// </summary>
-        public string UserId { get; set; }
+        public string? UserId { get; set; }
 
         /// <summary>
         /// The date and time when the command was executed.
@@ -30,9 +30,10 @@ namespace LinqApi.Logging
         /// <summary>
         /// The type of command (e.g. Reader, NonQuery, Scalar).
         /// </summary>
-        public string CommandType { get; set; }
+        public string? CommandType { get; set; }
 
         public override string LogType => "Database";
     }
+
 }
 

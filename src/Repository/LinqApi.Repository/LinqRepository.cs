@@ -1,223 +1,298 @@
-using LinqApi.Core.Log;
-using LinqApi.Model;
-using LinqApi.Repository;
-using Microsoft.EntityFrameworkCore;
-using System.Globalization;
-using System.Linq.Dynamic.Core;
-using System.Linq.Expressions;
-using System.Text.RegularExpressions;
+using LinqApi.Core;
 
-public class LinqRepository<TDbContext, TEntity, TId> : ILinqRepository<TEntity, TId>
-    where TDbContext : DbContext
-    where TEntity : class
+
+namespace LinqApi.Repository
 {
-    protected readonly TDbContext DbContext;
-    protected readonly DbSet<TEntity> DbSet;
 
-    // Eventler
-    public event EventHandler<LinqLogEntity> EntityInserted;
-    public event EventHandler<LinqLogEntity> EntityUpdated;
-    public event EventHandler<LinqLogEntity> EntityDeleted;
-    public event EventHandler<LinqLogEntity> EntityRetrieved;
+    using Microsoft.EntityFrameworkCore;
+    using System;
+    using System.Collections.Generic;
+    using System.Globalization;
+    using System.Linq;
+    using System.Linq.Dynamic.Core;
+    using System.Linq.Expressions;
+    using System.Text.RegularExpressions;
+    using System.Threading;
+    using System.Threading.Tasks;
 
-    public LinqRepository(TDbContext dbContext)
+    namespace LinqApi.Repository
     {
-        DbContext = dbContext;
-        DbSet = dbContext.Set<TEntity>();
-    }
-
-    public async Task<TEntity> InsertAsync(TEntity entity, CancellationToken cancellationToken = default)
-    {
-        await DbContext.AddAsync(entity, cancellationToken);
-        await SaveChangesAsync(cancellationToken);
-        if (entity is LinqLogEntity logEntity)
-            EntityInserted?.Invoke(this, logEntity);
-        return entity;
-    }
-
-    public async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
-    {
-        DbContext.Entry(entity).State = EntityState.Modified;
-        await SaveChangesAsync(cancellationToken);
-        if (entity is LinqLogEntity logEntity)
-            EntityUpdated?.Invoke(this, logEntity);
-        return entity;
-    }
-
-    public async Task DeleteAsync(TId id, CancellationToken cancellationToken = default)
-    {
-        var entity = await GetByIdAsync(id, cancellationToken);
-        if (entity != null)
+        /// <summary>
+        /// Represents a generic repository that provides LINQ-based data access for entities.
+        /// This repository is solely responsible for CRUD and query operations on TEntity.
+        /// Any logging, caching, or additional behavior should be implemented by subscribing
+        /// to its events (e.g. via decorators or interceptors).
+        /// </summary>
+        /// <typeparam name="TDbContext">The type of the database context.</typeparam>
+        /// <typeparam name="TEntity">The type of the entity.</typeparam>
+        /// <typeparam name="TId">The type of the entity identifier.</typeparam>
+        public class LinqRepository<TDbContext, TEntity, TId> : ILinqRepository<TEntity, TId>
+            where TDbContext : DbContext
+            where TEntity : class
         {
-            DbContext.Entry(entity).State = EntityState.Deleted;
-            await SaveChangesAsync(cancellationToken);
-            if (entity is LinqLogEntity logEntity)
-                EntityDeleted?.Invoke(this, logEntity);
-        }
-    }
+            /// <summary>
+            /// Gets the database context instance.
+            /// </summary>
+            protected readonly TDbContext DbContext;
 
-    public async Task<TEntity> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
-    {
-        var entity = await DbSet.FindAsync(new object[] { id }, cancellationToken);
-        if (entity is LinqLogEntity logEntity)
-            EntityRetrieved?.Invoke(this, logEntity);
-        return entity;
-    }
+            /// <summary>
+            /// Gets the <see cref="DbSet{TEntity}"/> instance.
+            /// </summary>
+            protected readonly DbSet<TEntity> DbSet;
 
-    public async Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken = default) =>
-        await DbSet.ToListAsync(cancellationToken);
+            #region Events
 
-    public async Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default) =>
-        await DbSet.Where(predicate).ToListAsync(cancellationToken);
+            /// <summary>
+            /// Occurs after an entity has been successfully inserted.
+            /// Subscribers can use this event to perform logging, caching, or other post-insert operations.
+            /// </summary>
+            public event EventHandler<TEntity> EntityInserted;
 
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
-        await DbContext.SaveChangesAsync(cancellationToken);
+            /// <summary>
+            /// Occurs after an entity has been successfully updated.
+            /// Subscribers can use this event to perform logging, caching, or other post-update operations.
+            /// </summary>
+            public event EventHandler<TEntity> EntityUpdated;
 
-    public async Task<PaginationModel<dynamic>> GetFilterPagedAsync(
-LinqFilterModel filterModel,
-CancellationToken cancellationToken = default)
-    {
-        if (filterModel.Pager == null)
-        {
-            filterModel.Pager = new Pager() { PageNumber = 1, PageSize = 1 };
-        }
-        // 1️⃣ DbSet üzerinden IQueryable<TEntity> oluşturuyoruz.
-        IQueryable<TEntity> query = DbSet.AsQueryable();
+            /// <summary>
+            /// Occurs after an entity has been successfully deleted.
+            /// Subscribers can use this event to perform logging, caching, or other post-delete operations.
+            /// </summary>
+            public event EventHandler<TEntity> EntityDeleted;
 
-        // Yardımcı: filter string'ini parametreleştiren metod
-        (string paramFilter, List<object> parameters) = ParameterizeFilterString(filterModel.Filter);
+            /// <summary>
+            /// Occurs after an entity has been successfully retrieved.
+            /// Subscribers can use this event to perform logging, caching, or other post-retrieval operations.
+            /// </summary>
+            public event EventHandler<TEntity> EntityRetrieved;
 
+            #endregion
 
-
-        // 2️⃣ Dinamik Where (Filter) uygulaması (parametreleştirilmiş filter ve parametreler kullanılıyor)
-        if (!string.IsNullOrWhiteSpace(paramFilter))
-        {
-            var predicate = DynamicExpressionParser.ParseLambda<TEntity, bool>(
-                ParsingConfig.DefaultEFCore21,
-                false,
-                paramFilter,
-                parameters.ToArray()
-            );
-            
-            query = query.Where((Expression<Func<TEntity, bool>>)predicate);
-        }
-
-        // 3️⃣ Include ve ThenInclude işlemleri (navigation paging EF Core’da direkt desteklenmediğinden sadece include path ekliyoruz)
-        if (filterModel.Includes != null && filterModel.Includes.Any())
-        {
-            foreach (var include in filterModel.Includes)
+            /// <summary>
+            /// Initializes a new instance of the <see cref="LinqRepository{TDbContext, TEntity, TId}"/> class.
+            /// </summary>
+            /// <param name="dbContext">The database context.</param>
+            public LinqRepository(TDbContext dbContext)
             {
-                string includePath = include.PropertyName;
-                if (include.ThenIncludes != null && include.ThenIncludes.Any())
+                DbContext = dbContext;
+                DbSet = dbContext.Set<TEntity>();
+            }
+
+            /// <inheritdoc/>
+            public async Task<TEntity> InsertAsync(TEntity entity, CancellationToken cancellationToken = default)
+            {
+                await DbContext.AddAsync(entity, cancellationToken).ConfigureAwait(false);
+                await SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                // Raise event for external observers (e.g. logging or caching interceptors)
+                EntityInserted?.Invoke(this, entity);
+                return entity;
+            }
+
+            /// <inheritdoc/>
+            public async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+            {
+                DbContext.Entry(entity).State = EntityState.Modified;
+                await SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                // Raise event for external observers
+                EntityUpdated?.Invoke(this, entity);
+                return entity;
+            }
+
+            /// <inheritdoc/>
+            public async Task DeleteAsync(TId id, CancellationToken cancellationToken = default)
+            {
+                var entity = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+                if (entity != null)
                 {
-                    foreach (var thenInclude in include.ThenIncludes)
+                    DbContext.Entry(entity).State = EntityState.Deleted;
+                    await SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                    // Raise event for external observers
+                    EntityDeleted?.Invoke(this, entity);
+                }
+            }
+
+            /// <inheritdoc/>
+            public async Task<TEntity> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
+            {
+                var entity = await DbSet.FindAsync(new object[] { id }, cancellationToken).ConfigureAwait(false);
+                if (entity != null)
+                {
+                    // Raise event for external observers
+                    EntityRetrieved?.Invoke(this, entity);
+                }
+                return entity;
+            }
+
+            /// <inheritdoc/>
+            public async Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken = default) =>
+                await DbSet.ToListAsync(cancellationToken).ConfigureAwait(false);
+
+            /// <inheritdoc/>
+            public async Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default) =>
+                await DbSet.Where(predicate).ToListAsync(cancellationToken).ConfigureAwait(false);
+
+            /// <inheritdoc/>
+            public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
+                await DbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            /// <inheritdoc/>
+            /// <remarks>
+            /// This method applies dynamic filtering, includes, grouping, projection, ordering, and paging.
+            /// It uses the <see cref="System.Linq.Dynamic.Core"/> library to parse dynamic expressions.
+            /// For better adherence to the Single Responsibility Principle, consider extracting the filtering logic
+            /// into a separate service.
+            /// </remarks>
+            public async Task<PaginationModel<dynamic>> GetFilterPagedAsync(
+                LinqFilterModel filterModel,
+                CancellationToken cancellationToken = default)
+            {
+                // Ensure a valid Pager instance is provided.
+                if (filterModel.Pager == null)
+                {
+                    filterModel.Pager = new Pager { PageNumber = 1, PageSize = 1 };
+                }
+
+                // 1️⃣ Create an IQueryable<TEntity> from the DbSet.
+                IQueryable<TEntity> query = DbSet.AsQueryable();
+
+                // 2️⃣ Parameterize the filter string.
+                (string paramFilter, List<object> parameters) = ParameterizeFilterString(filterModel.Filter);
+
+                // 3️⃣ Apply dynamic filtering if a filter is provided.
+                if (!string.IsNullOrWhiteSpace(paramFilter))
+                {
+                    var predicate = DynamicExpressionParser.ParseLambda<TEntity, bool>(
+                        ParsingConfig.DefaultEFCore21,
+                        false,
+                        paramFilter,
+                        parameters.ToArray()
+                    );
+                    query = query.Where(predicate);
+                }
+
+                // 4️⃣ Apply dynamic include paths for navigation properties.
+                if (filterModel.Includes != null && filterModel.Includes.Any())
+                {
+                    foreach (var include in filterModel.Includes)
                     {
-                        foreach (var childInclude in thenInclude.ChildIncludes)
+                        string includePath = include.PropertyName;
+                        if (include.ThenIncludes != null && include.ThenIncludes.Any())
                         {
-                            string fullInclude = $"{includePath}.{childInclude.PropertyName}";
-                            query = query.Include(fullInclude);
+                            foreach (var thenInclude in include.ThenIncludes)
+                            {
+                                foreach (var childInclude in thenInclude.ChildIncludes)
+                                {
+                                    string fullInclude = $"{includePath}.{childInclude.PropertyName}";
+                                    query = query.Include(fullInclude);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            query = query.Include(includePath);
                         }
                     }
                 }
-                else
+
+                // 5️⃣ Convert to non-generic IQueryable for dynamic operations.
+                IQueryable dynamicQuery = query;
+
+                // 6️⃣ Apply grouping if specified.
+                if (!string.IsNullOrWhiteSpace(filterModel.GroupBy))
                 {
-                    query = query.Include(includePath);
+                    // Use AsEnumerable() to perform grouping on the client side.
+                    dynamicQuery = dynamicQuery.GroupBy(filterModel.GroupBy).AsQueryable();
                 }
+
+                // 7️⃣ Apply dynamic projection (select).
+                if (!string.IsNullOrWhiteSpace(filterModel.Select))
+                {
+                    dynamicQuery = dynamicQuery.Select(filterModel.Select);
+                }
+
+                // 8️⃣ Apply dynamic ordering.
+                if (!string.IsNullOrWhiteSpace(filterModel.OrderBy))
+                {
+                    string orderExpr = filterModel.Desc ? $"{filterModel.OrderBy} descending" : filterModel.OrderBy;
+                    dynamicQuery = dynamicQuery.OrderBy(orderExpr);
+                }
+
+                // 9️⃣ Cast dynamicQuery to IQueryable<dynamic>.
+                var castQuery = dynamicQuery.Cast<dynamic>();
+
+                // 🔟 Get the total record count.
+                int totalCount = await castQuery.CountAsync(cancellationToken).ConfigureAwait(false);
+
+                // 1️⃣1️⃣ Apply paging.
+                int skip = (filterModel.Pager.PageNumber - 1) * filterModel.Pager.PageSize;
+                var pagedQuery = castQuery.Skip(skip).Take(filterModel.Pager.PageSize);
+
+                // 1️⃣2️⃣ Execute the query and get the results.
+                var items = await pagedQuery.ToListAsync(cancellationToken).ConfigureAwait(false);
+
+                return new PaginationModel<dynamic>
+                {
+                    Items = items,
+                    TotalRecords = totalCount
+                };
+            }
+
+            /// <summary>
+            /// Parameterizes a dynamic filter string by replacing literal values with parameter placeholders.
+            /// </summary>
+            /// <param name="filter">The filter string containing literal values.</param>
+            /// <returns>
+            /// A tuple containing the parameterized filter string and a list of corresponding parameter values.
+            /// </returns>
+            /// <remarks>
+            /// This method uses regular expressions to replace literal values in the filter string with placeholders.
+            /// Numeric and date literal values are detected and converted to their appropriate types.
+            /// </remarks>
+            private static (string, List<object>) ParameterizeFilterString(string filter)
+            {
+                var parameters = new List<object>();
+                if (string.IsNullOrWhiteSpace(filter))
+                {
+                    return (filter, parameters);
+                }
+
+                // 1️⃣ Replace literal values enclosed in double quotes with parameter placeholders.
+                string newFilter = Regex.Replace(filter, "\"([^\"]+)\"", match =>
+                {
+                    string literal = match.Groups[1].Value;
+                    // If the literal matches a date format (e.g., "yyyy-MM-dd"), parse it as DateTime.
+                    if (Regex.IsMatch(literal, @"^\d{4}-\d{2}-\d{2}$"))
+                    {
+                        parameters.Add(DateTime.ParseExact(literal, "yyyy-MM-dd", CultureInfo.InvariantCulture));
+                    }
+                    else
+                    {
+                        parameters.Add(literal);
+                    }
+                    return "@" + (parameters.Count - 1);
+                });
+
+                // 2️⃣ Replace numeric literal values with parameter placeholders.
+                // The negative lookbehind (?<!@) ensures that already replaced placeholders are not matched.
+                newFilter = Regex.Replace(newFilter, @"(?<!@)\b\d+(\.\d+)?\b", match =>
+                {
+                    if (int.TryParse(match.Value, out int intValue))
+                    {
+                        parameters.Add(intValue);
+                    }
+                    else if (double.TryParse(match.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out double doubleValue))
+                    {
+                        parameters.Add(doubleValue);
+                    }
+                    else
+                    {
+                        parameters.Add(match.Value);
+                    }
+                    return "@" + (parameters.Count - 1);
+                });
+
+                return (newFilter, parameters);
             }
         }
-
-        // 4️⃣ Sorguyu dinamik işlemleri destekleyecek non-generic IQueryable'a dönüştürüyoruz.
-        IQueryable dynamicQuery = query;
-
-        // 5️⃣ GroupBy uygulaması (varsa)
-        if (!string.IsNullOrWhiteSpace(filterModel.GroupBy))
-        {
-            // GroupBy sonrası sunucu tarafı çeviri desteklenmediğinden,
-            // grouping sonucu client side'a çekmek için AsEnumerable() kullanıyoruz.
-            dynamicQuery = dynamicQuery.GroupBy(filterModel.GroupBy)
-                                       .AsQueryable();
-        }
-
-        // 6️⃣ Select/projection uygulaması (varsa)
-        if (!string.IsNullOrWhiteSpace(filterModel.Select))
-        {
-            dynamicQuery = dynamicQuery.Select(filterModel.Select);
-        }
-
-        // 7️⃣ OrderBy uygulaması (dinamik)
-        if (!string.IsNullOrWhiteSpace(filterModel.OrderBy))
-        {
-            string orderExpr = filterModel.Desc ? $"{filterModel.OrderBy} descending" : filterModel.OrderBy;
-            dynamicQuery = dynamicQuery.OrderBy(orderExpr);
-        }
-
-        // 8️⃣ IQueryable'ı generic hale getiriyoruz.
-        var castQuery = dynamicQuery.Cast<dynamic>();
-
-        // 9️⃣ Toplam kayıt sayısını alıyoruz (client-side count, grouping sonrası zaten in-memory)
-        int totalCount = await castQuery.CountAsync();
-
-        // 10️⃣ Paging uygulaması (ana sorgu için)
-        int skip = (filterModel.Pager.PageNumber - 1) * filterModel.Pager.PageSize;
-        var pagedQuery = castQuery.Skip(skip).Take(filterModel.Pager.PageSize);
-
-        // 11️⃣ Sorguyu çalıştırıp sonuçları listeliyoruz.
-        // Not: Bu noktada sorgu in-memory olduğu için asenkron fayda sağlamayabilir.
-        var items = await pagedQuery.ToListAsync(cancellationToken);
-
-        return new PaginationModel<dynamic>
-        {
-            Items = items,
-            TotalRecords = totalCount
-        };
     }
-
-    private static (string, List<object>) ParameterizeFilterString(string filter)
-    {
-        var parameters = new List<object>();
-        if (string.IsNullOrWhiteSpace(filter))
-        {
-            return (filter, parameters);
-        }
-
-        // 1. Çift tırnak içindeki literal değerleri bulup, parametreye çeviriyoruz.
-        string newFilter = Regex.Replace(filter, "\"([^\"]+)\"", match =>
-        {
-            string literal = match.Groups[1].Value;
-            // Eğer tarih formatı ise "yyyy-MM-dd" gibi, DateTime'a çeviriyoruz.
-            if (Regex.IsMatch(literal, @"^\d{4}-\d{2}-\d{2}$"))
-            {
-                parameters.Add(DateTime.ParseExact(literal, "yyyy-MM-dd", CultureInfo.InvariantCulture));
-            }
-            else
-            {
-                parameters.Add(literal);
-            }
-            return "@" + (parameters.Count - 1);
-        });
-
-        // 2. Sayısal literal değerleri buluyoruz (örn. id > 3 veya 3.14).
-        // Negatif lookbehind (?<!@) ekleyerek, @ ile başlayan placeholder'ları eşlemiyoruz.
-        newFilter = Regex.Replace(newFilter, @"(?<!@)\b\d+(\.\d+)?\b", match =>
-        {
-            if (int.TryParse(match.Value, out int intValue))
-            {
-                parameters.Add(intValue);
-            }
-            else if (double.TryParse(match.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out double doubleValue))
-            {
-                parameters.Add(doubleValue);
-            }
-            else
-            {
-                parameters.Add(match.Value);
-            }
-            return "@" + (parameters.Count - 1);
-        });
-
-        return (newFilter, parameters);
-    }
-
-
-    // GetFilterPagedAsync ve ParameterizeFilterString metotları önceki örneklerden uyarlanabilir.
 }

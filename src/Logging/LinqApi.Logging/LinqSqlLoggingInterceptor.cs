@@ -21,11 +21,12 @@ namespace LinqApi.Logging
             private readonly ConcurrentDictionary<DbCommand, Stopwatch> _stopwatches = new();
 
             private readonly ILinqLogger _linqLogger;
+            private readonly IUserContext<string> userContext;
 
-
-            public LinqSqlLoggingInterceptor(ILinqLogger linqLogger)
+            public LinqSqlLoggingInterceptor(ILinqLogger linqLogger, IUserContext<string> userContext)
             {
                 _linqLogger = linqLogger;
+                this.userContext = userContext;
             }
 
             // Synchronous executing methods:
@@ -43,7 +44,6 @@ namespace LinqApi.Logging
        CommandEventData eventData,
        InterceptionResult<int> result)
             {
-                https://localhost:44382/StartStopwatch(command);
                 return base.NonQueryExecuting(command, eventData, result);
             }
 
@@ -147,7 +147,7 @@ namespace LinqApi.Logging
                 {
                     QueryText = command.CommandText,
                     DurationMs = durationMs,
-                    UserId = LinqAnonymousUserContext.CurrentUserId,  // Replace with your actual user retrieval logic
+                    UserId = userContext.Id,  // Replace with your actual user retrieval logic
                     ExecutedAt = DateTime.UtcNow,
                     CommandType = commandType,
                 };
@@ -155,7 +155,6 @@ namespace LinqApi.Logging
                 // Fire and forget logging (you might want to await in production)
                 await _linqLogger.LogAsync(sqlLog, cancellationToken).ConfigureAwait(false);
             }
-
         }
     }
 

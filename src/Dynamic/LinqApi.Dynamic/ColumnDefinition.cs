@@ -1,4 +1,4 @@
-﻿namespace LinqApi.Model
+namespace LinqApi.Model
 {
     public class ColumnDefinition
     {

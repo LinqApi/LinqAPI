@@ -1,4 +1,4 @@
-using LinqApi.Model;
+using LinqApi.Core;
 using LinqApi.Repository;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,7 +13,7 @@ namespace LinqApi.Controller
     /// <typeparam name="TUpdateVm">The view model type for update operations.</typeparam>
     /// <typeparam name="TId">The type of the entity identifier.</typeparam>
     [Route("[controller]")]
-    public abstract class LinqVmController<TEntity, TCreateVm, TUpdateVm, TId> : LinqVmReadonlyController<TEntity, TCreateVm, TId>
+    public abstract class LinqVmController<TEntity, TCreateVm, TUpdateVm, TId> : LinqReadonlyController<TEntity, TId>
          where TEntity : BaseEntity<TId>
     {
         protected readonly ILinqRepository<TEntity, TId> _repo;
@@ -35,6 +35,19 @@ namespace LinqApi.Controller
             var entity = MapToEntityFromCreate(vm);
             var created = await _repo.InsertAsync(entity, cancellation);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        }
+        [HttpGet("create-schema")]
+        public virtual IActionResult GetVmSchema()
+        {
+            var props = ViewModelSchemaHelper.GetSchema(typeof(TCreateVm));
+            return Ok(props);
+        }
+
+        [HttpGet("update-schema")]
+        public virtual IActionResult GetEntitySchema()
+        {
+            var props = ViewModelSchemaHelper.GetSchema(typeof(TUpdateVm));
+            return Ok(props);
         }
 
         /// <summary>

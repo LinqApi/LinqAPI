@@ -1,5 +1,6 @@
-using LinqApi.Model;
+using LinqApi.Core;
 using LinqApi.Repository;
+using LinqApi.Repository.LinqApi.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 

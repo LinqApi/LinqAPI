@@ -9,20 +9,18 @@ namespace LinqApi.Core
     namespace LinqApi.Core
     {
         /// <summary>
-        /// Default implementation for logging to MSSQL using EF Core.
+        /// Default implementation for logging to Sql using EF Core.
         /// </summary>
         /// <summary>
-        /// Default implementation for logging to MSSQL using EF Core.
+        /// Default implementation for logging to Sql using EF Core.
         /// </summary>
         public class LinqDbContextCallLogger : ILinqLogger
         {
             private readonly LinqLoggingDbContext _db;
-            private readonly ICorrelationIdGenerator _correlationGenerator;
 
             public LinqDbContextCallLogger(LinqLoggingDbContext db, ICorrelationIdGenerator correlationGenerator)
             {
                 _db = db ?? throw new ArgumentNullException(nameof(db));
-                _correlationGenerator = correlationGenerator ?? throw new ArgumentNullException(nameof(correlationGenerator));
             }
 
             public virtual IDisposable BeginScope<TState>(TState state) where TState : notnull
@@ -125,6 +123,9 @@ namespace LinqApi.Core
                         break;
                     case LinqEventLog eventLog:
                         _db.EventLogs.Add(eventLog);
+                        break;
+                    case LinqSqlLog databaseLog:
+                        _db.SqlLogs.Add(databaseLog);
                         break;
                     default:
                         _db.Logs.Add(logEntry);

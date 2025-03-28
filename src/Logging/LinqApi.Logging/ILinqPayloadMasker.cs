@@ -5,8 +5,8 @@ namespace LinqApi.Logging
     /// </summary>
     public interface ILinqPayloadMasker
     {
-        string MaskRequest(object request);
-        string MaskResponse(object response);
+        string MaskRequest(string request);
+        string MaskResponse(string response);
     }
 
 

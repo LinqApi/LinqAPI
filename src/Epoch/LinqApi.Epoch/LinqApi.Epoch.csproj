@@ -10,8 +10,4 @@
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.3" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Core\LinqApi\LinqApi.csproj" />
-  </ItemGroup>
-
 </Project>

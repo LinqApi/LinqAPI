@@ -33,10 +33,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Controller\" />
-	  <Folder Include="Extensions\" />
 	  <Folder Include="Mapping\" />
-	  <Folder Include="Repository\" />
 	</ItemGroup>
 
 </Project>

@@ -1,12 +1,10 @@
 using LinqApi.Correlation;
-using LinqApi.Model;
 
 namespace LinqApi.Core.Log
 {
     // Base log model (soyut)
     public abstract class LinqLogEntity : BaseEntity<long>
     {
-
         protected LinqLogEntity()
         {
             CorrelationId = CorrelationContext.GetNextCorrelationId(new DefaultCorrelationIdGenerator());

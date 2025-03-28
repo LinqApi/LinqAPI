@@ -1,5 +1,4 @@
-using System.Collections.Concurrent;
-using LinqApi.Model;
+using LinqApi.Core;
 using LinqApi.Repository;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,8 +16,6 @@ namespace LinqApi.Controller
         where TEntity : BaseEntity<TId>
     {
         protected readonly ILinqRepository<TEntity, TId> _repo;
-        private static readonly ConcurrentDictionary<string, object> _propertyCache = new();
-
         protected LinqReadonlyController(ILinqRepository<TEntity, TId> repo)
         {
             _repo = repo;
@@ -28,8 +25,9 @@ namespace LinqApi.Controller
 
         public virtual IActionResult GetAllProperties()
         {
-            var properties = EntitySchemaHelper.GetPropertiesSchema(typeof(TEntity));
-            return Ok(properties);
+
+            var props = ViewModelSchemaHelper.GetSchema(typeof(TEntity));
+            return Ok(props);
         }
 
         /// <summary>
