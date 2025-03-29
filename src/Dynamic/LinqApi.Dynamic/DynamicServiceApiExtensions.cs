@@ -91,7 +91,7 @@ namespace LinqApi.Dynamic.Extensions
 
             return services;
         }
-
+        
         private static bool IsValidPrimaryKey(Type keyType)
         {
             // Örneğin, bigint (long) tipli primary key'ler bazı yapılar tarafından kabul edilmeyebilir.

@@ -53,7 +53,7 @@ namespace LinqApi.Dynamic.Context
                     table = parts[0];
                     displayName = $"dbo.{table}";
                 }
-                normalizedSchema = schema.Equals("dbo", StringComparison.OrdinalIgnoreCase) ? "" : schema;
+                normalizedSchema = DynamicServiceApiProtectedExtensions.GetControllerName(schema,table);
                 builder.ToTable(table, schema);
 
                 // Primary Key Tanımlama

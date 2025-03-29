@@ -1,11 +1,16 @@
 using LinqApi.Core;
+using LinqApi.Dynamic.Assembly;
 using LinqApi.Localization.LinqApi.Localization.Extensions;
 using LinqApi.Repository;
 using LinqApi.Repository.LinqApi.Repository;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Concurrent;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace LinqApi.Localization.Extensions
 {
@@ -94,5 +99,60 @@ namespace LinqApi.Localization.Extensions
 
             return services;
         }
+
+        public static IServiceCollection AddRepositoriesForDbContext<TDbContext>(
+    this IServiceCollection services)
+    where TDbContext : DbContext
+        {
+            var dbContextType = typeof(TDbContext);
+
+            // DbSet<SomeEntity> -> SomeEntity
+            var dbSetProperties = dbContextType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p => p.PropertyType.IsGenericType
+                            && p.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>));
+
+            foreach (var prop in dbSetProperties)
+            {
+                var entityType = prop.PropertyType.GetGenericArguments()[0];
+
+                // 'BaseEntity<TId>' olup olmadığını bulalım
+                if (TryGetBaseEntityIdType(entityType, out var idType))
+                {
+                    // ILinqRepository<TEntity, TId>
+                    var repoInterface = typeof(ILinqRepository<,>).MakeGenericType(entityType, idType);
+
+                    // LinqRepository<TDbContext, TEntity, TId>
+                    var repoImplementation = typeof(LinqRepository<,,>).MakeGenericType(typeof(TDbContext), entityType, idType);
+
+                    services.AddScoped(repoInterface, repoImplementation);
+                }
+            }
+
+            return services;
+        }
+
+        /// <summary>
+        /// Sınıf hiyerarşisi içinde BaseEntity<TId> var mı diye arar, bulursa out param ile TId tipini döndürür.
+        /// </summary>
+        private static bool TryGetBaseEntityIdType(Type type, out Type idType)
+        {
+            idType = null;
+            var current = type;
+            while (current != null && current != typeof(object))
+            {
+                if (current.IsGenericType &&
+                    current.GetGenericTypeDefinition() == typeof(BaseEntity<>))
+                {
+                    idType = current.GetGenericArguments()[0];
+                    return true;
+                }
+                current = current.BaseType;
+            }
+            return false;
+        }
+
     }
+
+
+
 }

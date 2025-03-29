@@ -11,7 +11,6 @@ namespace LinqApi.Controller
     /// <typeparam name="TEntity">The entity type, which must derive from BaseEntity&lt;TId&gt;.</typeparam>
     /// <typeparam name="TId">The type of the entity identifier.</typeparam>
     [ApiController]
-    [Route("api/[controller]")]
     public class LinqReadonlyController<TEntity, TId> : ControllerBase
         where TEntity : BaseEntity<TId>
     {
@@ -52,7 +51,7 @@ namespace LinqApi.Controller
         [HttpPost("filterpaged")]
         public virtual async Task<IActionResult> GetByFilterPaged([FromBody] LinqFilterModel model, CancellationToken cancellation)
         {
-            if (string.IsNullOrWhiteSpace(model.Filter))
+          if (string.IsNullOrWhiteSpace(model.Filter))
                 return BadRequest("Filter is required.");
             var result = await _repo.GetFilterPagedAsync(model, cancellation);
             return Ok(result);

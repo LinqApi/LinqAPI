@@ -11,7 +11,6 @@ namespace LinqApi.Controller
     using System.Collections.Concurrent;
 
     [ApiController]
-    [Route("api/[controller]")]
     public class LinqController<TEntity, TId>(ILinqRepository<TEntity, TId> repo) : LinqReadonlyController<TEntity, TId>(repo)
      where TEntity : BaseEntity<TId>
     {
@@ -37,8 +36,12 @@ namespace LinqApi.Controller
             await _repo.DeleteAsync(id, cancellationToken);
             return NoContent();
         }
-    }
 
+
+
+
+     
+    }
     /// <summary>
     /// Provides helper methods to generate a property schema for entity types.
     /// </summary>
