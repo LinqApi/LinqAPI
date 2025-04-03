@@ -24,7 +24,11 @@ export class LinqDataTable {
             debug: false,
             stateManager: null
         };
-        this.cfg = { ...defaults, ...config };
+        log(...args) {
+            if (this.cfg.debug) {
+                console.debug("[LinqDataTable]", ...args);
+            }
+        this.cfg = { ...defaults, ...(config || {}) };
 
         if (!this.cfg.container) {
             throw new Error("LinqDataTable requires config.container to be set.");
@@ -91,28 +95,8 @@ export class LinqDataTable {
         await this.fetchData();
         this.render();
     }
-    async fetchProperties() {
-        const url = `${this.apiPrefix}${this.controller}/properties`;
-        try {
-            const res = await fetch(url);
-            const result = await res.json();
-            const arr = Array.isArray(result) ? result : (result.$values || result);
-            // Basit tipleri filtrele:
-            this.properties = (arr || []).filter(p => {
-                const t = p.type || "";
-                return !t.includes("Collection") && !t.startsWith("System.Object");
-            });
-            // Kompleks tipleri filtrele:
-            this.complexProperties = (arr || []).filter(p =>
-                p.type.includes("Collection") || p.type.includes("IEnumerable") || p.type.includes("ICollection")
-            );
-            this.log("Fetched simple properties:", this.properties);
-            this.log("Fetched complex properties:", this.complexProperties);
-        } catch (err) {
-            console.error("Failed to fetch properties:", err);
-        }
-    }
-    
+   
+
     openNestedGrid(propertyName, rowData) {
         // İlgili property nesnesini complexProperties listesinden bulalım
         const propObj = this.complexProperties.find(p => p.name.toLowerCase() === propertyName.toLowerCase());
@@ -161,62 +145,6 @@ export class LinqDataTable {
         nestedDataTable.init();
     }
 
-
-    // Yardımcı singularize fonksiyonu (basit örnek)
-    singularize(name) {
-        // Örneğin, "PosServices" → "PosService"
-        if (name.endsWith("s")) {
-            return name.slice(0, -1);
-        }
-        return name;
-    }
-
-
-    async fetchData() {
-        const url = `${this.apiPrefix}${this.controller}/filterpaged`;
-        const payload = {
-            filter: this.filter,
-            groupBy: this.groupBy,
-            select: this.select,
-            orderBy: this.orderBy,
-            desc: this.desc,
-            pager: { pageNumber: this.pageNumber, pageSize: this.pageSize },
-            includes: this.includes
-        };
-        try {
-            const res = await fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-            const result = await res.json();
-            let items = result.items || result.Items || result.results;
-            if (items && items.$values) {
-                items = items.$values;
-            }
-            this.data = items || [];
-            this.totalCount = result.totalRecords || result.TotalRecords || 0;
-            this.log("Data fetched:", this.data);
-        } catch (err) {
-            console.error("Error fetching data:", err);
-        }
-    }
-
-    /**
-     * Update internal query parameters from an external query object,
-     * then fetch data.
-     * @param {object} query - A query object (instance of Query)
-     */
-    async fetchDataFromQuery(query) {
-        this.filter = query.filter.toString();
-        this.orderBy = query.orderBy;
-        this.desc = query.desc;
-        this.groupBy = query.groupBy;
-        this.select = query.select;
-        this.includes = query.includes;
-        this.pageNumber = 1;
-        await this.fetchData();
-    }
 
     render() {
         this.log("Rendering data table...");
@@ -417,7 +345,11 @@ export class LinqDataTable {
         prevLink.innerHTML = "&laquo;";
         prevLink.onclick = (e) => {
             e.preventDefault();
+            if (!this.query) {
+                this.query = new Query(this.controller);
+            }
             if (this.pageNumber > 1) {
+
                 this.pageNumber--;
                 this.query.pager = new Pager(this.pageNumber, this.pageSize);
                 this.state.setState({ query: this.getQuery() });
@@ -437,6 +369,9 @@ export class LinqDataTable {
             link.onclick = (e) => {
                 e.preventDefault();
                 this.pageNumber = i;
+                if (!this.query) {
+                    this.query = new Query(this.controller);
+                }
                 this.query.pager = new Pager(this.pageNumber, this.pageSize);
                 this.state.setState({ query: this.getQuery() });
             };

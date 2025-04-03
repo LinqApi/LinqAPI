@@ -1,3 +1,6 @@
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
+
 namespace LinqApi.Core
 {
     /// <summary>
@@ -9,7 +12,9 @@ namespace LinqApi.Core
         /// Gets or sets the filter expression in string format. 
         /// Example: <c>"Age > 30 and Name.StartsWith(\"A\")"</c>
         /// </summary>
-        public string Filter { get; set; }
+        /// 
+        [AllowNull]
+        public string? Filter { get; set; }
 
         /// <summary>
         /// Gets or sets the pagination configuration for the main dataset.
@@ -20,7 +25,9 @@ namespace LinqApi.Core
         /// Gets or sets the field to order by. 
         /// Example: <c>"Name"</c>
         /// </summary>
-        public string OrderBy { get; set; }
+        /// 
+        [AllowNull]
+        public string? OrderBy { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the ordering should be descending.
@@ -31,13 +38,17 @@ namespace LinqApi.Core
         /// Gets or sets the grouping logic in string format.
         /// Example: <c>"new (DepartmentId)"</c>
         /// </summary>
-        public string GroupBy { get; set; }
+        /// 
+
+        public string? GroupBy { get; set; }
 
         /// <summary>
         /// Gets or sets the select/projection fields.
         /// Example: <c>"new (Name, Age, Salary.Max())"</c>
         /// </summary>
-        public string Select { get; set; }
+        /// 
+        [AllowNull]
+        public string? Select { get; set; }
 
         /// <summary>
         /// Gets or sets the navigation properties to be included in the query.

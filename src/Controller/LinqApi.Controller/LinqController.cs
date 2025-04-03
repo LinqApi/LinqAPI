@@ -59,7 +59,7 @@ namespace LinqApi.Controller
             var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Select(p => new
                 {
-                    Name = p.Name,
+                    Name = ToCamelCase(p.Name),
                     Type = GetReadableTypeName(p.PropertyType),
                     Default = p.GetValue(instance),
                     IsRequired = p.GetCustomAttributes().Any(a => a.GetType().Name.Contains("Required"))
@@ -70,6 +70,15 @@ namespace LinqApi.Controller
             _schemaCache.TryAdd(cacheKey, props);
             return props;
         }
+
+        private static string ToCamelCase(string input)
+        {
+            if (string.IsNullOrEmpty(input) || char.IsLower(input[0]))
+                return input;
+
+            return char.ToLowerInvariant(input[0]) + input.Substring(1);
+        }
+
 
         public static string GetReadableTypeName(Type type)
         {

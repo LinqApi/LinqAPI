@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Linq API Dashboard - Select2 Examples</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.min.css" />
+    <style>
+        /* Optional: style the containers for visibility */
+        .select2-example {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Your page markup … -->
+    <!-- Container elements for our 16 examples -->
+    <!-- Server-side examples -->
+    <div id="server-grid-single" class="select2-example">Server Grid Single Select</div>
+    <div id="server-grid-single2" class="select2-example">Server Grid Single Select #2</div>
+    <div id="server-grid-multi" class="select2-example">Server Grid Multi Select</div>
+    <div id="server-grid-multi2" class="select2-example">Server Grid Multi Select #2</div>
+    <div id="server-tag-single" class="select2-example">Server Tag Single Select</div>
+    <div id="server-tag-single2" class="select2-example">Server Tag Single Select #2</div>
+    <div id="server-tag-multi" class="select2-example">Server Tag Multi Select</div>
+    <div id="server-tag-multi2" class="select2-example">Server Tag Multi Select #2</div>
+
+    <!-- Client-side examples -->
+    <div id="client-grid-single" class="select2-example">Client Grid Single Select</div>
+    <div id="client-grid-single2" class="select2-example">Client Grid Single Select #2</div>
+    <div id="client-grid-multi" class="select2-example">Client Grid Multi Select</div>
+    <div id="client-grid-multi2" class="select2-example">Client Grid Multi Select #2</div>
+    <div id="client-tag-single" class="select2-example">Client Tag Single Select</div>
+    <div id="client-tag-single2" class="select2-example">Client Tag Single Select #2</div>
+    <div id="client-tag-multi" class="select2-example">Client Tag Multi Select</div>
+    <div id="client-tag-multi2" class="select2-example">Client Tag Multi Select #2</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        // Import your classes from your modules.
+        import { LinqASelect2Server } from './js/ui/linqASelect2.js';  // server-side variant
+        import { LinqASelect2Client } from './js/ui/linqASelect2.js';  // client-side variant
+        import { LinqASelect2Grid } from './js/ui/linqASelect2.js';    // grid render mixin/variant
+        import { LinqASelect2Tag } from './js/ui/linqASelect2.js';     // tag render variant
+
+        // Helper function to log errors
+        function safeInit(fn, description) {
+          try {
+            fn();
+            console.log(description + " initialized successfully.");
+          } catch (e) {
+            console.error("Error initializing " + description + ":", e);
+          }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+          // ========= Server-Side Examples =========
+
+          // 1. Server-side Grid Single Select (Example 1)
+          safeInit(() => {
+            const container = document.getElementById("server-grid-single");
+            const instance = new LinqASelect2Server({
+              container: container,
+              url: "/api/Country/filterpaged",
+              searchProperty: "Name",
+              displayProperty: "Name",
+              valueField: "Id",
+              filterSuffix: "1=1",
+              pageSize: 10,
+              debounceDuration: 500,
+              multiselect: false,
+              showPropertyHeader: false,
+              initialData: null,
+              stateManager: { getState: () => ({}), setState: (s) => console.log("Server Grid Single:", s), subscribe: () => {} },
+              renderMode: "grid"
+            });
+            instance.init();
+          }, "Server Grid Single Select (Example 1)");
+
+          // 2. Server-side Grid Single Select (Example 2)
+          safeInit(() => {
+            const container = document.getElementById("server-grid-single2");
+            const instance = new LinqASelect2Server({
+              container: container,
+              url: "/api/Country/filterpaged",
+              searchProperty: "Name",
+              displayProperty: "Name",
+              valueField: "Id",
+              filterSuffix: "1=1",
+              pageSize: 10,
+              debounceDuration: 500,
+              multiselect: false,
+              showPropertyHeader: false,
+              initialData: null,
+              stateManager: { getState: () => ({}), setState: (s) => console.log("Server Grid Single #2:", s), subscribe: () => {} },
+              renderMode: "grid"
+            });
+            instance.init();
+          }, "Server Grid Single Select (Example 2)");
+
+          // 3. Server-side Grid Multi Select (Example 1)
+          safeInit(() => {
+            const container = document.getElementById("server-grid-multi");
+            const instance = new LinqASelect2Server({
+              container: container,
+              url: "/api/Country/filterpaged",
+              searchProperty: "Name",
+              displayProperty: ["Name", "Code"],
+              valueField: "Id",
+              filterSuffix: "1=1",
+              pageSize: 10,
+              debounceDuration: 500,
+              multiselect: true,
+              showPropertyHeader: true,
+              initialData: [],
+              stateManager: { getState: () => ({}), setState: (s) => console.log("Server Grid Multi:", s), subscribe: () => {} },
+              renderMode: "grid"
+            });
+            instance.init();
+          }, "Server Grid Multi Select (Example 1)");
+
+          // 4. Server-side Grid Multi Select (Example 2)
+          safeInit(() => {
+            const container = document.getElementById("server-grid-multi2");
+            const instance = new LinqASelect2Server({
+              container: container,
+              url: "/api/Country/filterpaged",
+              searchProperty: "Name",
+              displayProperty: ["Name", "Code"],
+              valueField: "Id",
+              filterSuffix: "1=1",
+              pageSize: 10,
+              debounceDuration: 500,
+              multiselect: true,
+              showPropertyHeader: true,
+              initialData: [],
+              stateManager: { getState: () => ({}), setState: (s) => console.log("Server Grid Multi #2:", s), subscribe: () => {} },
+              renderMode: "grid"
+            });
+            instance.init();
+          }, "Server Grid Multi Select (Example 2)");
+
+          // 5. Server-side Tag Single Select (Example 1)
+          safeInit(() => {
+            const container = document.getElementById("server-tag-single");
+            const instance = new LinqASelect2Tag({
+              container: container,
+              url: "/api/Country/filterpaged",
+              searchProperty: "Code", // using Code field for search
+              displayProperty: "Code",
+              valueField: "Id",
+              filterSuffix: "1=1",
+              pageSize: 10,
+              debounceDuration: 500,
+              multiselect: false,
+              showPropertyHeader: false,
+              initialData: null,
+              stateManager: { getState: () => ({}), setState: (s) => console.log("Server Tag Single:", s), subscribe: () => {} },
+              renderMode: "tag",  // tag render mode
+              tagSeparatorRegex: /\s+/  // default whitespace separator
+            });
+            instance.init();
+          }, "Server Tag Single Select (Example 1)");
+
+          // 6. Server-side Tag Single Select (Example 2)
+          safeInit(() => {
+            const container = document.getElementById("server-tag-single2");
+            const instance = new LinqASelect2Tag({
+              container: container,
+              url: "/api/Country/filterpaged",
+              searchProperty: "Code",
+              displayProperty: "Code",
+              valueField: "Id",
+              filterSuffix: "1=1",
+              pageSize: 10,
+              debounceDuration: 500,
+              multiselect: false,
+              showPropertyHeader: false,
+              initialData: null,
+              stateManager: { getState: () => ({}), setState: (s) => console.log("Server Tag Single #2:", s), subscribe: () => {} },
+              renderMode: "tag",
+              tagSeparatorRegex: /\s+/
+            });
+            instance.init();
+          }, "Server Tag Single Select (Example 2)");
+
+          // 7. Server-side Tag Multi Select (Example 1)
+          safeInit(() => {
+            const container = document.getElementById("server-tag-multi");
+            const instance = new LinqASelect2Tag({
+              container: container,
+              url: "/api/Country/filterpaged",
+              searchProperty: "Name",
+              displayProperty: "Name",
+              valueField: "Id",
+              filterSuffix: "Id>5",
+              pageSize: 10,
+              debounceDuration: 500,
+              multiselect: true,
+              showPropertyHeader: false,
+              initialData: null,
+              stateManager: { getState: () => ({}), setState: (s) => console.log("Server Tag Multi:", s), subscribe: () => {} },
+              renderMode: "tag",
+              tagSeparatorRegex: /[,\s]+/   // split on commas or whitespace
+            });
+            instance.init();
+          }, "Server Tag Multi Select (Example 1)");
+
+          // 8. Server-side Tag Multi Select (Example 2)
+          safeInit(() => {
+            const container = document.getElementById("server-tag-multi2");
+            const instance = new LinqASelect2Tag({
+              container: container,
+              url: "/api/Country/filterpaged",
+              searchProperty: "Name",
+              displayProperty: "Name",
+              valueField: "Id",
+              filterSuffix: "Id>5",
+              pageSize: 10,
+              debounceDuration: 500,
+              multiselect: true,
+              showPropertyHeader: false,
+              initialData: null,
+              stateManager: { getState: () => ({}), setState: (s) => console.log("Server Tag Multi #2:", s), subscribe: () => {} },
+              renderMode: "tag",
+              tagSeparatorRegex: /[,\s]+/
+            });
+            instance.init();
+          }, "Server Tag Multi Select (Example 2)");
+
+          // ========= Client-Side Examples =========
+          // For client-side, we assume localData is provided in the config.
+
+          const localData = [
+            { Id: 1, Name: "USA", Code: "US" },
+            { Id: 2, Name: "Canada", Code: "CA" },
+            { Id: 3, Name: "Mexico", Code: "MX" },
+            { Id: 4, Name: "Brazil", Code: "BR" }
+          ];
+
+          // 9. Client-side Grid Single Select (Example 1)
+          safeInit(() => {
+            const container = document.getElementById("client-grid-single");
+            const instance = new LinqASelect2Client({
+              container: container,
+              searchProperty: "Name",
+              displayProperty: "Name",
+              valueField: "Id",
+              filterSuffix: "",  // no extra filter
+              pageSize: 10,      // ignored in client mode
+              debounceDuration: 500,
+              multiselect: false,
+              showPropertyHeader: false,
+              initialData: null,
+              localData: localData,
+              stateManager: { getState: () => ({}), setState: (s) => console.log("Client Grid Single:", s), subscribe: () => {} },
+              renderMode: "grid"
+            });
+            instance.init();
+          }, "Client Grid Single Select (Example 1)");
+
+          // 10. Client-side Grid Single Select (Example 2)
+          safeInit(() => {
+            const container = document.getElementById("client-grid-single2");
+            const instance = new LinqASelect2Client({
+              container: container,
+              searchProperty: "Name",
+              displayProperty: "Name",
+              valueField: "Id",
+              filterSuffix: "",
+              pageSize: 10,
+              debounceDuration: 500,
+              multiselect: false,
+              showPropertyHeader: false,
+              initialData: null,
+              localData: localData,
+              stateManager: { getState: () => ({}), setState: (s) => console.log("Client Grid Single #2:", s), subscribe: () => {} },
+              renderMode: "grid"
+            });
+            instance.init();
+          }, "Client Grid Single Select (Example 2)");
+
+          // 11. Client-side Grid Multi Select (Example 1)
+          safeInit(() => {
+            const container = document.getElementById("client-grid-multi");
+            const instance = new LinqASelect2Client({
+              container: container,
+              searchProperty: "Name",
+              displayProperty: ["Name", "Code"],
+              valueField: "Id",
+              filterSuffix: "",
+              pageSize: 10,
+              debounceDuration: 500,
+              multiselect: true,
+              showPropertyHeader: true,
+              initialData: [],
+              localData: localData,
+              stateManager: { getState: () => ({}), setState: (s) => console.log("Client Grid Multi:", s), subscribe: () => {} },
+              renderMode: "grid"
+            });
+            instance.init();
+          }, "Client Grid Multi Select (Example 1)");
+
+          // 12. Client-side Grid Multi Select (Example 2)
+          safeInit(() => {
+            const container = document.getElementById("client-grid-multi2");
+            const instance = new LinqASelect2Client({
+              container: container,
+              searchProperty: "Name",
+              displayProperty: ["Name", "Code"],
+              valueField: "Id",
+              filterSuffix: "",
+              pageSize: 10,
+              debounceDuration: 500,
+              multiselect: true,
+              showPropertyHeader: true,
+              initialData: [],
+              localData: localData,
+              stateManager: { getState: () => ({}), setState: (s) => console.log("Client Grid Multi #2:", s), subscribe: () => {} },
+              renderMode: "grid"
+            });
+            instance.init();
+          }, "Client Grid Multi Select (Example 2)");
+
+          // 13. Client-side Tag Single Select (Example 1)
+          safeInit(() => {
+            const container = document.getElementById("client-tag-single");
+            const instance = new LinqASelect2Client({
+              container: container,
+              searchProperty: "Name",
+              displayProperty: "Name",
+              valueField: "Id",
+              filterSuffix: "",
+              pageSize: 10,
+              debounceDuration: 500,
+              multiselect: false,
+              showPropertyHeader: false,
+              initialData: null,
+              localData: localData,
+              stateManager: { getState: () => ({}), setState: (s) => console.log("Client Tag Single:", s), subscribe: () => {} },
+              renderMode: "tag",
+              tagSeparatorRegex: /[,\s]+/   // split on commas or whitespace
+            });
+            instance.init();
+          }, "Client Tag Single Select (Example 1)");
+
+          // 14. Client-side Tag Single Select (Example 2)
+          safeInit(() => {
+            const container = document.getElementById("client-tag-single2");
+            const instance = new LinqASelect2Client({
+              container: container,
+              searchProperty: "Name",
+              displayProperty: "Name",
+              valueField: "Id",
+              filterSuffix: "",
+              pageSize: 10,
+              debounceDuration: 500,
+              multiselect: false,
+              showPropertyHeader: false,
+              initialData: null,
+              localData: localData,
+              stateManager: { getState: () => ({}), setState: (s) => console.log("Client Tag Single #2:", s), subscribe: () => {} },
+              renderMode: "tag",
+              tagSeparatorRegex: /[,\s]+/
+            });
+            instance.init();
+          }, "Client Tag Single Select (Example 2)");
+
+          // 15. Client-side Tag Multi Select (Example 1)
+          safeInit(() => {
+            const container = document.getElementById("client-tag-multi");
+            const instance = new LinqASelect2Client({
+              container: container,
+              searchProperty: "Name",
+              displayProperty: "Name",
+              valueField: "Id",
+              filterSuffix: "",
+              pageSize: 10,
+              debounceDuration: 500,
+              multiselect: true,
+              showPropertyHeader: false,
+              initialData: null,
+              localData: localData,
+              stateManager: { getState: () => ({}), setState: (s) => console.log("Client Tag Multi:", s), subscribe: () => {} },
+              renderMode: "tag",
+              tagSeparatorRegex: /[,\s]+/
+            });
+            instance.init();
+          }, "Client Tag Multi Select (Example 1)");
+
+          // 16. Client-side Tag Multi Select (Example 2)
+          safeInit(() => {
+            const container = document.getElementById("client-tag-multi2");
+            const instance = new LinqASelect2Client({
+              container: container,
+              searchProperty: "Name",
+              displayProperty: "Name",
+              valueField: "Id",
+              filterSuffix: "",
+              pageSize: 10,
+              debounceDuration: 500,
+              multiselect: true,
+              showPropertyHeader: false,
+              initialData: null,
+              localData: localData,
+              stateManager: { getState: () => ({}), setState: (s) => console.log("Client Tag Multi #2:", s), subscribe: () => {} },
+              renderMode: "tag",
+              tagSeparatorRegex: /[,\s]+/
+            });
+            instance.init();
+          }, "Client Tag Multi Select (Example 2)");
+        });
+    </script>
+</body>
+</html>

@@ -30,7 +30,7 @@ namespace LinqApi.Dynamic.Controller
         /// Hangi LinqController tiplerinin üretileceğini tutan bir liste/dizi.
         /// Örneğin: new[] { LinqControllerType.LinqReadonlyController, LinqControllerType.LinqController }
         /// </summary>
-        public LinqControllerType ControllerType { get; set; } = Array.Empty<LinqControllerType>();
+        public LinqControllerType ControllerType { get; set; } = LinqControllerType.LinqController;
 
         /// <summary>
         /// Controller'ların yer alacağı "Area" ismi.
@@ -102,40 +102,38 @@ namespace LinqApi.Dynamic.Controller
                 // (Artık en son kalıtım BaseEntity<T> hangi noktada ise oradan alacağız.)
                 var idType = FindBaseEntityIdType(entityType);
 
-                foreach (var controllerTypeEnum in _options.ControllerTypes)
-                {
+                var controllerTypeEnum = _options.ControllerType;
                     var baseControllerType = GetBaseControllerType(controllerTypeEnum);
 
-                    if (!TryMakeGenericController(baseControllerType, entityType, idType, out var constructedController))
-                        continue;
+                if (!TryMakeGenericController(baseControllerType, entityType, idType, out var constructedController))
+                    continue;
 
-                    // => Örneğin "CountryController"
-                    var controllerName = $"{entityType.Name}Controller";
+                // => Örneğin "CountryController"
+                var controllerName = $"{entityType.Name}Controller";
 
-                    // Aynı isimde (class isminde) bir controller varsa eklemeyelim
-                    if (feature.Controllers.Any(c => c.Name == controllerName))
-                        continue;
+                // Aynı isimde (class isminde) bir controller varsa eklemeyelim
+                if (feature.Controllers.Any(c => c.Name == controllerName))
+                    continue;
 
-                    // Reflection.Emit ile runtime'da controller tipini üret
-                    var dynamicControllerType = DefineDynamicControllerType(
-                        constructedController,
-                        controllerName,
-                        _options.AreaName
-                    );
+                // Reflection.Emit ile runtime'da controller tipini üret
+                var dynamicControllerType = DefineDynamicControllerType(
+                    constructedController,
+                    controllerName,
+                    _options.AreaName
+                );
 
-                    feature.Controllers.Add(dynamicControllerType.GetTypeInfo());
+                feature.Controllers.Add(dynamicControllerType.GetTypeInfo());
 
-                    var routePrefix = string.IsNullOrEmpty(_options.AreaName)
-                ? $"api/[controller]"
-                : $"api/{_options.AreaName}/[controller]";
-                    LinqApiRegistry.Register(new DynamicApiInfo
-                    {
-                        EntityName = entityType.Name,
-                        ControllerName = controllerName,
-                        RoutePrefix = routePrefix
-                    });
+                var routePrefix = string.IsNullOrEmpty(_options.AreaName)
+            ? $"api/[controller]"
+            : $"api/{_options.AreaName}/[controller]";
+                LinqApiRegistry.Register(new DynamicApiInfo
+                {
+                    EntityName = entityType.Name,
+                    ControllerName = controllerName,
+                    RoutePrefix = routePrefix
+                });
 
-                }
             }
         }
         private Type DefineDynamicControllerType(

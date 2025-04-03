@@ -36,10 +36,14 @@ namespace LinqApi.Razor
         /// </remarks>
         public virtual IActionResult Index()
         
-        
-        
         {
             return View("Index");
+        }
+
+        public virtual IActionResult Select2()
+
+        {
+            return View("Select2");
         }
     }
 }

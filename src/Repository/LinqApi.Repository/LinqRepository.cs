@@ -40,33 +40,6 @@ namespace LinqApi.Repository
             /// </summary>
             protected readonly DbSet<TEntity> DbSet;
 
-            #region Events
-
-            /// <summary>
-            /// Occurs after an entity has been successfully inserted.
-            /// Subscribers can use this event to perform logging, caching, or other post-insert operations.
-            /// </summary>
-            public event EventHandler<TEntity> EntityInserted;
-
-            /// <summary>
-            /// Occurs after an entity has been successfully updated.
-            /// Subscribers can use this event to perform logging, caching, or other post-update operations.
-            /// </summary>
-            public event EventHandler<TEntity> EntityUpdated;
-
-            /// <summary>
-            /// Occurs after an entity has been successfully deleted.
-            /// Subscribers can use this event to perform logging, caching, or other post-delete operations.
-            /// </summary>
-            public event EventHandler<TEntity> EntityDeleted;
-
-            /// <summary>
-            /// Occurs after an entity has been successfully retrieved.
-            /// Subscribers can use this event to perform logging, caching, or other post-retrieval operations.
-            /// </summary>
-            public event EventHandler<TEntity> EntityRetrieved;
-
-            #endregion
 
             /// <summary>
             /// Initializes a new instance of the <see cref="LinqRepository{TDbContext, TEntity, TId}"/> class.
@@ -84,7 +57,6 @@ namespace LinqApi.Repository
                 await DbContext.AddAsync(entity, cancellationToken).ConfigureAwait(false);
                 await SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                 // Raise event for external observers (e.g. logging or caching interceptors)
-                EntityInserted?.Invoke(this, entity);
                 return entity;
             }
 
@@ -94,7 +66,6 @@ namespace LinqApi.Repository
                 DbContext.Entry(entity).State = EntityState.Modified;
                 await SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                 // Raise event for external observers
-                EntityUpdated?.Invoke(this, entity);
                 return entity;
             }
 
@@ -107,7 +78,6 @@ namespace LinqApi.Repository
                     DbContext.Entry(entity).State = EntityState.Deleted;
                     await SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                     // Raise event for external observers
-                    EntityDeleted?.Invoke(this, entity);
                 }
             }
 
@@ -118,7 +88,6 @@ namespace LinqApi.Repository
                 if (entity != null)
                 {
                     // Raise event for external observers
-                    EntityRetrieved?.Invoke(this, entity);
                 }
                 return entity;
             }
