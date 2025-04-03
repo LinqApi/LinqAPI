@@ -21,7 +21,7 @@ namespace LinqApi.Razor
     /// The service provider used to resolve dependencies. Although not directly used here,
     /// it allows for future expansion or retrieval of configurations via DI.
     /// </param>
-    public  class LinqDynamicMvcController : Microsoft.AspNetCore.Mvc.Controller
+    public class LinqDynamicMvcController : Microsoft.AspNetCore.Mvc.Controller
     {
         /// <summary>
         /// Gets the dynamic entity table information and returns the corresponding view.

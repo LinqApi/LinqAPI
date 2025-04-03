@@ -8,9 +8,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDynamicLinqApi("api", "Data Source=.\\SQLEXPRESS;Database=ppp4;Trusted_Connection=True;TrustServerCertificate=Yes");
+builder.Services.AddDynamicLinqApi(string.Empty, "Data Source=.\\SQLEXPRESS;Database=ppp4;Trusted_Connection=True;TrustServerCertificate=Yes");
 
-
+builder.Services.AddHttpContextAccessor();
 
 // MVC'yi view desteğiyle birlikte ekleyin
 builder.Services.AddControllersWithViews()
@@ -44,5 +44,9 @@ app.UseRouting();
 //    pattern: "{controller=LinqMvc}/{action=Index}/{id?}");
 
 
-app.MapDefaultControllerRoute();
+_ = app.MapControllerRoute(
+               name: "default",
+               pattern: "{controller=Home}/{action=Index}/{id?}",
+               defaults: new { area = "" }
+           );
 app.Run();

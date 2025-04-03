@@ -1,147 +1,185 @@
-import { Query, Include, LogicalFilter, Pager } from "../core/models.js";
-import { StateManager } from "../core/state.js";
-
-let instanceCounter = 0;
+import { defaults, fetchProperties } from "./linqutil.js";
+import { Query, LogicalFilter, Include, Pager } from "../core/models.js";
 
 export class QueryBuilder {
-    constructor(config) {
-        const defaults = {
-            container: null,
-            controller: "",
-            intellisense: false,
-            showInclude: true,
-            showGroupBy: true,
-            showSelect: true,
-            applyButtonText: "Generate Query",
-            stateManager: new StateManager({}),
-            debug: false,
-            onApplyQuery: null // optional callback when query is applied
-        };
 
-        this.cfg = { ...defaults, ...config };
+    /**
+     * @param {Object} options
+     * @param {HTMLElement|string} options.container - UI container.
+     * @param {StateManager} options.stateManager - Shared state manager.
+     * @param {string} options.controller - Relevant controller name.
+     * @param {string} [options.apiPrefix="/api"] - API prefix.
+     * @param {Array} [options.properties=null] - List of properties if provided.
+     */
+    constructor({ container, stateManager, controller, apiPrefix = "/api", properties = null }) {
+        this.stateManager = stateManager;
+        this.controller = controller;
+        this.apiPrefix = apiPrefix;
 
-        if (!this.cfg.container) {
-            throw new Error("QueryBuilder requires a container element.");
-        }
-        if (!this.cfg.controller) {
-            throw new Error("QueryBuilder requires a controller name.");
-        }
+        // Select the container element
+        this.containerElm = (typeof container === "string")
+            ? document.querySelector(container)
+            : container;
+        if (!this.containerElm) throw new Error("QueryBuilder: Invalid container.");
 
-        // Generate a unique instance ID for this QueryBuilder widget.
-        this.instanceId = ++instanceCounter;
-
-        // Use provided stateManager or create a new one.
-        this.state = this.cfg.stateManager;
-        this.container = this.cfg.container;
-        this.intellisenseOn = this.cfg.intellisense;
-        // Create the Query instance using the provided controller.
-        this.query = new Query(this.cfg.controller);
-        this.properties = [];
-        this.complexProperties = [];
-
-        // Optionally, fetch properties immediately (if needed)
-        // this.fetchProperties().then(() => this.render());
-        this.init();
-    }
-
-    log(...args) {
-        if (this.cfg.debug) console.debug("[QueryBuilder]", ...args);
-    }
-
-    async init() {
-        await this.fetchProperties();
-        this.render();
-    }
-
-    async fetchProperties() {
-        const url = `/api/${this.cfg.controller}/properties`;
-        try {
-            const res = await fetch(url);
-            if (!res.ok) throw new Error("Properties fetch failed");
-            const result = await res.json();
-            // Convert result into an array, if needed.
-            const arr = Array.isArray(result) ? result : (result.$values || result);
-            // Simple properties: exclude collections and System.Object types
-            this.properties = (arr || []).filter(
-                (p) => !p.type.includes("Collection") && !p.type.startsWith("System.Object")
-            );
-            // Complex properties: those that are collections/enumerables
-            this.complexProperties = (arr || []).filter(
-                (p) =>
-                    p.type.includes("Collection") ||
-                    p.type.includes("IEnumerable") ||
-                    p.type.includes("ICollection")
-            );
-            this.log("Properties loaded:", this.properties, this.complexProperties);
-        } catch (err) {
-            console.warn(err);
-            this.intellisenseOn = false;
-        }
-    }
-
-    render() {
-        // Create unique IDs using the instanceId
-        const uid = this.instanceId;
-        this.container.innerHTML = `
-      <div class="card p-3 shadow-sm mb-3">
-        <input id="filter-input-${uid}" class="form-control mb-2" placeholder="Filter..." value="${this.query.filter.toString()}">
-        ${this.cfg.showInclude ? `
-          <select id="include-select-${uid}" class="form-select mb-2">
-            <option value="">Include...</option>
-            ${this.complexProperties.map(p => `<option>${p.name}</option>`).join('')}
-          </select>` : ""}
-        ${this.cfg.showGroupBy ? `<input id="groupby-input-${uid}" class="form-control mb-2" placeholder="GroupBy...">` : ""}
-        ${this.cfg.showSelect ? `<input id="select-input-${uid}" class="form-control mb-2" placeholder="Select...">` : ""}
-        <input id="orderby-input-${uid}" class="form-control mb-2" placeholder="OrderBy..." value="${this.query.orderBy}">
-        <div class="form-check mb-3">
-          <input id="desc-input-${uid}" type="checkbox" class="form-check-input" ${this.query.desc ? "checked" : ""}>
-          <label class="form-check-label">Desc?</label>
-        </div>
-        <button id="generate-query-btn-${uid}" class="btn btn-primary">${this.cfg.applyButtonText}</button>
-      </div>
-    `;
-        this.setupEventHandlers(uid);
-    }
-
-    setupEventHandlers(uid) {
-        const filterInput = this.container.querySelector(`#filter-input-${uid}`);
-        const includeSelect = this.container.querySelector(`#include-select-${uid}`);
-        const groupByInput = this.container.querySelector(`#groupby-input-${uid}`);
-        const selectInput = this.container.querySelector(`#select-input-${uid}`);
-        const orderByInput = this.container.querySelector(`#orderby-input-${uid}`);
-        const descInput = this.container.querySelector(`#desc-input-${uid}`);
-        const generateQueryBtn = this.container.querySelector(`#generate-query-btn-${uid}`);
-
-        // On filter input change: update query.filter and state.
-        filterInput.addEventListener("input", () => {
-            this.query.filter = new LogicalFilter("AND", [filterInput.value]);
-            this.state.setState({ query: this.query });
+        // Retrieve query from state manager or create a new Query with defaults
+        this.query = this.stateManager.getState("query") || new Query(controller, {
+            filter: new LogicalFilter("AND", [{ toString: () => "1=1" }]),
+            pager: new Pager(),
+            orderBy: "id",
+            desc: true,
+            groupBy: "",
+            select: "",
+            includes: []
         });
 
-        generateQueryBtn.onclick = () => {
-            // Update other query parameters
-            this.query.orderBy = orderByInput.value;
-            this.query.desc = descInput.checked;
-            this.query.groupBy = groupByInput ? groupByInput.value : "";
-            this.query.select = selectInput ? selectInput.value : "";
-            if (includeSelect && includeSelect.value) {
-                if (!this.query.includes) {
-                    this.query.includes = [];
-                }
-                const includeObj = new Include(includeSelect.value, new Pager(1, 10), []);
-                this.query.includes = [includeObj]; // Veya çoklu include için push()
-            }
+        this.properties = properties;
+        if (!this.properties) {
+            fetchProperties(this.controller, this.apiPrefix)
+                .then(props => {
+                    this.properties = props;
+                    // Optionally extend the UI based on properties.
+                })
+                .catch(error => console.error("Failed to fetch properties:", error));
+        }
+        this._render();
 
-            // Update state manager with the new query.
-            this.state.setState({ query: this.getQuery() });
-            if (typeof this.cfg.onApplyQuery === "function") {
-                this.cfg.onApplyQuery(this.query);
-            }
-            this.log("Generated query:", this.query);
-        };
+        // Subscribe to state changes and update the UI accordingly.
+        this.stateManager.subscribe("query", (newQuery) => {
+            this.query = newQuery;
+            this._updateUI();
+        });
     }
 
-    getQuery() {
-        return this.query;
+    _render() {
+        // Clear the container
+        this.containerElm.innerHTML = "";
+
+        // Row 1: Filter and Select fields in two columns
+        const row1 = document.createElement("div");
+        row1.className = "row mb-3";
+        // Filter column
+        const filterCol = document.createElement("div");
+        filterCol.className = "col-md-6";
+        const filterLabel = document.createElement("label");
+        filterLabel.textContent = "Filter:";
+        filterLabel.className = "form-label";
+        this.filterInput = document.createElement("input");
+        this.filterInput.type = "text";
+        this.filterInput.className = "form-control";
+        // Use default "1=1" if undefined
+        this.filterInput.value = (this.query && this.query.filter && this.query.filter.toString()) || "1=1";
+        filterCol.appendChild(filterLabel);
+        filterCol.appendChild(this.filterInput);
+        row1.appendChild(filterCol);
+        // Select column
+        const selectCol = document.createElement("div");
+        selectCol.className = "col-md-6";
+        const selectLabel = document.createElement("label");
+        selectLabel.textContent = "Select:";
+        selectLabel.className = "form-label";
+        this.selectInput = document.createElement("input");
+        this.selectInput.type = "text";
+        this.selectInput.className = "form-control";
+        this.selectInput.value = (this.query && this.query.select) || "";
+        selectCol.appendChild(selectLabel);
+        selectCol.appendChild(this.selectInput);
+        row1.appendChild(selectCol);
+        this.containerElm.appendChild(row1);
+
+        // Row 2: GroupBy and OrderBy fields
+        const row2 = document.createElement("div");
+        row2.className = "row mb-3";
+        // GroupBy column
+        const groupByCol = document.createElement("div");
+        groupByCol.className = "col-md-6";
+        const groupByLabel = document.createElement("label");
+        groupByLabel.textContent = "GroupBy:";
+        groupByLabel.className = "form-label";
+        this.groupByInput = document.createElement("input");
+        this.groupByInput.type = "text";
+        this.groupByInput.className = "form-control";
+        this.groupByInput.value = (this.query && this.query.groupBy) || "";
+        groupByCol.appendChild(groupByLabel);
+        groupByCol.appendChild(this.groupByInput);
+        row2.appendChild(groupByCol);
+        // OrderBy column
+        const orderByCol = document.createElement("div");
+        orderByCol.className = "col-md-6";
+        const orderByLabel = document.createElement("label");
+        orderByLabel.textContent = "OrderBy:";
+        orderByLabel.className = "form-label";
+        this.orderByInput = document.createElement("input");
+        this.orderByInput.type = "text";
+        this.orderByInput.className = "form-control";
+        this.orderByInput.value = (this.query && this.query.orderBy) || "id";
+        orderByCol.appendChild(orderByLabel);
+        orderByCol.appendChild(this.orderByInput);
+        row2.appendChild(orderByCol);
+        this.containerElm.appendChild(row2);
+
+        // Row 3: Desc checkbox and Apply button
+        const row3 = document.createElement("div");
+        row3.className = "row mb-3 align-items-center";
+        // Desc column
+        const descCol = document.createElement("div");
+        descCol.className = "col-md-6";
+        const descDiv = document.createElement("div");
+        descDiv.className = "form-check";
+        this.descInput = document.createElement("input");
+        this.descInput.type = "checkbox";
+        this.descInput.className = "form-check-input";
+        this.descInput.checked = (this.query && typeof this.query.desc === "boolean") ? this.query.desc : true;
+        const descLabel = document.createElement("label");
+        descLabel.textContent = "Desc:";
+        descLabel.className = "form-check-label";
+        descDiv.appendChild(this.descInput);
+        descDiv.appendChild(descLabel);
+        descCol.appendChild(descDiv);
+        row3.appendChild(descCol);
+        // Apply button column
+        const btnCol = document.createElement("div");
+        btnCol.className = "col-md-6 text-end";
+        this.applyBtn = document.createElement("button");
+        this.applyBtn.textContent = "Uygula";
+        this.applyBtn.className = "btn btn-primary";
+        this.applyBtn.addEventListener("click", () => this._applyQuery());
+        btnCol.appendChild(this.applyBtn);
+        row3.appendChild(btnCol);
+        this.containerElm.appendChild(row3);
+    }
+
+    _applyQuery() {
+        // Update the Query instance with input values using default values as needed.
+        const newQuery = {
+            filter: new LogicalFilter("AND", [
+                { toString: () => (this.filterInput.value ? this.filterInput.value : "1=1") }
+            ]),
+            select: this.selectInput.value || "",
+            groupBy: this.groupByInput.value || "",
+            orderBy: this.orderByInput.value || "id",
+            desc: !!this.descInput.checked
+        };
+        // Use stateManager to publish the updated query
+        this.stateManager.setState({ query: new Query(this.controller, newQuery) });
+    }
+
+    _updateUI() {
+        // Reflect the current query state in the UI controls.
+        this.filterInput.value = (this.query && this.query.filter && this.query.filter.toString()) || "1=1";
+        this.selectInput.value = (this.query && this.query.select) || "";
+        this.groupByInput.value = (this.query && this.query.groupBy) || "";
+        this.orderByInput.value = (this.query && this.query.orderBy) || "id";
+        this.descInput.checked = (this.query && typeof this.query.desc === "boolean") ? this.query.desc : true;
+    }
+
+    onQueryUpdated(newQuery) {
+        // Optionally update the query manually if needed.
+        this.query = newQuery;
+        this.query.select = this.selectInput.value;
+        this.query.groupBy = this.groupByInput.value;
+        this.query.orderBy = this.orderByInput.value;
+        this.query.desc = this.descInput.checked;
+        this.query.pager = newQuery.Pager;
     }
 }

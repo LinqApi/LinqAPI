@@ -312,14 +312,23 @@ namespace LinqApi.Dynamic.Controller
                 var schema = partsArr.Length > 1 ? partsArr[0] : "dbo";
                 var table = partsArr.Length > 1 ? partsArr[1] : partsArr[0];
 
-                var controllerName = (schema.ToLower() == "dbo" ? table : $"{schema}_{table}") + "Controller";
+                var controllerName = (schema.ToLower() == "dbo" ? table : $"{schema}_{table}");
 
                 if (feature.Controllers.Any(c => c.Name == controllerName))
                     continue;
 
                 var customControllerType = DefineDynamicControllerType(baseControllerType, controllerName, AreaName);
                 feature.Controllers.Add(customControllerType.GetTypeInfo());
+
+
+                LinqApiRegistry.Register(new DynamicApiInfo
+                {
+                    EntityName = controllerName.Replace("Controller", string.Empty),
+                    ControllerName = controllerName.Replace("Controller",string.Empty),
+                    RoutePrefix = AreaName
+                });
             }
+              
         }
         private Type DefineDynamicControllerType(
             Type baseControllerType,

@@ -1,355 +1,245 @@
-// ================================================
-// Base Component: LinqASelect2Base
-// ================================================
-import { buildQueryFilter } from "./linqUtil.js";
-import { fetchPagedData, debounce, buildFilter } from "./linqUtil.js";
+import { debounce, fetchPagedData, defaults } from "./linqutil.js";
+import { Query, LogicalFilter, Pager } from "../core/models.js";
+
 /**
- * LinqASelect2Base
+ * LinqSelect2 Component
+ * ----------------------
+ * A reusable, agile select component that supports both server- and client-side data fetching,
+ * single/multiple selection, and two render modes: "tag" and "grid".
  *
- * Base class for Select2-like components.
- * 
- * - The constructor merges configuration and stores initial data.
- * - The init() method (which must be called after the DOM is ready)
- *   validates required properties and creates all DOM elements (input,
- *   dropdown, count, and selected container).
- * - The buildFilter() method uses a shared query utility to avoid magic strings.
+ * In single-select mode, the selected item is always shown in the input field.
+ * In multi-select mode:
+ *   - "tag" mode displays selections as small removable tags.
+ *   - "grid" mode displays selections in a table below the input, with an "×" button to remove an item.
+ *
+ * The component also supports a "disabled" flag. When disabled, new selections are not allowed.
  */
-export class LinqASelect2Base {
-    constructor(config) {
+export class LinqSelect2 {
+    constructor(cfg) {
+        // Merge default config with user-provided options
         this.cfg = {
             container: null,
-            url: "",
-            searchProperty: "",
-            displayProperty: "name",
+            controller: "",
+            apiPrefix: defaults.apiPrefix,
+            searchProperty: "name",
+            displayProperty: "name", // Can be a string or an array of properties
             valueField: "id",
             filterSuffix: "",
-            pageSize: 10,
-            debounceDuration: 300,
+            renderMode: "tag",  // "tag" or "grid"
+            fetchMode: "server", // "server" or "client"
+            selectPlaceHolder : "Select...",
+            localData: [],
             multiselect: false,
-            dataPath: ["items", "$values", "results"],
-            ...config
+            pageSize: defaults.defaultPageSize,
+            debounceDuration: defaults.debounceDuration,
+            disabled: false,   // When true, new selections are disabled
+            ...cfg,
         };
-        this.data = [];
         this.selectedItems = [];
+        this.init();
     }
 
+    /**
+     * Initialize the component by setting up the markup and event handlers.
+     */
     init() {
-        const { container } = this.cfg;
-        if (!container) throw new Error("Container is required!");
+        this.container = this.cfg.container;
+        // Set up the component's markup:
+        //   - An input for search/selected value display.
+        //   - A dropdown for search results.
+        //   - A container for showing selected items (used in multi-select grid or tag mode).
+        this.container.innerHTML = `
+    <input class="form-control mb-1" placeholder="${this.cfg.placeholder || 'Select...'}" />
+    <div class="dropdown-menu w-100"></div>
+    <div class="selected-items mt-2"></div>
+`;
+        [this.input, this.dropdown, this.selectedContainer] = this.container.children;
 
-        this.wrapper = document.createElement("div");
-        this.wrapper.className = "linq-select2-wrapper position-relative";
-        container.appendChild(this.wrapper);
-
-        this.inputEl = document.createElement("input");
-        this.inputEl.className = "form-control";
-        this.inputEl.placeholder = "Search...";
-        this.wrapper.appendChild(this.inputEl);
-
-        this.dropdownEl = document.createElement("div");
-        this.dropdownEl.className = "linq-select2-dropdown position-absolute w-100 border bg-white";
-        this.dropdownEl.style.display = "none";
-        this.wrapper.appendChild(this.dropdownEl);
-
-        this.attachEvents();
+        // If disabled, disable input and do not bind selection events.
+        if (this.cfg.disabled) {
+            this.input.disabled = true;
+            this.dropdown.classList.remove("show");
+        } else {
+            // Bind search input events with debouncing.
+            this.input.oninput = debounce(() => this.fetchData(this.input.value), this.cfg.debounceDuration);
+            this.input.onfocus = () => this.fetchData("");
+            document.addEventListener("click", (e) => {
+                if (!this.container.contains(e.target)) {
+                    this.dropdown.classList.remove("show");
+                }
+            });
+        }
     }
 
-    attachEvents() {
-        this.inputEl.value = this.selectedItems.map(i =>
-            Array.isArray(this.cfg.displayProperty)
-                ? this.cfg.displayProperty.map(p => i[p]).join(this.cfg.separator || " - ")
-                : i[this.cfg.displayProperty]
-        ).join(", ");
+    /**
+     * Fetch data either from the server or from localData based on the fetchMode.
+     * @param {string} searchQuery - The search string entered by the user.
+     */
+    async fetchData(searchQuery) {
+        if (this.cfg.fetchMode === "server") {
+            const url = `${this.cfg.apiPrefix}/${this.cfg.controller}/${defaults.filterPagedRoute}`;
+            const filterSegments = [];
 
-        this.inputEl.addEventListener("focus", () => {
-            if (!this.data.length) this.fetchData("");
-        });
+            if (searchQuery) {
+                filterSegments.push(`${this.cfg.searchProperty}.Contains("${searchQuery}")`);
+            }
+            if (this.cfg.filterSuffix) {
+                filterSegments.push(this.cfg.filterSuffix);
+            }
 
-        document.addEventListener("click", (e) => {
-            if (!this.wrapper.contains(e.target)) this.hideDropdown();
-        });
-    }
+            const filter = new LogicalFilter("AND", filterSegments);
+            const query = new Query(this.cfg.controller, {
+                filter,
+                pager: new Pager(1, this.cfg.pageSize),
+                orderBy: this.cfg.valueField,
+                desc: false,
+            });
 
-    async fetchData(query) {
-        const filter = buildFilter({
-            searchProperty: this.cfg.searchProperty,
-            query,
-            filterSuffix: this.cfg.filterSuffix
-        });
-        this.data = await fetchPagedData(this.cfg.url, {
-            filter,
-            pager: { pageNumber: 1, pageSize: this.cfg.pageSize }
-        }, this.cfg.dataPath);
+            // Expecting the server response to have an "items" property.
+            this.data = await fetchPagedData(url, query);
+        } else {
+            // Client-side filtering on localData.
+            const q = searchQuery.toLowerCase();
+            this.data = {
+                items: this.cfg.localData.filter(i =>
+                    i[this.cfg.searchProperty].toLowerCase().includes(q)
+                )
+            };
+        }
         this.renderDropdown();
     }
 
+    /**
+     * Render the dropdown list with the fetched data.
+     * Uses getDisplayText() to build the display string for each item.
+     */
     renderDropdown() {
-        this.dropdownEl.innerHTML = "";
-        this.data.forEach(item => {
-            const option = document.createElement("div");
-            option.className = "linq-select2-option p-1";
-            option.textContent = Array.isArray(this.cfg.displayProperty)
-                ? this.cfg.displayProperty.map(p => item[p]).join(" - ")
-                : item[this.cfg.displayProperty];
+        this.dropdown.innerHTML = this.data.items.map(item => {
+            const displayText = this.getDisplayText(item);
+            return `<a class="dropdown-item">${displayText}</a>`;
+        }).join("");
 
-            option.onclick = () => this.selectItem(item);
-            this.dropdownEl.appendChild(option);
+        Array.from(this.dropdown.children).forEach((el, i) => {
+            el.onclick = () => this.selectItem(this.data.items[i]);
         });
-        this.dropdownEl.style.display = "block";
+        this.dropdown.classList.add("show");
     }
 
+    /**
+     * Handle item selection.
+     * For single-select mode, the selected item replaces any existing selection.
+     * For multi-select mode, the item is added if not already selected.
+     * If the component is disabled, no action is taken.
+     * @param {object} item - The item being selected.
+     */
     selectItem(item) {
-        const exists = this.selectedItems.some(i => i[this.cfg.valueField] === item[this.cfg.valueField]);
-        if (!exists || !this.cfg.multiselect) {
-            this.selectedItems = this.cfg.multiselect ? [...this.selectedItems, item] : [item];
+        if (this.cfg.disabled) return; // Do nothing if component is disabled
+
+        if (this.cfg.multiselect) {
+            // In multi-select, add the item if it's not already selected.
+            if (!this.selectedItems.some(i => i[this.cfg.valueField] === item[this.cfg.valueField])) {
+                this.selectedItems.push(item);
+            }
+        } else {
+            // In single-select, replace the current selection.
+            this.selectedItems = [item];
         }
-        this.inputEl.value = this.selectedItems.map(i => i[this.cfg.displayProperty]).join(", ");
-        this.hideDropdown();
+        this.updateSelectedUI();
+        // For single-select mode, hide the dropdown.
+        if (!this.cfg.multiselect) {
+            this.dropdown.classList.remove("show");
+        }
     }
 
-    hideDropdown() {
-        this.dropdownEl.style.display = "none";
+    /**
+     * Update the selected items display.
+     * - In single-select mode, the selected item is shown inside the input field.
+     * - In multi-select mode:
+     *     * In "tag" mode, selections are shown as removable tags.
+     *     * In "grid" mode, selections are shown in a table with removal buttons.
+     */
+    updateSelectedUI() {
+        // Helper to generate the display text from an item.
+        const displayText = (item) => this.getDisplayText(item);
+
+        // Single-select: Always display selection in the input field.
+        if (!this.cfg.multiselect) {
+            this.input.value = this.selectedItems[0] ? displayText(this.selectedItems[0]) : "";
+            // Clear external selected items container.
+            this.selectedContainer.innerHTML = "";
+        } else {
+            // Multi-select mode.
+            // Clear the input field for further search.
+            this.input.value = "";
+            if (this.cfg.renderMode === "tag") {
+                // Render selected items as tags with an "×" icon.
+                this.selectedContainer.innerHTML = this.selectedItems.map(item => `
+                    <span class="badge bg-secondary me-1">
+                        ${displayText(item)}
+                        <span data-id="${item[this.cfg.valueField]}" class="ms-1" style="cursor: pointer;">&times;</span>
+                    </span>
+                `).join("");
+                // Bind removal event on each tag's "×" icon.
+                this.selectedContainer.querySelectorAll("[data-id]").forEach(span => {
+                    span.onclick = () => this.removeSelected(span.dataset.id);
+                });
+            } else if (this.cfg.renderMode === "grid") {
+                // Render selected items in a grid (table) with a removal button.
+                this.selectedContainer.innerHTML = `
+                    <table class="table table-bordered small">
+                        <tbody>
+                            ${this.selectedItems.map(item => `
+                                <tr>
+                                    <td>${displayText(item)}</td>
+                                    <td style="width:1%; white-space: nowrap;">
+                                        <button class="btn btn-sm btn-danger" data-id="${item[this.cfg.valueField]}">&times;</button>
+                                    </td>
+                                </tr>
+                            `).join("")}
+                        </tbody>
+                    </table>
+                `;
+                // Bind removal event on each grid button.
+                this.selectedContainer.querySelectorAll("button[data-id]").forEach(btn => {
+                    btn.onclick = () => this.removeSelected(btn.getAttribute("data-id"));
+                });
+            }
+        }
     }
 
+    /**
+     * Remove a selected item by its valueField.
+     * @param {string|number} id - The identifier of the item to remove.
+     */
+    removeSelected(id) {
+        this.selectedItems = this.selectedItems.filter(i =>
+            i[this.cfg.valueField].toString() !== id.toString()
+        );
+        this.updateSelectedUI();
+    }
+
+    /**
+     * Get the current selection.
+     * @returns {Array|object|null} - Returns an array for multi-select or a single object (or null) for single-select.
+     */
     getValue() {
         return this.cfg.multiselect ? this.selectedItems : this.selectedItems[0] || null;
     }
-}
 
-/**
- * LinqASelect2Server
- *
- * Server-side implementation: fetches data from the backend.
- */
-export class LinqASelect2Server extends LinqASelect2Base {
-    async fetchData(query) {
-        const filter = this.buildFilter(query);
-        const payload = {
-            filter: filter,
-            pager: { pageNumber: 1, pageSize: this.cfg.pageSize }
-        };
-        try {
-            const res = await fetch(this.cfg.url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-            const result = await res.json();
-            this.data = result.items || result.$values || [];
-            const totalCount = result.totalRecords || this.data.length;
-            if (this.cfg.showCount) {
-                this.countEl.textContent = `${this.cfg.countLabel}${totalCount}`;
-            }
-            this.renderDropdown();
-        } catch (err) {
-            console.error("LinqASelect2Server fetchData error:", err);
+    /**
+     * Helper method to build the display text for an item.
+     * If displayProperty is an array, concatenates the values separated by " - ".
+     * Otherwise, returns the single property value.
+     * @param {object} item - The data item.
+     * @returns {string} The display text.
+     */
+    getDisplayText(item) {
+        if (Array.isArray(this.cfg.displayProperty)) {
+            return this.cfg.displayProperty
+                .map(prop => item[prop])
+                .filter(val => val != null)
+                .join(" - ");
         }
+        return item[this.cfg.displayProperty] ?? "";
     }
 }
-
-export class LinqASelect2ServerGrid extends LinqASelect2Base {
-    selectItem(item) {
-        super.selectItem(item);
-        this.renderSelectedItems();
-    }
-
-    renderSelectedItems() {
-        if (this.selectedContainer) this.selectedContainer.remove();
-        this.selectedContainer = document.createElement("div");
-        this.selectedContainer.className = "linq-selected-items mt-2";
-
-        this.selectedItems.forEach(item => {
-            const div = document.createElement("div");
-            div.textContent = Array.isArray(this.cfg.displayProperty)
-                ? this.cfg.displayProperty.map(p => item[p]).join(this.cfg.separator || " - ")
-                : item[this.cfg.displayProperty];
-            this.selectedContainer.appendChild(div);
-        });
-
-        this.wrapper.appendChild(this.selectedContainer);
-    }
-}
-
-/**
- * LinqASelect2Client
- *
- * Client-side implementation: filters using local data.
- */
-export class LinqASelect2Client extends LinqASelect2Base {
-    async fetchData(query) {
-        if (!this.cfg.localData) {
-            console.warn("LinqASelect2Client: localData is not provided.");
-            return;
-        }
-        const lowerQuery = query.toLowerCase();
-        this.data = this.cfg.localData.filter(item => {
-            const value = String(item[this.cfg.searchProperty] || "").toLowerCase();
-            return value.indexOf(lowerQuery) !== -1;
-        });
-        if (this.cfg.showCount) {
-            this.countEl.textContent = `Total: ${this.data.length}`;
-        }
-        this.renderDropdown();
-    }
-}
-
-/**
- * LinqASelect2Grid
- *
- * Grid rendering variant.
- */
-export class LinqASelect2Grid extends LinqASelect2Base {
-    updateSelectedUI() {
-        // Sadece seçim gösterimini güncelle, wrapper içindeki input/dropdown'ı asla silme
-        if (!this.wrapper) return;
-
-        // Daha önce eklenmiş seçim listesi varsa sil
-        const existing = this.wrapper.querySelector(".linq-selected-items");
-        if (existing) existing.remove();
-
-        const selectionDiv = document.createElement("div");
-        selectionDiv.className = "linq-selected-items mt-2";
-
-        this.selectedItems.forEach(item => {
-            const div = document.createElement("div");
-            div.className = "linq-selected-item";
-            div.style.padding = "2px";
-            if (Array.isArray(this.cfg.displayProperty)) {
-                div.textContent = this.cfg.displayProperty.map(p => item[p]).join(" - ");
-            } else {
-                div.textContent = item[this.cfg.displayProperty];
-            }
-            selectionDiv.appendChild(div);
-        });
-
-        this.wrapper.appendChild(selectionDiv);
-    }
-
-
-}
-
-/**
- * LinqASelect2Tag
- *
- * Tag rendering variant.
- */
-export class LinqASelect2Tag extends LinqASelect2Base {
-    updateSelectedUI() {
-        this.selectedContainer.innerHTML = "";
-        this.selectedItems.forEach(item => {
-            const tag = document.createElement("span");
-            tag.className = "linq-select2-tag badge bg-secondary me-1";
-            tag.style.cursor = "default";
-            if (Array.isArray(this.cfg.displayProperty)) {
-                tag.textContent = this.cfg.displayProperty.map(prop => item[prop]).join(" - ");
-            } else {
-                tag.textContent = item[this.cfg.displayProperty];
-            }
-            this.selectedContainer.appendChild(tag);
-        });
-    }
-}
-
-/**
- * USAGE EXAMPLES:
- *
- * 1. Server-Side Grid Rendering:
- * 
- *    // In your HTML, include a container element:
- *    // <div id="server-grid-container"></div>
- *    const serverGridContainer = document.getElementById("server-grid-container");
- *    const select2ServerGrid = new LinqASelect2Server({
- *         container: serverGridContainer,
- *         url: "/api/Country/filterpaged",
- *         searchProperty: "Name",
- *         displayProperty: ["Name", "Code"],
- *         valueField: "Id",
- *         filterSuffix: "1=1",
- *         pageSize: 10,
- *         debounceDuration: 500,
- *         multiselect: true,
- *         showPropertyHeader: true,
- *         initialData: null,
- *         stateManager: { getState: () => ({}), setState: (s) => console.log(s), subscribe: () => {} },
- *         renderMode: "grid"
- *    });
- *    select2ServerGrid.init();
- *
- * 2. Client-Side Tag Rendering:
- *
- *    // In your HTML, include a container element:
- *    // <div id="client-tag-container"></div>
- *    const clientTagContainer = document.getElementById("client-tag-container");
- *    const localData = [
- *         { Id: 1, Name: "USA", Code: "US" },
- *         { Id: 2, Name: "Canada", Code: "CA" },
- *         { Id: 3, Name: "Mexico", Code: "MX" }
- *    ];
- *    const select2ClientTag = new LinqASelect2Client({
- *         container: clientTagContainer,
- *         searchProperty: "Name",
- *         displayProperty: "Name",
- *         valueField: "Id",
- *         filterSuffix: "",
- *         debounceDuration: 500,
- *         multiselect: true,
- *         initialData: null,
- *         localData: localData,
- *         stateManager: { getState: () => ({}), setState: (s) => console.log(s), subscribe: () => {} },
- *         renderMode: "tag",
- *         tagSeparatorRegex: /[,\s]+/   // Split on commas or whitespace.
- *    });
- *    select2ClientTag.init();
- *
- * 3. General Grid Rendering using a specialized grid variant:
- *
- *    // In your HTML, include a container element:
- *    // <div id="select2-grid-container"></div>
- *    const gridContainer = document.getElementById("select2-grid-container");
- *    const select2Grid = new LinqASelect2Grid({
- *         container: gridContainer,
- *         url: "/api/YourController/filterpaged",
- *         searchProperty: "Name",
- *         displayProperty: ["Name", "Surname"],
- *         valueField: "Id",
- *         filterSuffix: "Id>5",
- *         pageSize: 10,
- *         debounceDuration: 500,
- *         multiselect: true,
- *         showPropertyHeader: true,
- *         initialData: null,
- *         stateManager: { getState: () => ({}), setState: (s) => console.log("State updated:", s), subscribe: () => {} },
- *         renderMode: "grid"
- *    });
- *    select2Grid.init();
- *
- * 4. Tag Rendering with Bootstrap 5 styling (using the tag variant):
- *
- *    // In your HTML, include a container element:
- *    // <div id="select2-tag-container"></div>
- *    const tagContainer = document.getElementById("select2-tag-container");
- *    const select2Tag = new LinqASelect2Tag({
- *         container: tagContainer,
- *         url: "/api/YourController/filterpaged",
- *         searchProperty: "Name",
- *         displayProperty: "Name",
- *         valueField: "Id",
- *         filterSuffix: "Id>5",
- *         pageSize: 10,
- *         debounceDuration: 500,
- *         multiselect: true,
- *         showPropertyHeader: false,
- *         initialData: null,
- *         stateManager: { getState: () => ({}), setState: (s) => console.log("State updated:", s), subscribe: () => {} },
- *         renderMode: "tag",
- *         tagSeparatorRegex: /[,\s]+/
- *    });
- *    select2Tag.init();
- *
- * NOTE:
- * - These components use Bootstrap 5 CSS classes (e.g., "form-control", "table", "badge")
- *   for styling but do not depend on Bootstrap's JavaScript.
- * - The design follows SOLID principles and is modular and extensible.
- * - The static factory method approach is available if you prefer to initialize with a single call,
- *   but in this design we use instance-based initialization for better control over lifecycle.
- */

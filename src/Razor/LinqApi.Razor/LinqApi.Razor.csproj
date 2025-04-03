@@ -6,8 +6,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
 	</PropertyGroup>
-
-
+  
 	<ItemGroup>
 		<SupportedPlatform Include="browser" />
 	</ItemGroup>

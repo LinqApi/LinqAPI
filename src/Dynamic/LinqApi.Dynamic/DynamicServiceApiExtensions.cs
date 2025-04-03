@@ -33,10 +33,9 @@ namespace LinqApi.Dynamic.Extensions
                 var (schema, table) = tableInfo;
 
                 // Schema normalizasyonu (dbo için sadece tablo adı kullanılacak)
-                string normalizedSchema = schema.Equals("dbo", StringComparison.OrdinalIgnoreCase) ? "" : schema;
-                string key = string.IsNullOrWhiteSpace(normalizedSchema) ? table : $"{normalizedSchema}.{table}";
+                string key = $"{schema}.{table}";
 
-            if (!columnSchemas.TryGetValue($"{key}", out Dictionary<string, ColumnDefinition> columns))
+                if (!columnSchemas.TryGetValue($"{key}", out Dictionary<string, ColumnDefinition> columns))
                     return;
                 if (!allPrimaryKeys.TryGetValue($"{key}", out string pkColumn))
                     return;
@@ -91,14 +90,19 @@ namespace LinqApi.Dynamic.Extensions
 
             return services;
         }
-        
+
         private static bool IsValidPrimaryKey(Type keyType)
         {
-            // Örneğin, bigint (long) tipli primary key'ler bazı yapılar tarafından kabul edilmeyebilir.
-            // Bu kontrol ile long tipini reddediyoruz.
-            if (keyType == typeof(long))
-                return false;
-            return keyType == typeof(int) ||
+
+            return keyType == typeof(int?) ||
+                keyType == typeof(long?) ||
+                   keyType == typeof(string) ||
+                   keyType == typeof(Guid?) ||
+                   keyType == typeof(DateTime?) ||
+                   keyType == typeof(short?)
+                   ||
+                   keyType == typeof(int) ||
+                keyType == typeof(long) ||
                    keyType == typeof(string) ||
                    keyType == typeof(Guid) ||
                    keyType == typeof(DateTime) ||
