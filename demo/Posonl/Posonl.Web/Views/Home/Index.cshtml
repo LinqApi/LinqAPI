@@ -1,0 +1,17 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+    // Countries listesini ViewBag üzerinden alıyoruz.
+    var countries = ViewBag.Countries as IEnumerable<Posonl.Domain.Country>;
+}
+<!-- Hero Bölümü -->
+@await Html.PartialAsync("_Hero")
+
+<!-- Karşılaştırma Formu Partial'ı -->
+@await Html.PartialAsync("_ComparisonForm", countries)
+
+<!-- Karşılaştırma Sonuçları Bölümü -->
+<div id="comparisonSection" class="my-5">
+    <h2>Comparison Results</h2>
+    <p>This section will display comparison details for selected POS companies.</p>
+    <!-- İlerleyen aşamalarda bu bölümü dinamik içerikle doldurabilirsiniz -->
+</div>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.min.css" />
+    @RenderSection("Styles", required: false)
+    <style>
+        /* Dashboard Layout Custom Styles */
+        #wrapper {
+            display: flex;
+            height: 100vh;
+        }
+
+        #sidebar-wrapper {
+            min-width: 250px;
+            max-width: 250px;
+            background-color: #f8f9fa;
+        }
+
+        #page-content-wrapper {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-heading {
+            font-size: 1.25rem;
+            font-weight: 500;
+        }
+
+        .nav-link i {
+            margin-right: 0.5rem;
+        }
+        /* Notification badge styles */
+        .notification-icon {
+            position: relative;
+            cursor: pointer;
+        }
+
+            .notification-icon .badge {
+                position: absolute;
+                top: 0;
+                right: 0;
+                background-color: red;
+                color: white;
+                font-size: 0.7rem;
+                border-radius: 50%;
+                padding: 2px 4px;
+            }
+    </style>
+</head>
+<body>
+    <div id="wrapper">
+        <!-- Sidebar-->
+        <div id="sidebar-wrapper" class="border-end">
+            <div class="sidebar-heading p-3 bg-light border-bottom">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </div>
+            <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action p-3"
+                   asp-area="Dashboard" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-house-door-fill"></i> Dashboard Home
+                </a>
+                <div class="list-group-item p-3">
+                    <div class="fw-bold mb-1">
+                        <i class="bi bi-geo-alt"></i> Country
+                    </div>
+                    <a class="d-block ms-3" asp-area="Dashboard" asp-controller="Home" asp-action="Country">Country</a>
+                    <a class="d-block ms-3" asp-area="Dashboard" asp-controller="Home" asp-action="CountryGroup">Country Group</a>
+                </div>
+                <div class="list-group-item p-3">
+                    <div class="fw-bold mb-1">
+                        <i class="bi bi-building"></i> POS
+                    </div>
+                    <a class="d-block ms-3" asp-area="Dashboard" asp-controller="Home" asp-action="PosCompany">POS Company</a>
+                    <a class="d-block ms-3" asp-area="Dashboard" asp-controller="Home" asp-action="PosService">POS Service</a>
+                    <a class="d-block ms-3" asp-area="Dashboard" asp-controller="Home" asp-action="PosServiceCategory">Service Category</a>
+                    <a class="d-block ms-3" asp-area="Dashboard" asp-controller="Home" asp-action="PosCommissionRate">Commission Rates</a>
+                </div>
+                <div class="list-group-item p-3">
+                    <div class="fw-bold mb-1">
+                        <i class="bi bi-star"></i> Ratings
+                    </div>
+                    <a class="d-block ms-3" asp-area="Dashboard" asp-controller="Home" asp-action="RatingCategory">Rating Category</a>
+                </div>
+                <div class="list-group-item p-3">
+                    <div class="fw-bold mb-1">
+                        <i class="bi bi-file-earmark-text-fill"></i> Logs
+                    </div>
+                    <a class="d-block ms-3" asp-area="Dashboard" asp-controller="Home" asp-action="LinqSqlLogs">MSSQL Logs</a>
+                    <a class="d-block ms-3" asp-area="Dashboard" asp-controller="Home" asp-action="LinqHttpCallLogs">HTTP Logs</a>
+                    <a class="d-block ms-3" asp-area="Dashboard" asp-controller="Home" asp-action="LinqEventLogs">Event Logs</a>
+                </div>
+            </div>
+        </div>
+        <!-- Page content wrapper-->
+        <div id="page-content-wrapper">
+            <!-- Top navigation-->
+            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+                <div class="container-fluid">
+                    <button class="btn btn-primary" id="sidebarToggle">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav ms-auto mt-2 mt-lg-0 align-items-center">
+                            <li class="nav-item me-3">
+                                <a class="nav-link" asp-area="Dashboard" asp-controller="Home" asp-action="Index">
+                                    <i class="bi bi-house"></i> Home
+                                </a>
+                            </li>
+                            <li class="nav-item me-3">
+                                <a class="nav-link" asp-area="Dashboard" asp-controller="Home" asp-action="Healthcheck">
+                                    <i class="bi bi-card-text"></i> Healthcheck
+                                </a>
+                            </li>
+                            <!-- Notification Icon -->
+                            <li class="nav-item">
+                                <a class="nav-link notification-icon" href="@Url.Action("Notifications", "Home", new { area = "Dashboard" })">
+                                    <i class="bi bi-bell"></i>
+                                    <span class="badge">3</span> <!-- This badge count could be dynamic -->
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+            <!-- Main content area -->
+            <div class="container-fluid pt-3">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
+    <script>
+        // Toggle sidebar visibility
+        const sidebarToggle = document.getElementById("sidebarToggle");
+        sidebarToggle.addEventListener("click", () => {
+          document.getElementById("sidebar-wrapper").classList.toggle("d-none");
+        });
+    </script>
+</body>
+</html>

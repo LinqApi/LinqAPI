@@ -12,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Core\LinqApi.Core\LinqApi.Core.csproj" />
     <ProjectReference Include="..\..\..\Dynamic\LinqApi.Dynamic\LinqApi.Dynamic.csproj" />
     <ProjectReference Include="..\..\..\Localization\LinqApi.Localization\LinqApi.Localization.csproj" />
     <ProjectReference Include="..\..\..\Repository\LinqApi.Repository\LinqApi.Repository.csproj" />

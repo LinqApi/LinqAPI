@@ -35,7 +35,7 @@ namespace LinqApi.Logging
         {
             var sw = Stopwatch.StartNew();
             string reqBody = string.Empty;
-
+              
             // Enable buffering to read the request body.
             context.Request.EnableBuffering();
             if (context.Request.ContentLength.GetValueOrDefault() > 0)

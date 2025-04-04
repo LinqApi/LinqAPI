@@ -1,0 +1,513 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Hero.Description" xml:space="preserve">
+    <value>POS şirketlerini karşılaştırın, en düşük komisyon oranlarını bulun ve işletmenize en uygun ödeme sistemini seçin.</value>
+  </data>
+  <data name="Hero.Title" xml:space="preserve">
+    <value>En İyi POS Çözümlerini Keşfedin!</value>
+  </data>
+  <data name="Menu.About" xml:space="preserve">
+    <value>Hakkımızda</value>
+  </data>
+  <data name="Menu.Contact" xml:space="preserve">
+    <value>İletişim</value>
+  </data>
+  <data name="Menu.Home" xml:space="preserve">
+    <value>Anasayfa</value>
+  </data>
+  <data name="Menu.PosCompanies" xml:space="preserve">
+    <value>Pos Şirketleri</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>Arama</value>
+  </data>
+  <data name="SearchButton" xml:space="preserve">
+    <value>Ara</value>
+  </data>
+  <data name="Hero.Button" xml:space="preserve">
+    <value>Hemen Karşılaştır</value>
+  </data>
+  <data name="SelectCountry" xml:space="preserve">
+    <value>Ülke Seçin</value>
+  </data>
+  <data name="CompareNow" xml:space="preserve">
+    <value>Karşılaştır</value>
+  </data>
+  <data name="Category.PaymentMethods" xml:space="preserve">
+    <value>Ödeme Yöntemleri </value>
+  </data>
+  <data name="Category.HardwareSolutions" xml:space="preserve">
+    <value>Donanım Çözümleri </value>
+  </data>
+  <data name="Category.BillingAndAccounting" xml:space="preserve">
+    <value>Fatura &amp; Muhasebe Entegrasyonları </value>
+  </data>
+  <data name="Category.EcommerceAndOnlinePayments" xml:space="preserve">
+    <value>E-Ticaret &amp; Online Ödeme </value>
+  </data>
+  <data name="Category.SecurityAndFraudPrevention" xml:space="preserve">
+    <value>Güvenlik ve Sahtecilik Önleme </value>
+  </data>
+  <data name="Category.CustomerAndLoyaltyPrograms" xml:space="preserve">
+    <value>Müşteri &amp; Sadakat Programları </value>
+  </data>
+  <data name="Category.MultiCurrencyAndCrossBorderPayments" xml:space="preserve">
+    <value>Çoklu Para Birimi &amp; Uluslararası Ödemeler</value>
+  </data>
+  <data name="Category.ReportingAndAnalytics" xml:space="preserve">
+    <value>Raporlama &amp; Analitik </value>
+  </data>
+  <data name="Category.SubscriptionAndRecurringPayments" xml:space="preserve">
+    <value>Abonelik &amp; Tekrarlayan Ödemeler </value>
+  </data>
+  <data name="Category.RegionalSpecificPOSServices" xml:space="preserve">
+    <value>Bölgeye Özel POS Hizmetleri </value>
+  </data>
+  <data name="PosService.CreditCardProcessing" xml:space="preserve">
+    <value>Kredi Kartı İşlemleri</value>
+  </data>
+  <data name="PosService.ContactlessPayments" xml:space="preserve">
+    <value>Temassız Ödemeler</value>
+  </data>
+  <data name="PosService.ContactlessPaymentsDescription" xml:space="preserve">
+    <value>Kart ya da mobil cihazların POS cihazlarına fiziksel temas gerektirmeden ödeme yapılmasını sağlar, hızlı ve hijyenik bir işlem sunar.</value>
+  </data>
+  <data name="PosService.EMVChipPayments" xml:space="preserve">
+    <value>EMV Çip Ödemeleri</value>
+  </data>
+  <data name="PosService.EMVChipPaymentsDescription" xml:space="preserve">
+    <value>EMV çipi, kart bilgilerini güvenle saklamak için kullanılan bir teknolojidir, dolandırıcılığı önlemeye yardımcı olur.</value>
+  </data>
+  <data name="PosService.MobilePayments" xml:space="preserve">
+    <value>Mobil Ödemeler</value>
+  </data>
+  <data name="PosService.MobilePaymentsDescription" xml:space="preserve">
+    <value>Mobil cüzdanlar aracılığıyla ödeme imkanı sunar, kullanıcıların hızlı ve güvenli bir şekilde alışveriş yapmalarını sağlar.</value>
+  </data>
+  <data name="PosService.CryptoPayments" xml:space="preserve">
+    <value>Kripto Para Ödemeleri</value>
+  </data>
+  <data name="PosService.CryptoPaymentsDescription" xml:space="preserve">
+    <value>Bitcoin, Ethereum gibi popüler kripto paralarla ödeme yapma imkanı tanır, dijital para birimi kullanıcıları için uygun bir seçenektir.</value>
+  </data>
+  <data name="PosService.BKMExpressPayment" xml:space="preserve">
+    <value>BKM Express Ödemesi</value>
+  </data>
+  <data name="PosService.BKMExpressPaymentDescription" xml:space="preserve">
+    <value>Türkiye özelinde geliştirilen bir online ödeme sistemidir, hızlı ve güvenli ödeme yapılmasını sağlar.</value>
+  </data>
+  <data name="PosService.TraditionalPOSMachines" xml:space="preserve">
+    <value>Geleneksel POS Makineleri</value>
+  </data>
+  <data name="PosService.TraditionalPOSMachinesDescription" xml:space="preserve">
+    <value>Standart işlemleri yönetmek için tasarlanmış fiziksel ödeme terminalleri sağlar, geniş kullanım alanlarına sahiptir.</value>
+  </data>
+  <data name="PosService.WirelessPOS" xml:space="preserve">
+    <value>Kablosuz POS</value>
+  </data>
+  <data name="PosService.WirelessPOSDescription" xml:space="preserve">
+    <value>Mobil ortamlarda ödeme yapabilme imkanı sunar, kablosuz bağlantı özellikleri ile donatılmıştır.</value>
+  </data>
+  <data name="PosService.TabletPOS" xml:space="preserve">
+    <value>Tablet POS</value>
+  </data>
+  <data name="PosService.TabletPOSDescription" xml:space="preserve">
+    <value>Tabletler üzerinde çalışabilen POS çözümleri sunar, kullanıcı dostu arayüzleri ile dikkat çeker.</value>
+  </data>
+  <data name="PosService.SelfCheckoutKiosks" xml:space="preserve">
+    <value>Kendi Kendine Ödeme Kioskları</value>
+  </data>
+  <data name="PosService.SelfCheckoutKiosksDescription" xml:space="preserve">
+    <value>Müşterilerin kendi başlarına hızlı ve kolay bir şekilde ödeme yapmalarını sağlayan otomatik kiosklar sunar.</value>
+  </data>
+  <data name="PosService.HandheldPOS" xml:space="preserve">
+    <value>El Tipi POS</value>
+  </data>
+  <data name="PosService.HandheldPOSDescription" xml:space="preserve">
+    <value>Küçük işletmelerde ya da hareketliliğin önemli olduğu açık hava etkinliklerinde kullanıma uygun, taşınabilir POS cihazları sunar.</value>
+  </data>
+  <data name="PosService.AutomatedInvoicing" xml:space="preserve">
+    <value> Otomatik Faturalandırma</value>
+  </data>
+  <data name="PosService.AutomatedInvoicingDescription" xml:space="preserve">
+    <value>İşlemler için faturaları otomatik olarak oluşturur, yoğun işlem hacmine sahip işletmeler için faturalandırma sürecini hızlandırır ve manuel hataları azaltır.</value>
+  </data>
+  <data name="PosService.TaxIntegration" xml:space="preserve">
+    <value>Vergi Hesaplama&amp;Ödeme Entegrasyonu</value>
+  </data>
+  <data name="PosService.TaxIntegrationDescription" xml:space="preserve">
+    <value>İşlemlere otomatik olarak doğru vergi oranlarını hesaplayıp uygulayarak vergi sistemleri ile entegre çalışır, uyumluluğu ve muhasebe süreçlerini basitleştirir.</value>
+  </data>
+  <data name="PosService.MultiCurrencyBilling" xml:space="preserve">
+    <value>Çoklu Para Birimi Faturalandırma</value>
+  </data>
+  <data name="PosService.MultiCurrencyBillingDescription" xml:space="preserve">
+    <value>Uluslararası faaliyet gösteren işletmeler için farklı para birimlerinde faturalandırma yaparak esneklik ve müşteri tabanının ihtiyaçlarına uyum sağlar.</value>
+  </data>
+  <data name="PosService.EReceiptGeneration" xml:space="preserve">
+    <value>Elektronik Fatura Oluşturma </value>
+  </data>
+  <data name="PosService.EReceiptGenerationDescription" xml:space="preserve">
+    <value>Her işlem için dijital faturalar veya fişler oluşturur, müşterilere kolay ve çevre dostu bir satın alma kanıtı sunarken kağıt israfını azaltır.</value>
+  </data>
+  <data name="PosService.POSAccountingIntegration" xml:space="preserve">
+    <value>POS Muhasebe Entegrasyonu</value>
+  </data>
+  <data name="PosService.POSAccountingIntegrationDescription" xml:space="preserve">
+    <value>POS verilerini dış muhasebe sistemleriyle entegre eder, işletmeler için gerçek zamanlı finansal veri ve içgörüler sağlar ve finansal izlemeyi ve karar verme süreçlerini iyileştirir. </value>
+  </data>
+  <data name="PosService.PaymentLinks" xml:space="preserve">
+    <value>Ödeme Bağlantıları</value>
+  </data>
+  <data name="PosService.PaymentLinksDescription" xml:space="preserve">
+    <value>Müşterilere e-posta veya mesajlaşma platformları aracılığıyla gönderilebilen, güvenli ve özelleştirilebilir ödeme bağlantıları oluşturur, kolay ve güvenli uzaktan ödemeleri sağlar.</value>
+  </data>
+  <data name="PosService.SubscriptionBilling" xml:space="preserve">
+    <value>Abonelik Faturalandırma </value>
+  </data>
+  <data name="PosService.SubscriptionBillingDescription" xml:space="preserve">
+    <value>Abonelik ödemelerini yönetir, faturalandırma döngüsünü otomatikleştirir ve hizmetler için sürekli gelir akışlarını sağlar, özellikle üyelikler ve dijital içeriğe sürekli erişim için yararlıdır. </value>
+  </data>
+  <data name="PosService.BuyNowPayLater" xml:space="preserve">
+    <value>Şimdi Al, Sonra Öde </value>
+  </data>
+  <data name="PosService.BuyNowPayLaterDescription" xml:space="preserve">
+    <value>Müşterilere ürün veya hizmetleri hemen satın alma ve zamanla ödeme yapma seçeneği sunar, satın alma gücünü artırır ve potansiyel olarak satış hacimlerini artırabilir. </value>
+  </data>
+  <data name="PosService.MerchantVirtualTerminals" xml:space="preserve">
+    <value>Sanal Ticari Terminaller </value>
+  </data>
+  <data name="PosService.MerchantVirtualTerminalsDescription" xml:space="preserve">
+    <value>Fiziksel POS cihazına ihtiyaç duymadan telefon veya uzaktan ödeme senaryoları için çevrimiçi ödemeleri kabul etmek için sanal terminal çözümleri sağlar. </value>
+  </data>
+  <data name="PosService.SplitPayments" xml:space="preserve">
+    <value>Parçalı Ödemeler</value>
+  </data>
+  <data name="PosService.SplitPaymentsDescription" xml:space="preserve">
+    <value>Müşterilere bir ödemeyi birden fazla ödeme yöntemi veya kart arasında bölmelerine olanak tanır, işlemler sırasında finanslarını yönetmeleri için esneklik ve kolaylık sağlar. </value>
+  </data>
+  <data name="PosService.CheckoutOptimizations" xml:space="preserve">
+    <value>Ödeme Optimizasyonları</value>
+  </data>
+  <data name="PosService.CheckoutOptimizationsDescription" xml:space="preserve">
+    <value>E-ticaret siteleri için ödeme süreçlerini hızlandırır, müşteri deneyimini iyileştirir ve dönüşüm oranlarını artırır.</value>
+  </data>
+  <data name="PosService.TwoFactorAuthentication" xml:space="preserve">
+    <value>İki Aşamalı Doğrulama </value>
+  </data>
+  <data name="PosService.TwoFactorAuthenticationDescription" xml:space="preserve">
+    <value>İşlemler sırasında ek bir güvenlik katmanı sağlayarak, müşterilerin kimliklerinin doğrulanmasını ve işlemlerin güvenliğinin artırılmasını sağlar. </value>
+  </data>
+  <data name="PosService.AITransactionMonitoring" xml:space="preserve">
+    <value>Yapay Zeka İşlem İzleme </value>
+  </data>
+  <data name="PosService.AITransactionMonitoringDescription" xml:space="preserve">
+    <value>İşlemleri gerçek zamanlı olarak yapay zeka algoritmaları kullanarak izler, şüpheli faaliyetleri saptar ve dolandırıcılık risklerini azaltır. </value>
+  </data>
+  <data name="PosService.ChargebackProtection" xml:space="preserve">
+    <value>Chargeback (Ters ibraz) Koruma </value>
+  </data>
+  <data name="PosService.ChargebackProtectionDescription" xml:space="preserve">
+    <value>İşlemlerde dolandırıcılıkla ilgili ters ibrazlara karşı koruma sağlar, böylece işletmeler finansal kayıpları en aza indirgeyebilir. </value>
+  </data>
+  <data name="PosService.DeviceFingerprinting" xml:space="preserve">
+    <value>Cihaz Parmak İzi Tanımlama</value>
+  </data>
+  <data name="PosService.DeviceFingerprintingDescription" xml:space="preserve">
+    <value>İşlemleri gerçekleştiren cihazları tanımlayarak, yetkisiz işlemleri önlemeye yardımcı olur ve güvenliği artırır. </value>
+  </data>
+  <data name="PosService.RiskScoring" xml:space="preserve">
+    <value>Risk Puanlama / Skorlama</value>
+  </data>
+  <data name="PosService.RiskScoringDescription" xml:space="preserve">
+    <value>İşlemlerin risk seviyesini değerlendirir, yüksek riskli işlemleri belirler ve işletmelerin bu işlemlere öncelikle yanıt vermesini sağlar. </value>
+  </data>
+  <data name="PosService.GiftCardManagement" xml:space="preserve">
+    <value>Hediye Kartı Yönetimi</value>
+  </data>
+  <data name="PosService.GiftCardManagementDescription" xml:space="preserve">
+    <value>Hediye kartlarının verilmesi ve kullanımının izlenmesi işlemlerini yönetir, müşteri sadakatini artırır ve tekrar satın alma oranlarını yükseltir. </value>
+  </data>
+  <data name="PosService.LoyaltyRewards" xml:space="preserve">
+    <value>Sadakat Ödülleri</value>
+  </data>
+  <data name="PosService.LoyaltyRewardsDescription" xml:space="preserve">
+    <value>Sadık müşterilere özel ödüller sunar, böylece müşteri memnuniyetini ve markaya olan bağlılığı artırır. </value>
+  </data>
+  <data name="PosService.PointRedemption" xml:space="preserve">
+    <value>Puan Kullanımı </value>
+  </data>
+  <data name="PosService.PointRedemptionDescription" xml:space="preserve">
+    <value>Müşterilerin sadakat puanlarını kullanarak ödüller kazanmalarını sağlar, bu da müşteri katılımını ve sadakat programlarının etkinliğini artırır. </value>
+  </data>
+  <data name="PosService.CashbackOffers" xml:space="preserve">
+    <value>Nakit Geri Ödeme Teklifleri</value>
+  </data>
+  <data name="PosService.CashbackOffersDescription" xml:space="preserve">
+    <value>İşlemlerde müşterilere nakit geri ödeme teklif eder, bu da alışveriş sıklığını ve müşteri memnuniyetini artırabilir. </value>
+  </data>
+  <data name="PosService.CustomerDataAnalytics" xml:space="preserve">
+    <value>Müşteri Veri Analitiği </value>
+  </data>
+  <data name="PosService.CustomerDataAnalyticsDescription" xml:space="preserve">
+    <value>Müşteri verilerini analiz eder ve pazarlama stratejilerini geliştirmek için değerli içgörüler sunar, işletmelerin müşteri davranışlarını daha iyi anlamasını sağlar. </value>
+  </data>
+  <data name="PosService.DynamicCurrencyConversion" xml:space="preserve">
+    <value>Dinamik Para Birimi Dönüşümü </value>
+  </data>
+  <data name="PosService.DynamicCurrencyConversionDescription" xml:space="preserve">
+    <value>Müşterilerin kendi para birimlerinde ödeme yapmalarını sağlar, böylece döviz kuru dalgalanmalarından etkilenmeden alışveriş yapabilirler. </value>
+  </data>
+  <data name="PosService.InternationalWireTransfers" xml:space="preserve">
+    <value>Uluslararası Havale</value>
+  </data>
+  <data name="PosService.InternationalWireTransfersDescription" xml:space="preserve">
+    <value>Farklı ülkeler arasında banka transferleri yapılmasını sağlar, bu da özellikle çok uluslu işletmeler için finansal işlemleri kolaylaştırır. </value>
+  </data>
+  <data name="PosService.MultiCurrencyPOSBilling" xml:space="preserve">
+    <value>Çoklu Para Birimi POS Faturalandırma</value>
+  </data>
+  <data name="PosService.MultiCurrencyPOSBillingDescription" xml:space="preserve">
+    <value>Çeşitli para birimlerinde işlem yapabilme özelliği sunar, global müşteriler için alışveriş deneyimini basitleştirir. </value>
+  </data>
+  <data name="PosService.ForexRateLocking" xml:space="preserve">
+    <value>Döviz Kuru Sabitleme</value>
+  </data>
+  <data name="PosService.ForexRateLockingDescription" xml:space="preserve">
+    <value>İşlem sırasında döviz kurunu sabitler, böylece müşteriler ve işletmeler kur dalgalanmalarından korunur. </value>
+  </data>
+  <data name="PosService.CrossBorderTransactionSecurity" xml:space="preserve">
+    <value>Yurtdışı İşlem Güvenliği </value>
+  </data>
+  <data name="PosService.CrossBorderTransactionSecurityDescription" xml:space="preserve">
+    <value>Uluslararası işlemlerde güvenlik önlemlerini artırır, dolandırıcılık ve veri ihlallerine karşı koruma sağlar. </value>
+  </data>
+  <data name="PosService.SalesAnalytics" xml:space="preserve">
+    <value>Satış Analitiği</value>
+  </data>
+  <data name="PosService.SalesAnalyticsDescription" xml:space="preserve">
+    <value>Satış performansı üzerine derinlemesine bilgiler sağlar, işletmelerin pazar trendlerini ve müşteri tercihlerini daha iyi anlamasını sağlar. </value>
+  </data>
+  <data name="PosService.CustomerBehaviorReports" xml:space="preserve">
+    <value>Müşteri Davranış Raporları </value>
+  </data>
+  <data name="PosService.CustomerBehaviorReportsDescription" xml:space="preserve">
+    <value>Müşteri alışveriş modellerini analiz eder, pazarlama ve satış stratejilerinin geliştirilmesine yardımcı olur. </value>
+  </data>
+  <data name="PosService.InventoryTracking" xml:space="preserve">
+    <value>Stok Takibi </value>
+  </data>
+  <data name="PosService.InventoryTrackingDescription" xml:space="preserve">
+    <value>Stok seviyelerini ve dönüşüm oranlarını izler, işletmelerin stok yönetimini optimize etmesine yardımcı olur. </value>
+  </data>
+  <data name="PosService.RevenueForecastingDescription" xml:space="preserve">
+    <value>Geçmiş satış verilerine dayanarak gelecek gelirleri tahmin eder, finansal planlama için kritik bilgiler sunar.</value>
+  </data>
+  <data name="PosService.POSDeviceHealthMonitoring" xml:space="preserve">
+    <value>POS Cihazı Sağlık İzleme</value>
+  </data>
+  <data name="PosService.POSDeviceHealthMonitoringDescription" xml:space="preserve">
+    <value>POS cihazlarının operasyonel durumunu izler, arızaların ve kesintilerin önlenmesine yardımcı olur. </value>
+  </data>
+  <data name="PosService.AutomatedSubscriptionBilling" xml:space="preserve">
+    <value>Otomatik Abonelik Faturalandırma</value>
+  </data>
+  <data name="PosService.AutomatedSubscriptionBillingDescription" xml:space="preserve">
+    <value>Abonelik bazlı ödemeleri otomatik olarak yönetir, düzenli gelir akışını sağlar ve yönetim sürecini basitleştirir.</value>
+  </data>
+  <data name="PosService.UsageBasedBilling" xml:space="preserve">
+    <value>Kullanım Bazlı Faturalandırma</value>
+  </data>
+  <data name="PosService.UsageBasedBillingDescription" xml:space="preserve">
+    <value>Kullanıcıların hizmet kullanım miktarına göre faturalandırılmasını sağlar, adil ve şeffaf bir ödeme yapısını destekler.</value>
+  </data>
+  <data name="PosService.DunningManagement" xml:space="preserve">
+    <value>Tahsilat Yönetimi</value>
+  </data>
+  <data name="PosService.DunningManagementDescription" xml:space="preserve">
+    <value>Ödeme gecikmeleri için otomatik hatırlatmalar gönderir ve tahsilat süreçlerini otomatize eder, nakit akışını iyileştirir.</value>
+  </data>
+  <data name="PosService.RecurringPaymentManagement" xml:space="preserve">
+    <value>Düzenli Ödeme Yönetimi</value>
+  </data>
+  <data name="PosService.RecurringPaymentManagementDescription" xml:space="preserve">
+    <value>Düzenli ödemeleri yönetir ve otomatize eder, böylece ödemelerin zamanında ve hatasız bir şekilde yapılmasını sağlar.</value>
+  </data>
+  <data name="PosService.DeferredPaymentProcessing" xml:space="preserve">
+    <value>Ertelenmiş Ödeme İşleme</value>
+  </data>
+  <data name="PosService.DeferredPaymentProcessingDescription" xml:space="preserve">
+    <value>Müşterilere satın alma sonrası ödemeleri belirli bir süre ertelemelerine olanak tanır, satın alma gücünü artırır.</value>
+  </data>
+  <data name="PosService.UPIPaymentsIndia" xml:space="preserve">
+    <value>UPI Ödemeleri Hindistan</value>
+  </data>
+  <data name="PosService.UPIPaymentsIndiaDescription" xml:space="preserve">
+    <value>Hindistan içinde UPI (Unified Payments Interface) kullanarak hızlı ve güvenli ödeme yapma imkanı sağlar.</value>
+  </data>
+  <data name="PosService.WeChatPayChina" xml:space="preserve">
+    <value>WeChat Pay Çin</value>
+  </data>
+  <data name="PosService.WeChatPayChinaDescription" xml:space="preserve">
+    <value>Çin'de WeChat üzerinden ödeme yapma imkanı sunar, geniş kullanıcı kitlesi ile popüler bir seçenektir.</value>
+  </data>
+  <data name="PosService.AliPayChina" xml:space="preserve">
+    <value>AliPay Çin</value>
+  </data>
+  <data name="PosService.AliPayChinaDescription" xml:space="preserve">
+    <value>AliPay kullanarak Çin içinde ve uluslararası ödemeler yapma imkanı sunar, güvenli ve yaygın bir ödeme yöntemidir.</value>
+  </data>
+  <data name="PosService.iDealNetherlands" xml:space="preserve">
+    <value>iDeal Hollanda</value>
+  </data>
+  <data name="PosService.iDealNetherlandsDescription" xml:space="preserve">
+    <value>Hollanda'da iDeal kullanarak banka hesapları arası doğrudan ödeme yapma imkanı sunar, yüksek güvenliklidir.</value>
+  </data>
+  <data name="PosService.PayNowSingapore" xml:space="preserve">
+    <value>PayNow Singapur</value>
+  </data>
+  <data name="PosService.PayNowSingaporeDescription" xml:space="preserve">
+    <value>Singapur'da PayNow kullanarak anında ödeme yapma imkanı sağlar, hızlı ve etkilidir.</value>
+  </data>
+  <data name="PosService.ChaseMerchantServices" xml:space="preserve">
+    <value>Chase Ticari Hizmetler</value>
+  </data>
+  <data name="PosService.ChaseMerchantServicesDescription" xml:space="preserve">
+    <value>Chase bankası tarafından sunulan ticari ödeme hizmetleri, çeşitli ödeme seçenekleri sunar.</value>
+  </data>
+  <data name="PosService.SquarePOS" xml:space="preserve">
+    <value>Square POS</value>
+  </data>
+  <data name="PosService.SquarePOSDescription" xml:space="preserve">
+    <value>Mobil ve esnek ödeme çözümleri sunar, küçük ve orta ölçekli işletmeler için idealdir.</value>
+  </data>
+  <data name="PosService.ToastPOS" xml:space="preserve">
+    <value>Toast POS</value>
+  </data>
+  <data name="PosService.ToastPOSDescription" xml:space="preserve">
+    <value>Restoranlar için özel olarak tasarlanmış POS sistemi, sipariş yönetimi ve masa düzenleme özellikleri sunar.</value>
+  </data>
+  <data name="PosService.CreditCardProcessingDescription" xml:space="preserve">
+    <value>Kredi kartı işlemleri, müşterilerin kredi veya banka kartlarıyla güvenli bir şekilde ödeme yapmalarını sağlar. Bu süreç, kart bilgilerinin şifrelenmesini, işlemin onaylanmasını ve fonların ilgili taraflar arasında güvenli bir şekilde transfer edilmesini içerir. Ayrıca, dolandırıcılığı önlemek amacıyla gelişmiş güvenlik protokolleri kullanılır. Bu hizmet, perakende mağazalarından online alışveriş platformlarına kadar geniş bir kullanım alanına sahiptir ve işletmelerin müşteri memnuniyetini artırarak daha hızlı ve etkili ödeme almasını sağlar.</value>
+  </data>
+  <data name="PosService.RevenueForecasting" xml:space="preserve">
+    <value>Gelir Tahmini</value>
+  </data>
+</root>

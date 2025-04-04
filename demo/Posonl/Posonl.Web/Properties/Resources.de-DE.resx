@@ -1,0 +1,522 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Hero.Description" xml:space="preserve">
+    <value>Vergleichen Sie POS-Anbieter, finden Sie die niedrigsten Transaktionsgebühren und wählen Sie das beste Zahlungssystem für Ihr Unternehmen.</value>
+  </data>
+  <data name="Hero.Title" xml:space="preserve">
+    <value>Entdecken Sie die besten POS-Lösungen!</value>
+  </data>
+  <data name="Menu.About" xml:space="preserve">
+    <value>Über uns</value>
+  </data>
+  <data name="Menu.Contact" xml:space="preserve">
+    <value>Kontakt</value>
+  </data>
+  <data name="Menu.Home" xml:space="preserve">
+    <value>Startseite</value>
+  </data>
+  <data name="Menu.PosCompanies" xml:space="preserve">
+    <value>POS-Unternehmen</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>Suche</value>
+  </data>
+  <data name="SearchButton" xml:space="preserve">
+    <value>Suchen</value>
+  </data>
+  <data name="Hero.Button" xml:space="preserve">
+    <value>Jetzt vergleichen</value>
+  </data>
+  <data name="SelectCountry" xml:space="preserve">
+    <value>Land auswählen</value>
+  </data>
+  <data name="CompareNow" xml:space="preserve">
+    <value>Vergleichen</value>
+  </data>
+  <data name="Category.PaymentMethods" xml:space="preserve">
+    <value>Zahlungsmethoden</value>
+  </data>
+  <data name="Category.HardwareSolutions" xml:space="preserve">
+    <value>Hardwarelösungen</value>
+  </data>
+  <data name="Category.BillingAndAccounting" xml:space="preserve">
+    <value>Abrechnung &amp; Buchhaltung</value>
+  </data>
+  <data name="Category.EcommerceAndOnlinePayments" xml:space="preserve">
+    <value>E-Commerce &amp; Online-Zahlungen</value>
+  </data>
+  <data name="Category.SecurityAndFraudPrevention" xml:space="preserve">
+    <value>Sicherheit &amp; Betrugsprävention</value>
+  </data>
+  <data name="Category.CustomerAndLoyaltyPrograms" xml:space="preserve">
+    <value>Kunden- &amp; Treueprogramme</value>
+  </data>
+  <data name="Category.MultiCurrencyAndCrossBorderPayments" xml:space="preserve">
+    <value>Mehrwährungs- &amp; grenzüberschreitende Zahlungen</value>
+  </data>
+  <data name="Category.ReportingAndAnalytics" xml:space="preserve">
+    <value>Berichterstattung &amp; Analytik</value>
+  </data>
+  <data name="Category.SubscriptionAndRecurringPayments" xml:space="preserve">
+    <value>Abonnements &amp; wiederkehrende Zahlungen</value>
+  </data>
+  <data name="Category.RegionalSpecificPOSServices" xml:space="preserve">
+    <value>Regionale POS-Dienste</value>
+  </data>
+  <data name="PosService.CreditCardProcessing" xml:space="preserve">
+    <value>Kreditkartenzahlungen</value>
+  </data>
+  <data name="PosService.ContactlessPayments" xml:space="preserve">
+    <value>Kontaktlose Zahlungen</value>
+  </data>
+  <data name="PosService.ContactlessPaymentsDescription" xml:space="preserve">
+    <value>Ermöglicht Zahlungen ohne physischen Kontakt zwischen Karte oder mobilem Gerät und dem POS-Terminal, bietet eine schnelle und hygienische Transaktionsmöglichkeit.</value>
+  </data>
+  <data name="PosService.EMVChipPayments" xml:space="preserve">
+    <value>EMV-Chip-Zahlungen</value>
+  </data>
+  <data name="PosService.EMVChipPaymentsDescription" xml:space="preserve">
+    <value>Der EMV-Chip dient zur sicheren Speicherung von Karteninformationen und hilft, Betrug zu verhindern.</value>
+  </data>
+  <data name="PosService.MobilePayments" xml:space="preserve">
+    <value>Mobile Zahlungen</value>
+  </data>
+  <data name="PosService.MobilePaymentsDescription" xml:space="preserve">
+    <value>Bietet Zahlungsmöglichkeiten über mobile Wallets, ermöglicht Nutzern schnelle und sichere Einkäufe.</value>
+  </data>
+  <data name="PosService.CryptoPayments" xml:space="preserve">
+    <value>Kryptowährungszahlungen</value>
+  </data>
+  <data name="PosService.CryptoPaymentsDescription" xml:space="preserve">
+    <value>Ermöglicht Zahlungen mit beliebten Kryptowährungen wie Bitcoin, Ethereum, eine geeignete Option für Nutzer digitaler Währungen.</value>
+  </data>
+  <data name="PosService.BKMExpressPayment" xml:space="preserve">
+    <value>BKM Express Zahlung</value>
+  </data>
+  <data name="PosService.BKMExpressPaymentDescription" xml:space="preserve">
+    <value>Ein speziell für den türkischen Markt entwickeltes Online-Zahlungssystem, ermöglicht schnelle und sichere Zahlungen.</value>
+  </data>
+  <data name="PosService.TraditionalPOSMachines" xml:space="preserve">
+    <value>Traditionelle POS-Geräte</value>
+  </data>
+  <data name="PosService.TraditionalPOSMachinesDescription" xml:space="preserve">
+    <value>Bietet physische Zahlungsterminals, die für die Abwicklung von Standardtransaktionen konzipiert sind, breit einsetzbar.</value>
+  </data>
+  <data name="PosService.WirelessPOS" xml:space="preserve">
+    <value>Drahtloses POS</value>
+  </data>
+  <data name="PosService.WirelessPOSDescription" xml:space="preserve">
+    <value>Bietet die Möglichkeit, Zahlungen in mobilen Umgebungen durchzuführen, ausgestattet mit drahtlosen Verbindungsfunktionen.</value>
+  </data>
+  <data name="PosService.TabletPOS" xml:space="preserve">
+    <value>Tablet-POS</value>
+  </data>
+  <data name="PosService.TabletPOSDescription" xml:space="preserve">
+    <value>Bietet POS-Lösungen, die auf Tablet-Geräten laufen, zeichnen sich durch benutzerfreundliche Schnittstellen aus.</value>
+  </data>
+  <data name="PosService.SelfCheckoutKiosks" xml:space="preserve">
+    <value>Self-Checkout-Kioske</value>
+  </data>
+  <data name="PosService.SelfCheckoutKiosksDescription" xml:space="preserve">
+    <value>Bietet automatische Kioske, die es Kunden ermöglichen, selbstständig schnell und einfach Zahlungen durchzuführen.</value>
+  </data>
+  <data name="PosService.HandheldPOS" xml:space="preserve">
+    <value>Handheld-POS</value>
+  </data>
+  <data name="PosService.HandheldPOSDescription" xml:space="preserve">
+    <value>Bietet tragbare POS-Geräte, die ideal für kleine Transaktionen und Umgebungen sind, in denen Mobilität wie bei Outdoor-Events und kleineren Cafés entscheidend ist.</value>
+  </data>
+  <data name="PosService.AutomatedInvoicing" xml:space="preserve">
+    <value>Automatisierte Rechnungsstellung</value>
+  </data>
+  <data name="PosService.AutomatedInvoicingDescription" xml:space="preserve">
+    <value>Generiert automatisch Rechnungen für Transaktionen, rationalisiert den Abrechnungsprozess und reduziert manuelle Fehler, besonders vorteilhaft für Geschäfte mit hohem Transaktionsvolumen.</value>
+  </data>
+  <data name="PosService.TaxIntegration" xml:space="preserve">
+    <value>Steuerintegration</value>
+  </data>
+  <data name="PosService.TaxIntegrationDescription" xml:space="preserve">
+    <value>Integriert mit Steuersystemen, um automatisch die richtigen Steuersätze auf Transaktionen anzuwenden, gewährleistet Compliance und vereinfacht Buchhal</value>
+  </data>
+  <data name="PosService.MultiCurrencyBilling" xml:space="preserve">
+    <value>Abrechnung in mehreren Währungen</value>
+  </data>
+  <data name="PosService.MultiCurrencyBillingDescription" xml:space="preserve">
+    <value>Ermöglicht die Abrechnung in mehreren Währungen, bietet Flexibilität und bequem für Unternehmen, die international tätig sind oder eine diverse Kundenbasis ha</value>
+  </data>
+  <data name="PosService.EReceiptGeneration" xml:space="preserve">
+    <value>Elektronische Beleggenerierung </value>
+  </data>
+  <data name="PosService.EReceiptGenerationDescription" xml:space="preserve">
+    <value>Erstellt digitale Belege für jede Transaktion, bietet Kunden einen bequemen und umweltfreundlichen Kaufnachweis und reduziert Papierabfall.</value>
+  </data>
+  <data name="PosService.POSAccountingIntegration" xml:space="preserve">
+    <value>POS-Buchhaltungsintegration</value>
+  </data>
+  <data name="PosService.POSAccountingIntegrationDescription" xml:space="preserve">
+    <value>Integriert POS-Daten mit externen Buchhaltungssystemen, bietet Echtzeit-Finanzdaten und Einblicke, verbessert die finanzielle Verfolgung und Entscheidungsfindung für Unternehmen.</value>
+  </data>
+  <data name="PosService.PaymentLinks" xml:space="preserve">
+    <value>Zahlungslinks</value>
+  </data>
+  <data name="PosService.PaymentLinksDescription" xml:space="preserve">
+    <value>Erstellt sichere, anpassbare Zahlungslinks, die über E-Mail oder Messaging-Plattformen an Kunden gesendet werden können, um einfache und sichere Fernzahlungen zu erleichtern.</value>
+  </data>
+  <data name="PosService.SubscriptionBilling" xml:space="preserve">
+    <value>Abonnementabrechnung</value>
+  </data>
+  <data name="PosService.SubscriptionBillingDescription" xml:space="preserve">
+    <value>Verwaltet wiederkehrende Abonnementzahlungen, automatisiert den Abrechnungszyklus und sichert konstante Einnahmequellen für Dienstleistungen wie Mitgliedschaften und laufenden Zugang zu digitalen Inhalten.</value>
+  </data>
+  <data name="PosService.BuyNowPayLater" xml:space="preserve">
+    <value>Kaufe jetzt, zahle später </value>
+  </data>
+  <data name="PosService.BuyNowPayLaterDescription" xml:space="preserve">
+    <value>Bietet Kunden die Möglichkeit, Waren oder Dienstleistungen sofort zu kaufen und über die Zeit zu bezahlen, erhöht die Kaufkraft und kann potenziell die Verkaufsvolumen steigern.
+</value>
+  </data>
+  <data name="PosService.MerchantVirtualTerminals" xml:space="preserve">
+    <value>Händler-Virtuelle Terminals </value>
+  </data>
+  <data name="PosService.MerchantVirtualTerminalsDescription" xml:space="preserve">
+    <value>Bietet virtuelle Terminal-Lösungen für Händler, um Online-Zahlungen ohne die Notwendigkeit eines physischen POS-Geräts zu akzeptieren, ideal für Telefon- oder Remote-Zahlungsszenarien.
+</value>
+  </data>
+  <data name="PosService.SplitPayments" xml:space="preserve">
+    <value>Geteilte Zahlungen </value>
+  </data>
+  <data name="PosService.SplitPaymentsDescription" xml:space="preserve">
+    <value>Ermöglicht es Kunden, eine Zahlung über mehrere Zahlungsmethoden oder Karten aufzuteilen, bietet Flexibilität und Bequemlichkeit bei der Verwaltung ihrer Finanzen während Transaktionen.
+</value>
+  </data>
+  <data name="PosService.CheckoutOptimizations" xml:space="preserve">
+    <value>Optimierung des Checkouts </value>
+  </data>
+  <data name="PosService.CheckoutOptimizationsDescription" xml:space="preserve">
+    <value>Optimiert den Checkout-Prozess, um die Benutzererfahrung zu verbessern und die Konversionsraten durch Vereinfachung der Zahlungsabläufe in E-Commerce-Umgebungen zu erhöhen.</value>
+  </data>
+  <data name="PosService.TwoFactorAuthentication" xml:space="preserve">
+    <value>Zwei-Faktor-Authentifizierung </value>
+  </data>
+  <data name="PosService.TwoFactorAuthenticationDescription" xml:space="preserve">
+    <value>Fügt eine zusätzliche Sicherheitsebene zu Transaktionen hinzu, indem die Identität der Kunden verifiziert und die Sicherheit der Transaktionen erhöht wird.
+</value>
+  </data>
+  <data name="PosService.AITransactionMonitoring" xml:space="preserve">
+    <value>Zwei-Faktor-Authentifizierung </value>
+  </data>
+  <data name="PosService.AITransactionMonitoringDescription" xml:space="preserve">
+    <value>Fügt eine zusätzliche Sicherheitsebene zu Transaktionen hinzu, indem die Identität der Kunden verifiziert und die Sicherheit der Transaktionen erhöht wird.
+</value>
+  </data>
+  <data name="PosService.ChargebackProtection" xml:space="preserve">
+    <value>Rückbuchungsschutz</value>
+  </data>
+  <data name="PosService.ChargebackProtectionDescription" xml:space="preserve">
+    <value>Überwacht Transaktionen in Echtzeit mit KI-Algorithmen, erkennt verdächtige Aktivitäten und reduziert Betrugsrisiken.</value>
+  </data>
+  <data name="PosService.DeviceFingerprinting" xml:space="preserve">
+    <value>Geräte-Fingerprinting </value>
+  </data>
+  <data name="PosService.DeviceFingerprintingDescription" xml:space="preserve">
+    <value>Identifiziert die Geräte, die Transaktionen durchführen, hilft, unbefugte Transaktionen zu verhindern und erhöht die Sicherheit.
+</value>
+  </data>
+  <data name="PosService.RiskScoring" xml:space="preserve">
+    <value>Risikobewertung</value>
+  </data>
+  <data name="PosService.RiskScoringDescription" xml:space="preserve">
+    <value>Bewertet das Risikoniveau von Transaktionen, identifiziert Transaktionen mit hohem Risiko und ermöglicht es Unternehmen, prioritär auf diese Transaktionen zu reagieren.
+</value>
+  </data>
+  <data name="PosService.GiftCardManagement" xml:space="preserve">
+    <value>Geschenkkartenverwaltung</value>
+  </data>
+  <data name="PosService.GiftCardManagementDescription" xml:space="preserve">
+    <value>Verwaltet die Ausgabe und Nutzung von Geschenkkarten, fördert die Kundentreue und erhöht die Wiederkaufsraten.</value>
+  </data>
+  <data name="PosService.LoyaltyRewards" xml:space="preserve">
+    <value>Treueprämien</value>
+  </data>
+  <data name="PosService.LoyaltyRewardsDescription" xml:space="preserve">
+    <value>Bietet treuen Kunden spezielle Belohnungen an, erhöht die Kundenzufriedenheit und die Loyalität zur Marke.</value>
+  </data>
+  <data name="PosService.PointRedemption" xml:space="preserve">
+    <value>Punkteeinlösung</value>
+  </data>
+  <data name="PosService.PointRedemptionDescription" xml:space="preserve">
+    <value>Ermöglicht es Kunden, Treuepunkte einzulösen und Prämien zu gewinnen, was die Kundenbeteiligung und die Wirksamkeit von Treueprogrammen erhöht.</value>
+  </data>
+  <data name="PosService.CashbackOffers" xml:space="preserve">
+    <value>Cashback-Angebote</value>
+  </data>
+  <data name="PosService.CashbackOffersDescription" xml:space="preserve">
+    <value>Bietet Kunden bei Transaktionen Cashback an, was die Einkaufshäufigkeit und Kundenzufriedenheit steigern kann.</value>
+  </data>
+  <data name="PosService.CustomerDataAnalytics" xml:space="preserve">
+    <value>Analysiert Kundendaten und bietet wertvolle Einblicke, um Marketingstrategien zu verbessern und Unternehmen ein besseres Verständnis des Kundenverhaltens zu ermöglichen.</value>
+  </data>
+  <data name="PosService.CustomerDataAnalyticsDescription" xml:space="preserve">
+    <value>Analysiert Kundendaten und bietet wertvolle Einblicke, um Marketingstrategien zu verbessern und Unternehmen ein besseres Verständnis des Kundenverhaltens zu ermöglichen.</value>
+  </data>
+  <data name="PosService.DynamicCurrencyConversion" xml:space="preserve">
+    <value>Dynamische Währungsumrechnung </value>
+  </data>
+  <data name="PosService.DynamicCurrencyConversionDescription" xml:space="preserve">
+    <value>Ermöglicht es Kunden, in ihrer eigenen Währung zu bezahlen, wodurch sie vor Schwankungen der Wechselkurse geschützt sind.
+</value>
+  </data>
+  <data name="PosService.InternationalWireTransfers" xml:space="preserve">
+    <value>Internationale Überweisungen </value>
+  </data>
+  <data name="PosService.InternationalWireTransfersDescription" xml:space="preserve">
+    <value>Ermöglicht Banktransfers zwischen verschiedenen Ländern, was besonders für multinationale Unternehmen die finanziellen Transaktionen erleichtert.
+</value>
+  </data>
+  <data name="PosService.MultiCurrencyPOSBilling" xml:space="preserve">
+    <value>POS-Abrechnung in mehreren Währungen </value>
+  </data>
+  <data name="PosService.MultiCurrencyPOSBillingDescription" xml:space="preserve">
+    <value>Bietet die Möglichkeit, Transaktionen in verschiedenen Währungen durchzuführen, vereinfacht das Einkaufserlebnis für globale Kunden.</value>
+  </data>
+  <data name="PosService.ForexRateLocking" xml:space="preserve">
+    <value>Devisenkursfixierung</value>
+  </data>
+  <data name="PosService.ForexRateLockingDescription" xml:space="preserve">
+    <value>Fixiert den Wechselkurs zum Zeitpunkt der Transaktion, schützt Kunden und Unternehmen vor Schwankungen der Wechselkurse. </value>
+  </data>
+  <data name="PosService.CrossBorderTransactionSecurity" xml:space="preserve">
+    <value>Sicherheit bei grenzüberschreitenden Transaktionen </value>
+  </data>
+  <data name="PosService.CrossBorderTransactionSecurityDescription" xml:space="preserve">
+    <value>Erhöht die Sicherheitsmaßnahmen bei internationalen Transaktionen und bietet Schutz vor Betrug und Datenverletzungen.</value>
+  </data>
+  <data name="PosService.SalesAnalytics" xml:space="preserve">
+    <value>Verkaufsanalytik</value>
+  </data>
+  <data name="PosService.SalesAnalyticsDescription" xml:space="preserve">
+    <value>Bietet tiefgehende Einblicke in die Verkaufsleistung, ermöglicht Unternehmen, Markttrends und Kundenpräferenzen besser zu verstehen.</value>
+  </data>
+  <data name="PosService.CustomerBehaviorReports" xml:space="preserve">
+    <value>Kundenverhaltensberichte</value>
+  </data>
+  <data name="PosService.CustomerBehaviorReportsDescription" xml:space="preserve">
+    <value>Analysiert die Einkaufsmuster der Kunden und hilft bei der Verbesserung von Marketing- und Verkaufsstrategien.</value>
+  </data>
+  <data name="PosService.InventoryTracking" xml:space="preserve">
+    <value>Lagerbestandsverfolgung</value>
+  </data>
+  <data name="PosService.InventoryTrackingDescription" xml:space="preserve">
+    <value>Überwacht Lagerbestände und Umschlagsraten, hilft Unternehmen bei der Optimierung der Lagerverwaltung.</value>
+  </data>
+  <data name="PosService.RevenueForecastingDescription" xml:space="preserve">
+    <value>Basiert auf historischen Verkaufsdaten, um zukünftige Einnahmen zu prognostizieren, bietet kritische Informationen für die finanzielle Planung.</value>
+  </data>
+  <data name="PosService.POSDeviceHealthMonitoring" xml:space="preserve">
+    <value>Überwachung der POS-Gerätegesundheit </value>
+  </data>
+  <data name="PosService.POSDeviceHealthMonitoringDescription" xml:space="preserve">
+    <value>Überwacht den Betriebsstatus von POS-Geräten, hilft Ausfälle und Unterbrechungen zu vermeiden.</value>
+  </data>
+  <data name="PosService.AutomatedSubscriptionBilling" xml:space="preserve">
+    <value>Automatisierte Abonnementabrechnung</value>
+  </data>
+  <data name="PosService.AutomatedSubscriptionBillingDescription" xml:space="preserve">
+    <value>Automatisiert den Abrechnungsprozess für Abonnements, erleichtert die Verwaltung wiederkehrender Zahlungen und minimiert den administrativen Aufwand.</value>
+  </data>
+  <data name="PosService.UsageBasedBilling" xml:space="preserve">
+    <value>Nutzungsbasierte Abrechnung</value>
+  </data>
+  <data name="PosService.UsageBasedBillingDescription" xml:space="preserve">
+    <value>Stellt Kunden basierend auf dem tatsächlichen Verbrauch von Diensten oder Produkten in Rechnung, was eine faire und transparente Preisgestaltung ermöglicht.</value>
+  </data>
+  <data name="PosService.DunningManagement" xml:space="preserve">
+    <value>Mahnwesenverwaltung</value>
+  </data>
+  <data name="PosService.DunningManagementDescription" xml:space="preserve">
+    <value>Verwaltet das Mahnwesen und automatisiert Erinnerungen für überfällige Zahlungen, um die Eintreibung von Forderungen zu verbessern und den Cashflow zu sichern.</value>
+  </data>
+  <data name="PosService.RecurringPaymentManagement" xml:space="preserve">
+    <value>Verwaltung wiederkehrender Zahlungen</value>
+  </data>
+  <data name="PosService.RecurringPaymentManagementDescription" xml:space="preserve">
+    <value>Organisiert und steuert wiederkehrende Zahlungen, stellt die Pünktlichkeit und Genauigkeit der Abrechnung sicher und verbessert die Kundenzufriedenheit durch zuverlässige Zahlungsabwicklung.</value>
+  </data>
+  <data name="PosService.DeferredPaymentProcessing" xml:space="preserve">
+    <value>Zahlungsabwicklung mit verzögerter Zahlung</value>
+  </data>
+  <data name="PosService.DeferredPaymentProcessingDescription" xml:space="preserve">
+    <value>Ermöglicht es Kunden, ihre Zahlungen zu einem späteren Zeitpunkt zu tätigen, was den Kaufanreiz erhöht und den Umsatz steigern kann, indem es den Kunden mehr Flexibilität bei der Finanzierung bietet.</value>
+  </data>
+  <data name="PosService.UPIPaymentsIndia" xml:space="preserve">
+    <value>UPI-Zahlungen Indien</value>
+  </data>
+  <data name="PosService.UPIPaymentsIndiaDescription" xml:space="preserve">
+    <value>Ermöglicht schnelle und sichere Zahlungen innerhalb Indiens über die Unified Payments Interface (UPI).</value>
+  </data>
+  <data name="PosService.WeChatPayChina" xml:space="preserve">
+    <value>WeChat Pay China</value>
+  </data>
+  <data name="PosService.WeChatPayChinaDescription" xml:space="preserve">
+    <value>Ermöglicht Zahlungen über WeChat in China, beliebt wegen seiner breiten Nutzerbasis.</value>
+  </data>
+  <data name="PosService.AliPayChina" xml:space="preserve">
+    <value>AliPay China</value>
+  </data>
+  <data name="PosService.AliPayChinaDescription" xml:space="preserve">
+    <value>Ermöglicht Zahlungen in China und international über AliPay, eine sichere und weit verbreitete Zahlungsmethode.</value>
+  </data>
+  <data name="PosService.iDealNetherlands" xml:space="preserve">
+    <value>iDeal Niederlande</value>
+  </data>
+  <data name="PosService.iDealNetherlandsDescription" xml:space="preserve">
+    <value>Ermöglicht direkte Bank-zu-Bank-Zahlungen in den Niederlanden über iDeal, bietet hohe Sicherheit.</value>
+  </data>
+  <data name="PosService.PayNowSingapore" xml:space="preserve">
+    <value>PayNow Singapur</value>
+  </data>
+  <data name="PosService.PayNowSingaporeDescription" xml:space="preserve">
+    <value>Ermöglicht sofortige Zahlungen in Singapur über PayNow, schnell und effizient.</value>
+  </data>
+  <data name="PosService.ChaseMerchantServices" xml:space="preserve">
+    <value>Chase Händlerdienste</value>
+  </data>
+  <data name="PosService.ChaseMerchantServicesDescription" xml:space="preserve">
+    <value>Handelszahlungsdienste von der Chase Bank angeboten, bietet eine Vielzahl von Zahlungsoptionen.</value>
+  </data>
+  <data name="PosService.SquarePOS" xml:space="preserve">
+    <value>Square POS</value>
+  </data>
+  <data name="PosService.SquarePOSDescription" xml:space="preserve">
+    <value>Bietet mobile und flexible Zahlungslösungen, ideal für kleine und mittlere Unternehmen.</value>
+  </data>
+  <data name="PosService.ToastPOS" xml:space="preserve">
+    <value>Toast POS</value>
+  </data>
+  <data name="PosService.ToastPOSDescription" xml:space="preserve">
+    <value>Spezialisiert auf Restaurants, bietet Funktionen zur Bestellverwaltung und Tischorganisation.</value>
+  </data>
+  <data name="PosService.CreditCardProcessingDescription" xml:space="preserve">
+    <value>Automatisiert den Rechnungserstellungsprozess, wodurch Zeit gespart und Fehler reduziert werden. Dies ist ideal für Unternehmen, die eine hohe Anzahl von Transaktionen verarbeiten.</value>
+  </data>
+  <data name="PosService.RevenueForecasting" xml:space="preserve">
+    <value>Umsatzprognosen</value>
+  </data>
+</root>

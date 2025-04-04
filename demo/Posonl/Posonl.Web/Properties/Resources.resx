@@ -1,0 +1,507 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Hero.Description" xml:space="preserve">
+    <value>Compare POS providers, find the lowest commission rates, and choose the best payment system for your business.</value>
+  </data>
+  <data name="Hero.Title" xml:space="preserve">
+    <value>Discover the Best POS Solutions!</value>
+  </data>
+  <data name="Menu.About" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="Menu.Contact" xml:space="preserve">
+    <value>Contact</value>
+  </data>
+  <data name="Menu.Home" xml:space="preserve">
+    <value>Home</value>
+  </data>
+  <data name="Menu.PosCompanies" xml:space="preserve">
+    <value>PosCompanies</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="SearchButton" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Hero.Button" xml:space="preserve">
+    <value>Compare Now</value>
+  </data>
+  <data name="SelectCountry" xml:space="preserve">
+    <value>Select Country</value>
+  </data>
+  <data name="CompareNow" xml:space="preserve">
+    <value>Compare Now</value>
+  </data>
+  <data name="Category.PaymentMethods" xml:space="preserve">
+    <value>Payment Methods </value>
+  </data>
+  <data name="Category.HardwareSolutions" xml:space="preserve">
+    <value>Hardware Solutions </value>
+  </data>
+  <data name="Category.BillingAndAccounting" xml:space="preserve">
+    <value>Billing &amp; Accounting </value>
+  </data>
+  <data name="Category.EcommerceAndOnlinePayments" xml:space="preserve">
+    <value>E-commerce &amp; Online Payments </value>
+  </data>
+  <data name="Category.SecurityAndFraudPrevention" xml:space="preserve">
+    <value>Security &amp; Fraud Prevention </value>
+  </data>
+  <data name="Category.CustomerAndLoyaltyPrograms" xml:space="preserve">
+    <value>Customer &amp; Loyalty Programs </value>
+  </data>
+  <data name="Category.MultiCurrencyAndCrossBorderPayments" xml:space="preserve">
+    <value>Multi-currency &amp; Cross-border Payments </value>
+  </data>
+  <data name="Category.ReportingAndAnalytics" xml:space="preserve">
+    <value>Reporting &amp; Analytics </value>
+  </data>
+  <data name="Category.SubscriptionAndRecurringPayments" xml:space="preserve">
+    <value>Subscription &amp; Recurring Payments </value>
+  </data>
+  <data name="Category.RegionalSpecificPOSServices" xml:space="preserve">
+    <value>Regional-Specific POS Services </value>
+  </data>
+  <data name="PosService.CreditCardProcessing" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.ContactlessPayments" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.ContactlessPaymentsDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.EMVChipPayments" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.EMVChipPaymentsDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.MobilePayments" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.MobilePaymentsDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.CryptoPayments" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.CryptoPaymentsDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.BKMExpressPayment" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.BKMExpressPaymentDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.TraditionalPOSMachines" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.TraditionalPOSMachinesDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.WirelessPOS" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.WirelessPOSDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.TabletPOS" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.TabletPOSDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.SelfCheckoutKiosks" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.SelfCheckoutKiosksDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.HandheldPOS" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.HandheldPOSDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.AutomatedInvoicing" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.AutomatedInvoicingDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.TaxIntegration" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.TaxIntegrationDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.MultiCurrencyBilling" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.MultiCurrencyBillingDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.EReceiptGeneration" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.EReceiptGenerationDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.POSAccountingIntegration" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.POSAccountingIntegrationDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.PaymentLinks" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.PaymentLinksDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.SubscriptionBilling" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.SubscriptionBillingDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.BuyNowPayLater" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.BuyNowPayLaterDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.MerchantVirtualTerminals" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.MerchantVirtualTerminalsDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.SplitPayments" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.SplitPaymentsDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.CheckoutOptimizations" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.CheckoutOptimizationsDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.TwoFactorAuthentication" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.TwoFactorAuthenticationDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.AITransactionMonitoring" xml:space="preserve">
+    <value>AI Transaction Monitoring</value>
+  </data>
+  <data name="PosService.AITransactionMonitoringDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.ChargebackProtection" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.ChargebackProtectionDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.DeviceFingerprinting" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.DeviceFingerprintingDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.RiskScoring" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.RiskScoringDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.GiftCardManagement" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.GiftCardManagementDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.LoyaltyRewards" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.LoyaltyRewardsDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.PointRedemption" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.PointRedemptionDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.CashbackOffers" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.CashbackOffersDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.CustomerDataAnalytics" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.CustomerDataAnalyticsDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.DynamicCurrencyConversion" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.DynamicCurrencyConversionDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.InternationalWireTransfers" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.InternationalWireTransfersDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.MultiCurrencyPOSBilling" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.MultiCurrencyPOSBillingDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.ForexRateLocking" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.ForexRateLockingDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.CrossBorderTransactionSecurity" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.CrossBorderTransactionSecurityDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.SalesAnalytics" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.SalesAnalyticsDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.CustomerBehaviorReports" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.CustomerBehaviorReportsDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.InventoryTracking" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.InventoryTrackingDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.RevenueForecastingDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.POSDeviceHealthMonitoring" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.POSDeviceHealthMonitoringDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.AutomatedSubscriptionBilling" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.AutomatedSubscriptionBillingDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.UsageBasedBilling" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.UsageBasedBillingDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.DunningManagement" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.DunningManagementDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.RecurringPaymentManagement" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.RecurringPaymentManagementDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.DeferredPaymentProcessing" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.DeferredPaymentProcessingDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.UPIPaymentsIndia" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.UPIPaymentsIndiaDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.WeChatPayChina" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.WeChatPayChinaDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.AliPayChina" xml:space="preserve">
+    <value>AliPay China </value>
+  </data>
+  <data name="PosService.AliPayChinaDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.iDealNetherlands" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.iDealNetherlandsDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.PayNowSingapore" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.PayNowSingaporeDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.ChaseMerchantServices" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.ChaseMerchantServicesDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.SquarePOS" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.SquarePOSDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.ToastPOS" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PosService.ToastPOSDescription" xml:space="preserve">
+    <value />
+  </data>
+</root>

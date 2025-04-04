@@ -1,0 +1,56 @@
+@{
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    ViewData["Title"] = "PosCompany";
+}
+<div class="container mt-4">
+    <h2>LINQ Query Builder Demo (Country)</h2>
+    <!-- Container for the QueryBuilder UI -->
+    <div id="queryBuilderContainer"></div>
+    <hr>
+    <h3>Data Table</h3>
+    <!-- Container for the dynamic data table -->
+    <div id="dataTableContainer"></div>
+</div>
+
+@section Scripts {
+    <script type="module">
+        // Import modules from your built library
+        import { QueryBuilder } from '/js/ui/QueryBuilder.js';
+        import { LinqDataTable } from '/js/ui/LinqDataTable.js';
+        import { StateManager } from '/js/core/State.js';
+
+        // Create a shared state manager instance.
+        const state = new StateManager();
+
+        // Initialize QueryBuilder
+        const qbContainer = document.getElementById("queryBuilderContainer");
+        const queryBuilder = new QueryBuilder({
+            container: qbContainer,
+            controller: "PosCompany",
+            stateManager: state,
+            intellisense: false,
+            debug: true
+        });
+        queryBuilder.init();
+
+        // Initialize LinqDataTable
+        const dtContainer = document.getElementById("dataTableContainer");
+        const dataTable = new LinqDataTable({
+            container: dtContainer,
+            controller: "PosCompany",
+            stateManager: state, // Optionally, you can share state here as well
+            debug: true
+        });
+        dataTable.init();
+
+        // Subscribe to state changes so that when the QueryBuilder updates the query,
+        // the data table fetches new data based on that query.
+        state.subscribe(async (s) => {
+            if (s.query) {
+                // You could have a dedicated method to update the table from a query:
+                await dataTable.fetchDataFromQuery(s.query);
+                dataTable.render();
+            }
+        });
+    </script>
+}

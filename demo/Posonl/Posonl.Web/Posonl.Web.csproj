@@ -1,0 +1,70 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="Properties\Resources.tr-TR.resx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.2" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="8.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Core\LinqApi.Core\LinqApi.Core.csproj" />
+    <ProjectReference Include="..\..\..\src\Dynamic\LinqApi.Dynamic\LinqApi.Dynamic.csproj" />
+    <ProjectReference Include="..\..\..\src\Extensions\LinqApi.Extensions\LinqApi.Extensions\LinqApi.Extensions.csproj" />
+    <ProjectReference Include="..\..\..\src\Localization\LinqApi.Localization\LinqApi.Localization.csproj" />
+    <ProjectReference Include="..\..\..\src\Logging\LinqApi.Logging\LinqApi.Logging.csproj" />
+    <ProjectReference Include="..\..\..\src\Razor\LinqApi.Razor\LinqApi.Razor.csproj" />
+    <ProjectReference Include="..\..\..\src\Repository\LinqApi.Repository\LinqApi.Repository.csproj" />
+    <ProjectReference Include="..\Posonl.Infrastructure\Posonl.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Update="EntityTypes.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>EntityTypes.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Areas\Dashboard\Data\" />
+    <Folder Include="Areas\Dashboard\Models\" />
+    <Folder Include="Areas\LinqApi\Controllers\" />
+    <Folder Include="Areas\LinqApi\Data\" />
+    <Folder Include="Areas\LinqApi\Models\" />
+    <Folder Include="Areas\LinqApi\Views\" />
+    <Folder Include="T4\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,18 @@
+﻿@{
+    var selectedLang = ViewBag.SelectedLang as string ?? "tr";
+}
+
+<form asp-controller="Home" asp-action="SetCulture" method="post" id="langForm">
+    <select name="lang" id="langSelect" class="form-select" style="width: auto;">
+        <option value="tr" selected="@(selectedLang == "tr")">Türkçe 🇹🇷</option>
+        <option value="en" selected="@(selectedLang == "en")">English 🇺🇸</option>
+        <option value="de" selected="@(selectedLang == "de")">Deutsch 🇩🇪</option>
+    </select>
+    <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+</form>
+
+<script>
+    document.getElementById('langSelect').addEventListener('change', function () {
+        document.getElementById('langForm').submit();
+    });
+</script>

@@ -1,0 +1,63 @@
+﻿@model IEnumerable<Posonl.Domain.Country>
+@using Microsoft.Extensions.Localization
+@using Posonl.Web.Properties
+@inject IStringLocalizer<Resources> Localizer
+
+<div class="comparison-form my-5">
+    <form id="comparisonForm" class="row g-3">
+        <div class="col-md-4">
+            <label for="countrySelect" class="form-label">@Localizer["SelectCountry"]</label>
+            <select id="countrySelect" name="country" class="form-select">
+                <option value="">-- @Localizer["SelectCountry"] --</option>
+                @foreach (var country in Model)
+                {
+                    <option value="@country.Code">@country.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="posServiceName" class="form-label">@Localizer["PosServiceName"]</label>
+            <input type="text" id="posServiceName" name="posServiceName" class="form-control" placeholder="@Localizer["EnterPosServiceName"]" />
+        </div>
+        <div class="col-md-4 align-self-end">
+            <button type="button" id="searchButton" class="btn btn-success w-100">@Localizer["SearchNow"]</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // "Search Now" butonuna tıklayınca filtre parametrelerini alıp HomeController'daki FilterResults metoduna GET isteği gönderelim.
+        document.getElementById("searchButton").addEventListener("click", async function () {
+            const country = document.getElementById('countrySelect').value;
+            const posServiceName = document.getElementById('posServiceName').value;
+
+            // Sorgu parametrelerini URL'e ekliyoruz.
+            const queryParams = new URLSearchParams({
+                countryCode: country,
+                posServiceName: posServiceName
+            }).toString();
+
+            const apiUrl = `@Url.Action("FilterResults", "Home")?${queryParams}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'GET'
+                });
+                if (!response.ok) {
+                    throw new Error("API call failed: " + response.status);
+                }
+                const html = await response.text();
+                document.getElementById("comparisonSection").innerHTML = html;
+
+                // Yüklendikten sonra tooltip'leri yeniden initialize et.
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        });
+    });
+</script>

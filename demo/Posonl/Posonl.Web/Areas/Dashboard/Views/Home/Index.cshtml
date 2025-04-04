@@ -1,0 +1,94 @@
+@{
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    ViewData["Title"] = "Country Query Example";
+}
+<div class="container mt-4">
+    <h2>LINQ Query Builder Demo (Country)</h2>
+    <!-- Container for the QueryBuilder UI -->
+    <div id="queryBuilderContainer"></div>
+    <hr>
+    <h3>Data Table</h3>
+    <!-- Container for the dynamic data table -->
+    <div id="dataTableContainer"></div>
+    <hr>
+    <h3>Create Form Example</h3>
+    <!-- Container for the Create Form UI -->
+    <div id="createFormContainer"></div>
+    <hr>
+    <h3>Update Form Example</h3>
+    <!-- Container for the Update Form UI -->
+    <div id="updateFormContainer"></div>
+</div>
+
+@section Scripts {
+    <script type="module">
+        import { QueryBuilder } from '/js/ui/QueryBuilder.js';
+        import { LinqDataTable } from '/js/ui/LinqDataTable.js';
+        import { StateManager } from '/js/core/State.js';
+
+        // Create a shared state manager instance.
+        const state = new StateManager();
+
+        // Initialize QueryBuilder
+        const qbContainer = document.getElementById("queryBuilderContainer");
+        const queryBuilder = new QueryBuilder({
+            container: qbContainer,
+            controller: "Country",
+            stateManager: state,
+            intellisense: false, // Disabled for now
+            debug: true,
+            onApplyQuery: (query) => {
+                console.log("Query applied from QueryBuilder:", query);
+            }
+        });
+        queryBuilder.init();
+
+        // Initialize LinqDataTable
+        const dtContainer = document.getElementById("dataTableContainer");
+        const dataTable = new LinqDataTable({
+            container: dtContainer,
+            controller: "Country",
+            stateManager: state,
+            debug: true
+        });
+        // Ensure fetchDataFromQuery is defined in LinqDataTable
+        if (typeof dataTable.fetchDataFromQuery !== "function") {
+          dataTable.fetchDataFromQuery = async (query) => {
+            dataTable.filter = query.filter.toString();
+            dataTable.orderBy = query.orderBy;
+            dataTable.desc = query.desc;
+            dataTable.groupBy = query.groupBy;
+            dataTable.select = query.select;
+            dataTable.includes = query.includes;
+            dataTable.pageNumber = 1;
+            await dataTable.fetchData();
+          };
+        }
+        dataTable.init();
+
+        // Subscribe to state changes so that when the QueryBuilder updates the query,
+        // the data table fetches new data based on that query.
+        state.subscribe(async (s) => {
+            if (s.query) {
+                await dataTable.fetchDataFromQuery(s.query);
+                dataTable.render();
+            }
+        });
+
+        // Create Form Example: Generate a create form and attach it.
+        const createFormContainer = document.getElementById("createFormContainer");
+        const createFormEl = dataTable.createForm("Create");
+        createFormContainer.appendChild(createFormEl);
+
+        // Update Form Example: For demonstration, simulate an update using a sample item.
+        const updateFormContainer = document.getElementById("updateFormContainer");
+        const sampleItem = { id: 1, name: "Sample Country", code: "SC", currency: "USD" };
+        dataTable.openUpdateForm(sampleItem).then(updateFormEl => {
+            if (updateFormEl) {
+                updateFormContainer.appendChild(updateFormEl);
+            } else {
+                console.error("Failed to create update form.");
+            }
+        });
+    </script>
+}

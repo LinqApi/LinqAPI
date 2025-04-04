@@ -1,0 +1,199 @@
+﻿@model IEnumerable<Posonl.Domain.Country>
+@using Microsoft.Extensions.Localization
+@using Posonl.Web.Properties
+@inject IStringLocalizer<Resources> Localizer
+
+<!-- Üst filtre alanı: Ülke seçimi ve PosService filtreleri -->
+<div class="container my-5">
+    <div class="row">
+        <!-- Ülke Seçimi -->
+        <div class="col-md-4">
+            <div class="mb-3">
+                <label for="countrySelect" class="form-label">@Localizer["SelectCountry"]</label>
+                <select id="countrySelect" name="country" class="form-select">
+                    <option value="">-- @Localizer["SelectCountry"] --</option>
+                    @foreach (var country in Model)
+                    {
+                        <option value="@country.Code">@country.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <!-- PosService Filtreleri (Kategori bazında gruplanmış örnek) -->
+        <div class="col-md-8">
+            <label class="form-label">@Localizer["FilterByPosService"]</label>
+            <div id="posServiceFilters" class="accordion" id="posServiceAccordion">
+                <!-- Örneğin, kategori bazında gruplandırdığımız filtreler -->
+                <!-- Bu kısımlarda localizer ile kategori isimleri ve açıklamaları alınabilir -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingRegional">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRegional" aria-expanded="false" aria-controls="collapseRegional">
+                            @Localizer["RegionalSpecificPOSServices"]
+                            <i class="bi bi-info-circle ms-2" title="@Localizer["PosService.RegionalSpecificPOSServicesDescription"]"></i>
+                        </button>
+                    </h2>
+                    <div id="collapseRegional" class="accordion-collapse collapse" aria-labelledby="headingRegional" data-bs-parent="#posServiceAccordion">
+                        <div class="accordion-body">
+                            <!-- Örnek checkbox listesi; bu liste API’den veya sabit veri olarak alınabilir -->
+                            <div class="form-check">
+                                <input class="form-check-input posServiceCheckbox" type="checkbox" value="2" id="posService2">
+                                <label class="form-check-label" for="posService2">
+                                    @Localizer["PosService.UPIPaymentsIndia"]  <!-- Name: Localizer üzerinden alınıyor -->
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input posServiceCheckbox" type="checkbox" value="3" id="posService3">
+                                <label class="form-check-label" for="posService3">
+                                    @Localizer["PosService.WeChatPayChina"]
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input posServiceCheckbox" type="checkbox" value="4" id="posService4">
+                                <label class="form-check-label" for="posService4">
+                                    @Localizer["PosService.AliPayChina"]
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Diğer kategoriler için benzer accordion-item'lar eklenebilir -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Arama ve Karşılaştırma Butonu -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <button type="button" id="searchButton" class="btn btn-success w-100">@Localizer["SearchNow"]</button>
+        </div>
+        <div class="col-md-4">
+            <button type="button" id="compareButton" class="btn btn-primary w-100">@Localizer["CompareNow"]</button>
+        </div>
+    </div>
+</div>
+
+<!-- Sonuçların gösterileceği bölüm -->
+<div id="comparisonSection" class="container my-5">
+    <h3>@Localizer["SearchResults"]</h3>
+    <div id="resultsContainer"></div>
+</div>
+
+<!-- JavaScript kısmı -->
+<script>
+    // Eğer HttpCacheManager kullanacaksanız; burada basit fetch ile de çağırabilirsiniz.
+    // Ayar: her seferinde pager 500 olacak şekilde API'ye istek gönderiyoruz.
+    const baseUrl = '@Url.Content("~/api/")';
+
+    function buildFilterQuery() {
+        const country = document.getElementById('countrySelect').value;
+        // PosService filtreleri: seçili checkbox'ların değerlerini alıyoruz.
+        const posServiceCheckboxes = document.querySelectorAll('.posServiceCheckbox:checked');
+        let posServiceIds = [];
+        posServiceCheckboxes.forEach(cb => {
+            posServiceIds.push(parseInt(cb.value));
+        });
+
+        // Dinamik sorgu stringi oluşturuyoruz:
+        // Eğer posServiceIds dolu ise Contains kullanacağız, boşsa "1=1" gibi tüm veriyi döndürecek
+        let posServiceFilter = posServiceIds.length > 0 ?
+            `posServices.Any(x => new long[]{${posServiceIds.join(',')}}.Contains(x.Id))` :
+            "1=1";
+
+        // Eğer ülke seçildiyse, ülke koduna göre filtre ekleyelim.
+        let countryFilter = country ? `SupportedCountries.Any(x => x.Code == "${country}")` : "1=1";
+
+        // Birleştirerek nihai filter ifadesi:
+        // Örneğin, posService filter ve country filter arasındaki koşulu "or" veya "and" olarak belirleyebilirsiniz.
+        // Bu örnekte "and" kullanıyoruz.
+        let filterExpression = `${countryFilter} and ${posServiceFilter}`;
+
+        // Ek olarak, ekstra pos company veya rating filtreleri eklenebilir.
+        // Aşağıdaki örnekte sadece temel filtreyi döndürüyoruz.
+        return {
+            filter: filterExpression,
+            pager: {
+                pageNumber: 1,
+                pageSize: 500
+            },
+            orderBy: "id",
+            desc: true,
+            includes: [
+                {
+                    propertyName: "PosServices",
+                    pager: {
+                        pageNumber: 1,
+                        pageSize: 500
+                    }
+                }
+            ]
+        };
+    }
+
+    async function performSearch(useCache = false) {
+        const queryObject = buildFilterQuery();
+        const queryJson = JSON.stringify(queryObject);
+        console.log("Sorgu JSON:", queryJson);
+
+        // Eğer HttpCacheManager kullanacaksanız, useCache parametresine göre onu çağırabilirsiniz.
+        // Örneğin:
+        // if (useCache) { return httpCacheManager.fetchWithCache(apiUrl, { method: 'POST', body: queryJson }); }
+        // Bu örnekte doğrudan fetch kullanacağız.
+        const apiUrl = baseUrl + "PosServiceCategory/filterpaged";
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: queryJson
+            });
+            if (!response.ok) {
+                throw new Error("API çağrısı başarısız: " + response.status);
+            }
+            const result = await response.json();
+            displayResults(result);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function displayResults(result) {
+        // Basit bir sonuç gösterimi
+        const container = document.getElementById("resultsContainer");
+        container.innerHTML = ""; // temizle
+
+        // Örneğin, dönen result.items üzerinden liste oluşturabilirsiniz.
+        if (result && result.items && result.items.length) {
+            result.items.forEach(item => {
+                const div = document.createElement("div");
+                div.classList.add("card", "mb-3");
+                div.innerHTML = `
+                    <div class="card-body">
+                        <h5 class="card-title">${item.name}</h5>
+                        <!-- PosServices'in localizer'dan alınan adını buraya yazabilirsin -->
+                        <p class="card-text">${item.posServices && item.posServices.length ? item.posServices[0].description : ""}</p>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        } else {
+            container.innerHTML = `<div class="alert alert-info">${"No results found"}</div>`;
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("searchButton").addEventListener("click", function () {
+            performSearch();
+        });
+
+        // "Compare Now" butonuna tıklayınca sonuç bölümüne yumuşak kaydırma
+        document.getElementById("compareButton").addEventListener("click", function () {
+            const comparisonSection = document.getElementById("comparisonSection");
+            if (comparisonSection) {
+                comparisonSection.scrollIntoView({ behavior: "smooth" });
+            }
+        });
+    });
+</script>

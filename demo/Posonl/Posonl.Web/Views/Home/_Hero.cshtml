@@ -1,0 +1,11 @@
+@using Microsoft.Extensions.Localization
+@using Posonl.Web.Properties
+@inject IStringLocalizer<Resources> Localizer
+
+<div class="jumbotron text-center py-5">
+    <div class="container">
+        <h1 class="display-4">@Localizer["Hero.Title"]</h1>
+        <p class="lead">@Localizer["Hero.Description"]</p>
+        <a class="btn btn-primary btn-lg" href="/Pos" role="button">@Localizer["Hero.Button"]</a>
+    </div>
+</div>

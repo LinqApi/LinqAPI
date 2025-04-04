@@ -1,0 +1,40 @@
+﻿@model IEnumerable<Posonl.Domain.PosServiceCategory>
+@using Microsoft.Extensions.Localization
+@using Posonl.Web.Properties
+@inject IStringLocalizer<Resources> Localizer
+
+<div class="row">
+    @if (Model != null && Model.Any())
+    {
+        foreach (var category in Model)
+        {
+            <div class="col-md-12 mb-3">
+                <h4>@category.Name</h4>
+                <ul class="list-group">
+                    @foreach (var posService in category.PosServices)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>@Localizer[$"PosService.{posService.Name}"];</span>
+                            
+                            <span>
+                                <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="@Localizer[$"PosService.{posService.Description}"]"></i>
+                            </span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">No results found.</div>
+    }
+</div>
+
+<script>
+    // Tooltip yeniden initialize edelim, çünkü partial view dinamik olarak yüklendiğinde
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+</script>

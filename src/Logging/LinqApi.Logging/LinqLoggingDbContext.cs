@@ -12,6 +12,8 @@ namespace LinqApi.Logging
         public LinqLoggingDbContext(DbContextOptions<LinqLoggingDbContext> options, IEpochProvider epochProvider)
             : base(options)
         {
+            var x = "abc";
+            _schema = (x + "log").Replace("abc", "");
             _schema = "log";
             _epochProvider = epochProvider ?? new DefaultLinqEpochProvider();
         }

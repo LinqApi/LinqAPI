@@ -1,0 +1,67 @@
+@using Microsoft.Extensions.Localization
+@using Posonl.Web.Properties
+@inject IStringLocalizer<Resources> Localizer
+@{
+    // Geçerli UI kültürünün iki harf kodunu alıyoruz (örneğin, "tr", "en", "de")
+    var currentLang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var testString = Localizer["Menu.Home"]; // Örneğin: "Anasayfa", "Home", "Startseite"
+}
+<!DOCTYPE html>
+<html lang="@currentLang">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - PosOnl</title>
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    @* <link rel="stylesheet" href="~/css/site.css" /> *@
+</head>
+<body>
+    <header>
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/">PosOnl</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <!-- Ana Menü Öğeleri -->
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/">@testString</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Pos">@Localizer["Menu.PosCompanies"]</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/About">@Localizer["Menu.About"]</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Contact">@Localizer["Menu.Contact"]</a>
+                        </li>
+                    </ul>
+                    <!-- Arama Formu -->
+                    <form class="d-flex" method="get" action="/Search">
+                        <input class="form-control me-2" type="search" name="query" placeholder="@Localizer["Search"]" aria-label="Arama">
+                        <button class="btn btn-outline-success" type="submit">@Localizer["SearchButton"]</button>
+                    </form>
+                    @await Html.PartialAsync("_LocaleSelector")
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container my-4">
+        @RenderBody()
+    </div>
+    <footer class="footer mt-auto py-3 bg-light border-top">
+        <div class="container text-center">
+            <span class="text-muted">&copy; @DateTime.Now.Year - PosOnl</span>
+        </div>
+    </footer>
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
