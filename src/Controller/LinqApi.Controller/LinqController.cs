@@ -9,12 +9,12 @@ namespace LinqApi.Controller
     using System.Reflection;
     using LinqApi.Core;
     using System.Collections.Concurrent;
+    using Microsoft.AspNetCore.Routing;
 
     [ApiController]
     public class LinqController<TEntity, TId>(ILinqRepository<TEntity, TId> repo) : LinqReadonlyController<TEntity, TId>(repo)
      where TEntity : BaseEntity<TId>
     {
-        protected internal readonly ILinqRepository<TEntity, TId> _repo;
 
         [HttpPost]
         public virtual async Task<IActionResult> Create([FromBody] TEntity entity, CancellationToken cancellationToken)
@@ -23,9 +23,10 @@ namespace LinqApi.Controller
             return CreatedAtAction(nameof(GetById), new { id = createdDto.Id }, createdDto);
         }
 
-        [HttpPut]
-        public virtual async Task<IActionResult> Update([FromBody] TEntity entity, CancellationToken cancellationToken)
+        [HttpPut("{id}")]
+        public virtual async Task<IActionResult> Update(TId id, [FromBody] TEntity entity, CancellationToken cancellationToken)
         {
+            entity.Id = id;
             var updatedDto = await _repo.UpdateAsync(entity, cancellationToken);
             return Ok(updatedDto);
         }
@@ -40,7 +41,7 @@ namespace LinqApi.Controller
 
 
 
-     
+
     }
     /// <summary>
     /// Provides helper methods to generate a property schema for entity types.

@@ -5,12 +5,13 @@ import { Query, LogicalFilter, Pager } from "../core/models.js";
  * LinqSelect2 Component
  * ----------------------
  * A reusable, agile select component that supports both server- and client-side data fetching,
- * single/multiple selection, and two render modes: "tag" and "grid".
+ * single/multiple selection, and three render modes: "tag", "grid", and now "checkbox".
  *
  * In single-select mode, the selected item is always shown in the input field.
  * In multi-select mode:
  *   - "tag" mode displays selections as small removable tags.
- *   - "grid" mode displays selections in a table below the input, with an "×" button to remove an item.
+ *   - "grid" mode displays selections in a table below the input with removal buttons.
+ *   - "checkbox" mode displays options as a small table with checkboxes next to each item.
  *
  * The component also supports a "disabled" flag. When disabled, new selections are not allowed.
  */
@@ -27,7 +28,7 @@ export class LinqSelect2 {
             filterSuffix: "",
             renderMode: "tag",  // "tag" or "grid"
             fetchMode: "server", // "server" or "client"
-            selectPlaceHolder : "Select...",
+            selectPlaceHolder: "Select...",
             localData: [],
             multiselect: false,
             pageSize: defaults.defaultPageSize,
@@ -44,16 +45,34 @@ export class LinqSelect2 {
      */
     init() {
         this.container = this.cfg.container;
-        // Set up the component's markup:
-        //   - An input for search/selected value display.
-        //   - A dropdown for search results.
-        //   - A container for showing selected items (used in multi-select grid or tag mode).
+        // Ensure the container has position relative
+        this.container.style.position = "relative";
+        window.addEventListener("resize", () => {
+            // For instance, you might reapply styles or recalc the top position if needed.
+            // Here we assume top remains "100%" relative to the input.
+            this.dropdown.style.top = "100%";
+        });
+
+        // Set up the component's markup inside a wrapper
         this.container.innerHTML = `
-    <input class="form-control mb-1" placeholder="${this.cfg.placeholder || 'Select...'}" />
-    <div class="dropdown-menu w-100"></div>
-    <div class="selected-items mt-2"></div>
-`;
-        [this.input, this.dropdown, this.selectedContainer] = this.container.children;
+        <div class="select2-wrapper" style="position: relative;">
+            <input class="form-control mb-1" placeholder="${this.cfg.placeholder || 'Select...'}" />
+            <div class="dropdown-menu w-100"></div>
+        </div>
+        <div class="selected-items mt-2"></div>
+    `;
+        const wrapper = this.container.querySelector(".select2-wrapper");
+        [this.input, this.dropdown] = wrapper.children;
+        // The selectedContainer remains outside the wrapper if desired.
+        this.selectedContainer = this.container.querySelector(".selected-items");
+
+        // Set dropdown absolute positioning
+        Object.assign(this.dropdown.style, {
+            position: "absolute",
+            top: "100%",
+            left: "0",
+            zIndex: "1000", // ensure it appears on top of other elements
+        });
 
         // If disabled, disable input and do not bind selection events.
         if (this.cfg.disabled) {
@@ -70,6 +89,7 @@ export class LinqSelect2 {
             });
         }
     }
+
 
     /**
      * Fetch data either from the server or from localData based on the fetchMode.
@@ -114,16 +134,61 @@ export class LinqSelect2 {
      * Uses getDisplayText() to build the display string for each item.
      */
     renderDropdown() {
-        this.dropdown.innerHTML = this.data.items.map(item => {
-            const displayText = this.getDisplayText(item);
-            return `<a class="dropdown-item">${displayText}</a>`;
-        }).join("");
+        // Check for the new "checkbox" render mode
+        if (this.cfg.renderMode === "checkbox") {
+            // Render the dropdown as a small table with checkboxes
+            let html = '<table class="table table-sm mb-0"><tbody>';
+            this.data.items.forEach((item, index) => {
+                const displayText = this.getDisplayText(item);
+                // Check if the item is already selected
+                const isChecked = this.selectedItems.some(i => i[this.cfg.valueField] === item[this.cfg.valueField]);
+                html += `
+                <tr>
+                    <td style="width: 1%;">
+                        <input type="checkbox" data-index="${index}" ${isChecked ? "checked" : ""} />
+                    </td>
+                    <td>${displayText}</td>
+                </tr>
+            `;
+            });
+            html += '</tbody></table>';
+            this.dropdown.innerHTML = html;
 
-        Array.from(this.dropdown.children).forEach((el, i) => {
-            el.onclick = () => this.selectItem(this.data.items[i]);
-        });
-        this.dropdown.classList.add("show");
+            // Attach event listeners to each checkbox to update the selection on change
+            const checkboxes = this.dropdown.querySelectorAll("input[type='checkbox']");
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener("change", (e) => {
+                    const index = e.target.getAttribute("data-index");
+                    const item = this.data.items[index];
+                    if (e.target.checked) {
+                        // Add the item if it's not already selected
+                        if (!this.selectedItems.some(i => i[this.cfg.valueField] === item[this.cfg.valueField])) {
+                            this.selectedItems.push(item);
+                        }
+                    } else {
+                        // Remove the item from the selected items
+                        this.selectedItems = this.selectedItems.filter(i => i[this.cfg.valueField] !== item[this.cfg.valueField]);
+                    }
+                    // Trigger onChange callback if provided in the config
+                    if (typeof this.cfg.onChange === "function") {
+                        this.cfg.onChange(this.getValue());
+                    }
+                });
+            });
+            this.dropdown.classList.add("show");
+        } else {
+            // Fallback to the existing render implementation for "tag" or "grid" modes
+            this.dropdown.innerHTML = this.data.items.map(item => {
+                const displayText = this.getDisplayText(item);
+                return `<a class="dropdown-item">${displayText}</a>`;
+            }).join("");
+            Array.from(this.dropdown.children).forEach((el, i) => {
+                el.onclick = () => this.selectItem(this.data.items[i]);
+            });
+            this.dropdown.classList.add("show");
+        }
     }
+
 
     /**
      * Handle item selection.
@@ -158,88 +223,99 @@ export class LinqSelect2 {
      *     * In "tag" mode, selections are shown as removable tags.
      *     * In "grid" mode, selections are shown in a table with removal buttons.
      */
+    /**
+  * Update the selected items display.
+  * This method now also triggers an onChange callback if provided in the config.
+  */
     updateSelectedUI() {
-        // Helper to generate the display text from an item.
         const displayText = (item) => this.getDisplayText(item);
 
-        // Single-select: Always display selection in the input field.
         if (!this.cfg.multiselect) {
             this.input.value = this.selectedItems[0] ? displayText(this.selectedItems[0]) : "";
-            // Clear external selected items container.
             this.selectedContainer.innerHTML = "";
         } else {
-            // Multi-select mode.
-            // Clear the input field for further search.
             this.input.value = "";
             if (this.cfg.renderMode === "tag") {
-                // Render selected items as tags with an "×" icon.
                 this.selectedContainer.innerHTML = this.selectedItems.map(item => `
-                    <span class="badge bg-secondary me-1">
-                        ${displayText(item)}
-                        <span data-id="${item[this.cfg.valueField]}" class="ms-1" style="cursor: pointer;">&times;</span>
-                    </span>
-                `).join("");
-                // Bind removal event on each tag's "×" icon.
+                <span class="badge bg-secondary me-1">
+                    ${displayText(item)}
+                    <span data-id="${item[this.cfg.valueField]}" class="ms-1" style="cursor: pointer;">&times;</span>
+                </span>
+            `).join("");
                 this.selectedContainer.querySelectorAll("[data-id]").forEach(span => {
-                    span.onclick = () => this.removeSelected(span.dataset.id);
+                    span.onclick = () => {
+                        this.removeSelected(span.dataset.id);
+                        if (typeof this.cfg.onChange === "function") {
+                            this.cfg.onChange(this.getValue());
+                        }
+                    };
                 });
             } else if (this.cfg.renderMode === "grid") {
-                // Render selected items in a grid (table) with a removal button.
                 this.selectedContainer.innerHTML = `
-                    <table class="table table-bordered small">
-                        <tbody>
-                            ${this.selectedItems.map(item => `
-                                <tr>
-                                    <td>${displayText(item)}</td>
-                                    <td style="width:1%; white-space: nowrap;">
-                                        <button class="btn btn-sm btn-danger" data-id="${item[this.cfg.valueField]}">&times;</button>
-                                    </td>
-                                </tr>
-                            `).join("")}
-                        </tbody>
-                    </table>
-                `;
-                // Bind removal event on each grid button.
+                <table class="table table-bordered small">
+                    <tbody>
+                        ${this.selectedItems.map(item => `
+                            <tr>
+                                <td>${displayText(item)}</td>
+                                <td style="width:1%; white-space: nowrap;">
+                                    <button class="btn btn-sm btn-danger" data-id="${item[this.cfg.valueField]}">&times;</button>
+                                </td>
+                            </tr>
+                        `).join("")}
+                    </tbody>
+                </table>
+            `;
                 this.selectedContainer.querySelectorAll("button[data-id]").forEach(btn => {
-                    btn.onclick = () => this.removeSelected(btn.getAttribute("data-id"));
+                    btn.onclick = () => {
+                        this.removeSelected(btn.getAttribute("data-id"));
+                        if (typeof this.cfg.onChange === "function") {
+                            this.cfg.onChange(this.getValue());
+                        }
+                    };
                 });
-            }
+            } // 👈 Bu } eksikti
+        }
+
+        // Trigger onChange even after full update
+        if (typeof this.cfg.onChange === "function") {
+            this.cfg.onChange(this.getValue());
         }
     }
 
-    /**
-     * Remove a selected item by its valueField.
-     * @param {string|number} id - The identifier of the item to remove.
-     */
-    removeSelected(id) {
-        this.selectedItems = this.selectedItems.filter(i =>
-            i[this.cfg.valueField].toString() !== id.toString()
-        );
-        this.updateSelectedUI();
-    }
 
-    /**
-     * Get the current selection.
-     * @returns {Array|object|null} - Returns an array for multi-select or a single object (or null) for single-select.
-     */
-    getValue() {
-        return this.cfg.multiselect ? this.selectedItems : this.selectedItems[0] || null;
-    }
+/**
+ * Remove a selected item by its valueField.
+ * @param {string|number} id - The identifier of the item to remove.
+ */
+removeSelected(id) {
+    this.selectedItems = this.selectedItems.filter(i =>
+        i[this.cfg.valueField].toString() !== id.toString()
+    );
+    this.updateSelectedUI();
+}
 
-    /**
-     * Helper method to build the display text for an item.
-     * If displayProperty is an array, concatenates the values separated by " - ".
-     * Otherwise, returns the single property value.
-     * @param {object} item - The data item.
-     * @returns {string} The display text.
-     */
-    getDisplayText(item) {
-        if (Array.isArray(this.cfg.displayProperty)) {
-            return this.cfg.displayProperty
-                .map(prop => item[prop])
-                .filter(val => val != null)
-                .join(" - ");
-        }
-        return item[this.cfg.displayProperty] ?? "";
+/**
+ * Get the current selection.
+ * @returns {Array|object|null} - Returns an array for multi-select or a single object (or null) for single-select.
+ */
+getValue() {
+    return this.cfg.multiselect ? this.selectedItems : this.selectedItems[0] || null;
+}
+
+/**
+ * Helper method to build the display text for an item.
+ * If displayProperty is an array, concatenates the values separated by " - ".
+ * Otherwise, returns the single property value.
+ * @param {object} item - The data item.
+ * @returns {string} The display text.
+ */
+getDisplayText(item) {
+    if (Array.isArray(this.cfg.displayProperty)) {
+        return this.cfg.displayProperty
+            .map(prop => item[prop])
+            .filter(val => val != null)
+            .join(" - ");
     }
+    return item[this.cfg.displayProperty] ?? "";
+}
 }

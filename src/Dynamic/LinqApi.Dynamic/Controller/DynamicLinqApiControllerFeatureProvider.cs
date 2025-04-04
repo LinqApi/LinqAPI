@@ -94,7 +94,7 @@ namespace LinqApi.Dynamic.Controller
                 .Where(IsConcreteSubclassOfGenericBaseEntity)
                 // Harici filter (opsiyonel)
                 .Where(_options.EntityFilter);
-
+            
             // 2) Her entity tipi için, _options.ControllerTypes'te belirtilen her enum için controller yarat
             foreach (var entityType in entityTypes)
             {

@@ -111,19 +111,58 @@ export const fetchPagedData = async (url, query) => {
     };
 };
 
-export const fetchProperties = async(controller, apiPrefix = "/api")=> {
-    // Sunucudan alan metadata bilgisini alacak bir AJAX/Fetch isteği yap.
-    // Örneğin: GET /api/{controller}/properties endpoint'ine istek atılabilir.
+
+/**
+ * Analyzes a property type string and returns an object with its kind and base type.
+ * @param {string} typeStr - The property type string (e.g., "ICollection<PosService>" or "String").
+ * @returns {Object} An object with 'kind' and 'baseType' properties.
+ */
+export const analyzePropertyType = (typeStr) => {
+    // Regex to detect collection types (e.g., ICollection<PosService>, IList<PosService>, IReadOnlyCollection<PosService>)
+    const complexListPattern = /^(ICollection|IList|IReadOnlyCollection)<\s*(.+)\s*>$/i;
+    const match = typeStr.match(complexListPattern);
+    if (match) {
+        return {
+            kind: "complexList",
+            baseType: match[2].trim()
+        };
+    }
+    // Define the allowed simple types for our application.
+    const simpleTypes = ['string', 'int64', 'boolean', 'datetime', 'int32'];
+    const lowerType = typeStr.toLowerCase();
+    if (simpleTypes.some(t => lowerType.includes(t))) {
+        return {
+            kind: "simple",
+            baseType: typeStr
+        };
+    }
+    // If not a collection and not one of the known simple types, treat it as a complex type.
+    return {
+        kind: "complex",
+        baseType: typeStr
+    };
+};
+
+
+export const fetchProperties = async (controller, apiPrefix = "/api") => {
     const url = `${apiPrefix.replace(/\/+$/, "")}/${controller}/properties`;
     return fetch(url)
         .then(response => {
             if (!response.ok) {
-                throw new Error(`fetchProperties isteği başarısız: ${response.status}`);
+                throw new Error(`fetchProperties request failed: ${response.status}`);
             }
             return response.json();
         })
+        .then(data => {
+            // Enhance each property with its type analysis.
+            return data.map(prop => {
+                const analysis = analyzePropertyType(prop.type);
+                return { ...prop, kind: analysis.kind, baseType: analysis.baseType };
+            });
+        })
         .catch(error => {
-            console.error("fetchProperties hata:", error);
+            console.error("fetchProperties error:", error);
             throw error;
         });
-}
+};
+

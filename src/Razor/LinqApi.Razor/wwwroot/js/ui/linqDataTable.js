@@ -2,7 +2,7 @@ import { StateManager } from "../core/state.js";
 import { QueryBuilder } from "./queryBuilder.js";
 import { defaults, fetchProperties, fetchPagedData, FormManager } from "./linqutil.js";
 import { Query, LogicalFilter, Pager } from "../core/models.js";
-
+import { LinqSelect2 } from "./linqASelect2.js";
 /**
  * Ana LinqDataTable bileşeni.
  * Tabloyu oluşturur, verileri sunucudan çeker ve kullanıcı etkileşimlerini (sayfalama, sıralama, düzenleme vb.) yönetir.
@@ -18,46 +18,54 @@ export class LinqDataTable {
      * @param {HTMLElement|string} [options.queryBuilderContainer] - QueryBuilder için harici bir konteyner. Verilmezse, LinqDataTable kendi içinde bir konteyner oluşturur.
      * @param {boolean} [options.autoCreateQueryBuilder=true] - true ise bir QueryBuilder arayüzü oluşturulur; false ise oluşturulmaz.
      */
-    constructor({ container, controller, apiPrefix = "/api", stateManager = null, queryBuilderContainer = null, autoCreateQueryBuilder = true }) {
-        // Ana konteyner elementini bul
+    constructor({
+        container,
+        controller,
+        apiPrefix = "/api",
+        stateManager = null,
+        queryBuilderContainer = null,
+        autoCreateQueryBuilder = true,
+        select2Columns = false // New config: enable column selection
+    }) {
+        // Find and assign the main container element
         if (typeof container === "string") {
             this.containerElm = document.querySelector(container);
         } else {
             this.containerElm = container;
         }
         if (!this.containerElm) {
-            throw new Error("LinqDataTable: Geçersiz container elementi.");
+            throw new Error("LinqDataTable: Invalid container element.");
         }
         this.controller = controller;
         this.apiPrefix = apiPrefix;
-        // StateManager: dışarıdan verilmişse kullan, yoksa yeni oluştur
+        // Use provided StateManager or create a new one
         this.stateManager = stateManager || new StateManager();
-        // Mevcut query durumunu al (başlangıçta varsa)
-        //this.currentQuery = this.stateManager.getState("query") || null;
+        // Component states
+        this.data = [];          // Data for current page
+        this.totalCount = 0;     // Total record count (for pagination)
+        this.pageSize = 10;      // Records per page
+        this.currentSort = null; // Sorting information ({ field, dir })
+        this.isLoading = false;  // Flag to indicate if data is being loaded
+        this.entityProperties = null; // Property metadata for form rendering
+        this.editingIndex = null; // Currently editing row index (if any)
 
-        // Bileşen durumları
-        this.data = [];           // Tablo verileri (mevcut sayfanın kayıtları)
-        this.totalCount = 0;      // Toplam kayıt sayısı (sayfalama için)
-        this.pageSize = 10;       // Sayfa başına kayıt adedi
-        this.currentPage = 1;     // Şu anki sayfa numarası
-        this.currentSort = null;  // Mevcut sıralama bilgisi ({ field, dir })
-        this.isLoading = false;   // Veri çekme işleminin devam edip etmediği
-        this.entityProperties = null;   // Alan listesi (özellik meta verileri), formlarda kullanılabilir
-        this.editingIndex = null; // Halen düzenleme modunda olan satır indeksi (varsa)
+        // New configuration for column selection in the grid
+        this.select2Columns = select2Columns;
+        this.selectedColumns = []; // Will hold selected column names
 
-
-       
-        // Tablo üstü kontrol panelini oluştur (ör: "Yeni Ekle" butonu)
+        // Render the top controls (e.g., "New" button)
         this._renderTopControls();
-        // Tablo elementini oluştur
+        // Create table element and add to container
         this.tableElm = document.createElement("table");
-        this.tableElm.className = "table table-striped table-hover"; // Bootstrap table classes
+        this.tableElm.className = "table table-striped table-hover";
         this.containerElm.appendChild(this.tableElm);
 
+        // Create pagination element and add to container
         this.pagerElm = document.createElement("div");
-        this.pagerElm.className = "d-flex justify-content-between align-items-center mt-3"; // Flex container for pager
+        this.pagerElm.className = "d-flex justify-content-between align-items-center mt-3";
         this.containerElm.appendChild(this.pagerElm);
 
+        // Setup QueryBuilder if enabled
         if (autoCreateQueryBuilder) {
             this.queryBuilder = new QueryBuilder({
                 container: queryBuilderContainer,
@@ -65,25 +73,20 @@ export class LinqDataTable {
                 controller: this.controller,
                 apiPrefix: this.apiPrefix
             });
-
-            // Subscribe to query updates from the QueryBuilder
+            // Subscribe to query updates from QueryBuilder
             this.queryBuilder.onQueryUpdated((newQuery) => {
                 this.currentQuery = newQuery;
-                this.currentPage = 1; // Reset to the first page when query changes
+                this.currentPage = 1; // Reset to first page when query changes
                 this._fetchData();  // Trigger data reload
             });
-
-
             this.stateManager.subscribe("query", (newQuery) => {
                 this.currentQuery = newQuery;
                 this.currentPage = 1;
                 this._fetchData();
             });
-
         }
-        // Get the query from state manager or from the queryBuilder
+        // Set the current query from state or QueryBuilder
         this.currentQuery = this.stateManager.getState("query") || this.queryBuilder.query;
-        // Always wrap if it’s not a Query instance:
         if (!(this.currentQuery instanceof Query)) {
             this.currentQuery = new Query(this.controller, {
                 filter: this.currentQuery.filter || new LogicalFilter("AND", [{ toString: () => "1=1" }]),
@@ -95,26 +98,89 @@ export class LinqDataTable {
                 includes: this.currentQuery.includes || [],
             });
         }
-        // Başlangıçta veriyi çek
+        // Fetch initial data
         this._fetchData();
     }
-
     /**
      * Tablo üst kısmındaki kontrol düğmelerini oluşturur (örn: "Yeni Ekle").
      * @private
      */
+    // In LinqDataTable.js (_renderTopControls method)
     _renderTopControls() {
         const controlsDiv = document.createElement("div");
-        controlsDiv.className = "mb-3"; // margin-bottom for spacing
-        // "Yeni Ekle" button with Bootstrap classes:
+        controlsDiv.className = "mb-3"; // Margin for spacing
+
+        // "New" button
         const addBtn = document.createElement("button");
         addBtn.type = "button";
         addBtn.textContent = "Yeni Ekle";
-        addBtn.className = "btn btn-primary"; // Bootstrap primary button
+        addBtn.className = "btn btn-primary";
         addBtn.addEventListener("click", () => this._openCreateForm());
         controlsDiv.appendChild(addBtn);
+
+        // --- Column Selector Container (Placeholder) ---
+        if (this.select2Columns) {
+            this.columnSelectContainer = document.createElement("div");
+            this.columnSelectContainer.className = "mb-2"; // Additional spacing
+            controlsDiv.appendChild(this.columnSelectContainer);
+        }
+
         this.containerElm.appendChild(controlsDiv);
     }
+
+
+
+    _createColumnSelector() {
+        // Prepare localData from the fetched entityProperties.
+        const localData = this.entityProperties.map(p => ({ id: p.name, name: p.name }));
+
+        this.columnSelector = new LinqSelect2({
+            container: this.columnSelectContainer,
+            controller: "", // Not needed in client mode
+            multiselect: true,
+            renderMode: "checkbox",
+            fetchMode: "client",
+            localData: localData,
+            displayProperty: "name",
+            valueField: "id",
+            selectPlaceHolder: "Select columns...",
+
+            // New onChange callback to handle any selection changes.
+            onChange: (selectedItems) => {
+                this.selectedColumns = selectedItems.map(s => s.id);
+                this._renderTable(); // Re-render the table with updated columns.
+            }
+        });
+
+        // Set default selection: first 8 columns (if available)
+        if (localData.length > 0) {
+            // Ensure 'id' is always the first column
+            const idColumn = localData.find(item => item.id.toLowerCase() === "id");
+            // Get the remaining columns that are not "id"
+            const otherColumns = localData.filter(item => item.id.toLowerCase() !== "id");
+            // Calculate how many columns to take so that total selected columns = 8
+            const remainingCount = 8 - (idColumn ? 1 : 0);
+            // Take the first remainingCount columns from the rest
+            const defaultOtherColumns = otherColumns.slice(0, remainingCount);
+
+            // Build the default selection array
+            this.selectedColumns = [];
+            if (idColumn) {
+                this.selectedColumns.push(idColumn.id);
+            }
+            defaultOtherColumns.forEach(item => this.selectedColumns.push(item.id));
+
+            // Update the columnSelector's selectedItems accordingly
+            this.columnSelector.selectedItems = localData.filter(item =>
+                this.selectedColumns.includes(item.id)
+            );
+            this.columnSelector.updateSelectedUI();
+        }
+
+    }
+
+
+
 
     /**
      * Geçerli filtre/sayfa/sıralama bilgilerine göre sunucudan verileri çekerek tabloyu günceller.
@@ -124,30 +190,45 @@ export class LinqDataTable {
         if (this.isLoading) return;
         this.isLoading = true;
 
-        // Ensure currentQuery is an instance of Query
+        // Ensure currentQuery is a Query instance
         if (!(this.currentQuery instanceof Query)) {
             this.currentQuery = new Query(this.controller, this.currentQuery);
         }
 
+        // Fetch properties from the server
         fetchProperties(this.controller, this.apiPrefix)
             .then(props => {
                 this.entityProperties = props;
+                // If select2Columns is enabled, create or update the column selector
+                if (this.select2Columns) {
+                    if (!this.columnSelector) {
+                        // Create the column selector now that properties are available
+                        this._createColumnSelector();
+                    } else {
+                        // Update the column selector's localData if it already exists
+                        const localData = this.entityProperties.map(p => ({ id: p.name, name: p.name }));
+                        this.columnSelector.cfg.localData = localData;
+                        // Optionally, update selectedItems if needed
+                        if (!this.selectedColumns || this.selectedColumns.length === 0) {
+                            this.selectedColumns = localData.slice(0, 8).map(item => item.id);
+                            this.columnSelector.selectedItems = localData.filter(item => this.selectedColumns.includes(item.id));
+                        }
+                        this.columnSelector.updateSelectedUI();
+                    }
+                }
             })
+            .catch(error => {
+                console.error("fetchProperties error:", error);
+            });
 
-
+        // Continue fetching the table data...
         fetchPagedData(
             `${this.apiPrefix.replace(/\/+$/, "")}/${this.controller}/${defaults.filterPagedRoute}`,
             this.currentQuery
         )
             .then(data => {
-                // data is now an object with 'items' and 'totalCount'
                 this.data = data.items;
-                // Use the returned totalCount directly
                 this.totalCount = data.totalCount;
-                // Update the pager part of the Query and publish
-                //this._updateQuery({
-                //    pager: new Pager(this.currentPage, this.pageSize)
-                //});
                 this._renderTable();
                 this._renderPager();
             })
@@ -159,6 +240,7 @@ export class LinqDataTable {
                 this.isLoading = false;
             });
     }
+
 
 
     _updateQuery(newUpdates) {
@@ -175,70 +257,102 @@ export class LinqDataTable {
      * Tabloyu güncel veriyle yeniden oluşturur (başlıklar ve satırlar dahil).
      * @private
      */
+    // In LinqDataTable.js (_renderTable method)
     _renderTable() {
         this.tableElm.innerHTML = "";
         if (!this.data || this.data.length === 0) {
             const noDataRow = this.tableElm.insertRow();
             const cell = noDataRow.insertCell();
             cell.colSpan = 100;
-            cell.textContent = "Kayıt bulunamadı";
+            cell.textContent = "No records found";
             return;
         }
-        const header = this.tableElm.createTHead();
-        const headerRow = header.insertRow();
-        let fields;
-        if (this.data.length > 0) {
-            if (this.entityProperties && Array.isArray(this.entityProperties)) {
-                fields = this.entityProperties.filter(p => p && typeof p === "object")
-                    .map(p => p.name || p.type || p);
-            } else {
-                fields = Object.keys(this.data[0]);
+
+        // Determine which properties to display based on column selection
+        let visibleProperties = this.entityProperties;
+        if (this.select2Columns && this.selectedColumns && this.selectedColumns.length > 0) {
+            visibleProperties = this.entityProperties.filter(p => this.selectedColumns.includes(p.name));
+            // Sort the visibleProperties so that 'id' is always first
+            visibleProperties.sort((a, b) => {
+                if (a.name.toLowerCase() === "id") return -1;
+                if (b.name.toLowerCase() === "id") return 1;
+                return 0;
+            });
+            if (visibleProperties.length === 0) {
+                this.tableElm.innerHTML = "<tr><td colspan='100%'>No columns selected.</td></tr>";
+                return;
             }
-        } else {
-            fields = [];
         }
 
-        for (const field of fields) {
+        const header = this.tableElm.createTHead();
+        const headerRow = header.insertRow();
+
+        // Render header cells using the filtered properties
+        for (const prop of visibleProperties) {
             const th = document.createElement("th");
-            th.textContent = field;
-            th.style.cursor = "pointer";
-            th.addEventListener("click", () => this._onHeaderClick(field));
-            if (this.currentQuery.orderBy === field && this.currentQuery.orderBy) {
-                th.textContent += this.currentQuery.desc === true ? " ▲" : " ▼";
+            th.textContent = prop.name;
+            // Enable sorting only for simple types
+            if (prop.kind === "simple") {
+                th.style.cursor = "pointer";
+                th.addEventListener("click", () => this._onHeaderClick(prop.name));
+                if (this.currentQuery.orderBy === prop.name && this.currentQuery.orderBy) {
+                    th.textContent += this.currentQuery.desc ? " ▲" : " ▼";
+                }
+            } else {
+                // For complex types, disable click events
+                th.style.cursor = "default";
+                th.style.pointerEvents = "none";
             }
             headerRow.appendChild(th);
         }
-       
+
+        // Add an extra header for actions
         const actionTh = document.createElement("th");
-        actionTh.textContent = "İşlemler";
+        actionTh.textContent = "Actions";
         headerRow.appendChild(actionTh);
 
+        // Render table body rows using the filtered properties
         const body = this.tableElm.createTBody();
         this.data.forEach((item, index) => {
             const row = body.insertRow();
             row.setAttribute("data-index", index);
-            for (const field of fields) {
+            for (const prop of visibleProperties) {
                 const cell = row.insertCell();
-                let text = item[field];
-                if (text === null || text === undefined) text = "";
-                cell.textContent = text;
+                const value = item[prop.name];
+                if (prop.kind === "simple") {
+                    cell.textContent = (value == null) ? "" : value;
+                } else {
+                    // For complex and complexList types: show a '+' button if value exists; otherwise, show nothing.
+                    if (value) {
+                        const plusBtn = document.createElement("button");
+                        plusBtn.textContent = "+";
+                        plusBtn.className = "btn btn-sm btn-secondary";
+                        plusBtn.addEventListener("click", () => {
+                            // In a real implementation, you might open a modal to show details.
+                            alert(`Details for ${prop.name}: ${JSON.stringify(value)}`);
+                        });
+                        cell.appendChild(plusBtn);
+                    } else {
+                        cell.textContent = "";
+                    }
+                }
             }
+            // Render action buttons (edit, nested grid)
             const actionCell = row.insertCell();
-            // Edit button using Bootstrap
             const editBtn = document.createElement("button");
-            editBtn.textContent = "Düzenle";
+            editBtn.textContent = "Edit";
             editBtn.className = "btn btn-sm btn-primary me-1";
-            // IMPORTANT: Change from _openUpdateForm to _openInlineEdit to allow re-opening after cancel
             editBtn.addEventListener("click", () => this._openInlineEdit(index));
             actionCell.appendChild(editBtn);
-            // Nested grid button
             const nestBtn = document.createElement("button");
-            nestBtn.textContent = "Alt";
+            nestBtn.textContent = "Nested";
             nestBtn.className = "btn btn-sm btn-info";
-            nestBtn.addEventListener("click", () => this.openNestedGrid(index));
+            //nestBtn.addEventListener("click", () => this.openNestedGrid(index));
             actionCell.appendChild(nestBtn);
         });
     }
+
+
 
     /**
      * Sayfalama arayüzünü (ileri/geri) günceller.
@@ -246,47 +360,117 @@ export class LinqDataTable {
      */
     _renderPager() {
         this.pagerElm.innerHTML = "";
-        const totalPages = this.totalCount ? Math.ceil(this.totalCount / this.pageSize) : this.currentPage;
-        // Page info
-        const pageInfo = document.createElement("span");
-        pageInfo.textContent = `Sayfa ${this.currentPage} / ${totalPages}`;
-        this.pagerElm.appendChild(pageInfo);
 
-        // Previous button
+        // Calculate total pages from totalCount and current pageSize
+        const pageSize = this.currentQuery.pager.pageSize;
+        const totalPages = this.totalCount ? Math.ceil(this.totalCount / pageSize) : 1;
+        const currentPage = this.currentQuery.pager.pageNumber;
+
+        // Create container for pagination buttons
+        const pagerContainer = document.createElement("div");
+        pagerContainer.className = "d-flex align-items-center";
+
+        // Previous button using arrow icon
         const prevBtn = document.createElement("button");
-        prevBtn.textContent = "Önceki";
-        prevBtn.className = "btn btn-secondary ms-2"; // secondary button with left margin
-        prevBtn.disabled = this.currentPage <= 1;
+        prevBtn.innerHTML = "&lt;"; // '<' arrow icon
+        prevBtn.className = "btn btn-secondary me-2";
+        prevBtn.disabled = currentPage <= 1;
         prevBtn.addEventListener("click", () => {
-            if (this.currentPage > 1) {
-                this.currentPage--;
+            if (currentPage > 1) {
+                this._updateQuery({ pager: new Pager(currentPage - 1, pageSize) });
                 this._fetchData();
             }
         });
-        this.pagerElm.appendChild(prevBtn);
+        pagerContainer.appendChild(prevBtn);
 
-        // Next button
+        // Function to create page number buttons
+        const createPageButton = (page) => {
+            const btn = document.createElement("button");
+            btn.textContent = page;
+            btn.className = "btn btn-light mx-1";
+            if (page === currentPage) {
+                btn.classList.add("active");
+            }
+            btn.addEventListener("click", () => {
+                if (page !== currentPage) {
+                    this._updateQuery({ pager: new Pager(page, pageSize) });
+                    this._fetchData();
+                }
+            });
+            return btn;
+        };
+
+        // Always show the first page button
+        pagerContainer.appendChild(createPageButton(1));
+
+        // Determine start and end for page number buttons
+        let startPage = Math.max(2, currentPage);
+        let endPage = Math.min(totalPages - 1, currentPage + 2);
+
+        // Add ellipsis if startPage > 2
+        if (startPage > 2) {
+            const ellipsis = document.createElement("span");
+            ellipsis.textContent = "...";
+            ellipsis.className = "mx-1";
+            pagerContainer.appendChild(ellipsis);
+        }
+
+        // Add page number buttons from startPage to endPage
+        for (let i = startPage; i <= endPage; i++) {
+            pagerContainer.appendChild(createPageButton(i));
+        }
+
+        // Add ellipsis if endPage < totalPages - 1
+        if (endPage < totalPages - 1) {
+            const ellipsis = document.createElement("span");
+            ellipsis.textContent = "...";
+            ellipsis.className = "mx-1";
+            pagerContainer.appendChild(ellipsis);
+        }
+
+        // Always show the last page button if totalPages > 1
+        if (totalPages > 1) {
+            pagerContainer.appendChild(createPageButton(totalPages));
+        }
+
+        // Next button using arrow icon
         const nextBtn = document.createElement("button");
-        nextBtn.textContent = "Sonraki";
-        nextBtn.className = "btn btn-secondary ms-2"; // secondary button with left margin
-        nextBtn.disabled = this.totalCount
-            ? (this.currentPage >= Math.ceil(this.totalCount / this.pageSize))
-            : (this.data.length < this.pageSize);
+        nextBtn.innerHTML = "&gt;"; // '>' arrow icon
+        nextBtn.className = "btn btn-secondary ms-2";
+        nextBtn.disabled = currentPage >= totalPages;
         nextBtn.addEventListener("click", () => {
-            if (this.totalCount) {
-                if (this.currentPage < Math.ceil(this.totalCount / this.pageSize)) {
-                    this.currentPage++;
-                    this._fetchData();
-                }
-            } else {
-                if (this.data.length === this.pageSize) {
-                    this.currentPage++;
-                    this._fetchData();
-                }
+            if (currentPage < totalPages) {
+                this._updateQuery({ pager: new Pager(currentPage + 1, pageSize) });
+                this._fetchData();
             }
         });
-        this.pagerElm.appendChild(nextBtn);
+        pagerContainer.appendChild(nextBtn);
+
+        // Page-size dropdown
+        const pageSizeSelect = document.createElement("select");
+        pageSizeSelect.className = "form-select ms-3";
+        const pageSizeOptions = [10, 25, 50, 100, 250, 500];
+        pageSizeOptions.forEach(size => {
+            const option = document.createElement("option");
+            option.value = size;
+            option.textContent = size;
+            if (size === pageSize) {
+                option.selected = true;
+            }
+            pageSizeSelect.appendChild(option);
+        });
+        pageSizeSelect.addEventListener("change", () => {
+            const newSize = parseInt(pageSizeSelect.value, 10);
+            // Reset to first page when page size changes
+            this._updateQuery({ pager: new Pager(1, newSize) });
+            this._fetchData();
+        });
+        pagerContainer.appendChild(pageSizeSelect);
+
+        // Append the pager container to the pager element
+        this.pagerElm.appendChild(pagerContainer);
     }
+
 
     /**
      * Sütun başlığına tıklandığında çağrılır; sıralamayı uygular ve veriyi yeniler.
@@ -372,25 +556,31 @@ export class LinqDataTable {
         const row = this.tableElm.querySelector(`tr[data-index='${index}']`);
         if (!row) return;
         const item = this.data[index];
-        // Form içindeki tüm inputları al
         const inputs = row.querySelectorAll("input");
-        const updatedData = { ...item }; // mevcut veriyi kopyala
+        const updatedData = { ...item }; // Clone existing data
+
         inputs.forEach(input => {
             const field = input.name;
+            // Find the property metadata for this field
+            const propMeta = this.entityProperties.find(p => p.name.toLowerCase() === field.toLowerCase());
             let value;
             if (input.type === "checkbox") {
                 value = input.checked;
             } else if (input.type === "number") {
                 value = input.value === "" ? null : Number(input.value);
             } else if (input.type === "date") {
-                value = input.value; // tarih stringini (YYYY-MM-DD) al
+                value = input.value; // YYYY-MM-DD format
             } else {
                 value = input.value;
             }
+            // Skip complex fields if the value is empty.
+            if (propMeta && (propMeta.kind === "complex" || propMeta.kind === "complexList") && (value === "" || value === null)) {
+                return;
+            }
             updatedData[field] = value;
         });
-        // Güncelleme API çağrısı (PUT)
-        const idField = Object.keys(item).find(k => k === "id") || "id";
+
+        const idField = Object.keys(item).find(k => k.toLowerCase() === "id") || "id";
         const idValue = item[idField];
         const url = `${this.apiPrefix.replace(/\/+$/, "")}/${this.controller}/${idValue}`;
         fetch(url, {
@@ -400,22 +590,21 @@ export class LinqDataTable {
         })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error(`Güncelleme hatası: ${response.status}`);
+                    throw new Error(`Update error: ${response.status}`);
                 }
                 return response.json();
             })
             .then(updatedRecord => {
-                // Sunucu güncellenmiş kaydı döndürdüyse, local data'yı güncelle
+                // Update local data and re-render row.
                 this.data[index] = updatedRecord;
                 this.editingIndex = null;
-                // Satırı yeni verilerle yeniden oluştur
                 this._renderUpdatedRow(index);
             })
             .catch(error => {
-                console.error("Kayıt güncelleme hatası:", error);
-                // Hata durumunda kullanıcıya bilgi verilebilir (alert, vb.)
+                console.error("Record update error:", error);
             });
     }
+
 
     /**
      * Inline düzenleme modunu iptal eder, satırı orijinal haline döndürür.

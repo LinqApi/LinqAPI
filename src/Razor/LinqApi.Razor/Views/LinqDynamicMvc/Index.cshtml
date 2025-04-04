@@ -64,20 +64,14 @@
         <!-- Main Content -->
         <div class="flex-grow-1 p-3" style="overflow-y: auto;">
             <!-- Tabs Nav -->
-            <ul class="nav nav-tabs mb-3" id="mainTab" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="grid-tab" data-bs-toggle="tab" data-bs-target="#gridTab"
-                            type="button" role="tab" aria-controls="gridTab" aria-selected="true">
-                        Grid & QueryBuilder
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="select2-tab" data-bs-toggle="tab" data-bs-target="#select2Tab"
-                            type="button" role="tab" aria-controls="select2Tab" aria-selected="false">
-                        Select2 Examples
-                    </button>
-                </li>
-            </ul>
+            <button class="nav-link active" id="grid-tab" data-bs-toggle="tab" data-bs-target="#gridTab"
+                    type="button" role="tab" aria-controls="gridTab" aria-selected="true">
+                Grid & QueryBuilder
+            </button>
+            <button class="nav-link" id="select2-tab" data-bs-toggle="tab" data-bs-target="#select2Tab"
+                    type="button" role="tab" aria-controls="select2Tab" aria-selected="false">
+                Select2 Examples
+            </button>
 
             <!-- Tabs Content -->
             <div class="tab-content" id="mainTabContent">
@@ -150,7 +144,8 @@
                 queryBuilderContainer: qbContainer,
                 container: dtContainer,
                 apiPrefix: routePrefix || defaults.apiPrefix,
-                autoCreateQueryBuilder: true
+                autoCreateQueryBuilder: true,
+                select2Columns:true
             });
         }
 
