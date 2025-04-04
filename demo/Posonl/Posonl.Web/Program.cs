@@ -52,6 +52,8 @@ namespace Posonl.Web
             ControllerType = LinqControllerType.LinqController
         }));
 
+     
+
 
         LinqApi.Razor.MvcHelpers.CreateViews(apm);
     });
@@ -154,7 +156,11 @@ namespace Posonl.Web
                 loggingDbContext.Database.Migrate();
             }
 
-
+            using (var scope = app.Services.CreateScope())
+            {
+                var localizationDbContext = scope.ServiceProvider.GetRequiredService<LinqLocalizationContext>();
+                localizationDbContext.Database.Migrate();
+            }
 
             if (app.Environment.IsDevelopment())
             {
