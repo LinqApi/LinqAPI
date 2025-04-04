@@ -131,8 +131,11 @@ export class LinqDataTable {
 
 
     _createColumnSelector() {
-        // Prepare localData from the fetched entityProperties.
-        const localData = this.entityProperties.map(p => ({ id: p.name, name: p.name }));
+        // Filter out displayproperty items.
+        const normalProps = this.entityProperties.filter(p =>
+            p.type.toLowerCase() !== "displayproperty"
+        );
+        const localData = normalProps.map(p => ({ id: p.name, name: p.name }));
 
         this.columnSelector = new LinqSelect2({
             container: this.columnSelectContainer,
@@ -140,44 +143,36 @@ export class LinqDataTable {
             multiselect: true,
             renderMode: "checkbox",
             fetchMode: "client",
-            localData: localData,
+            localData: localData,  // Use only normal properties here.
             displayProperty: "name",
             valueField: "id",
             selectPlaceHolder: "Select columns...",
-
-            // New onChange callback to handle any selection changes.
             onChange: (selectedItems) => {
                 this.selectedColumns = selectedItems.map(s => s.id);
                 this._renderTable(); // Re-render the table with updated columns.
             }
         });
 
-        // Set default selection: first 8 columns (if available)
+        // Set default selection as before...
         if (localData.length > 0) {
-            // Ensure 'id' is always the first column
             const idColumn = localData.find(item => item.id.toLowerCase() === "id");
-            // Get the remaining columns that are not "id"
             const otherColumns = localData.filter(item => item.id.toLowerCase() !== "id");
-            // Calculate how many columns to take so that total selected columns = 8
             const remainingCount = 8 - (idColumn ? 1 : 0);
-            // Take the first remainingCount columns from the rest
             const defaultOtherColumns = otherColumns.slice(0, remainingCount);
 
-            // Build the default selection array
             this.selectedColumns = [];
             if (idColumn) {
                 this.selectedColumns.push(idColumn.id);
             }
             defaultOtherColumns.forEach(item => this.selectedColumns.push(item.id));
 
-            // Update the columnSelector's selectedItems accordingly
             this.columnSelector.selectedItems = localData.filter(item =>
                 this.selectedColumns.includes(item.id)
             );
             this.columnSelector.updateSelectedUI();
         }
-
     }
+
 
 
 
@@ -202,13 +197,10 @@ export class LinqDataTable {
                 // If select2Columns is enabled, create or update the column selector
                 if (this.select2Columns) {
                     if (!this.columnSelector) {
-                        // Create the column selector now that properties are available
                         this._createColumnSelector();
                     } else {
-                        // Update the column selector's localData if it already exists
                         const localData = this.entityProperties.map(p => ({ id: p.name, name: p.name }));
                         this.columnSelector.cfg.localData = localData;
-                        // Optionally, update selectedItems if needed
                         if (!this.selectedColumns || this.selectedColumns.length === 0) {
                             this.selectedColumns = localData.slice(0, 8).map(item => item.id);
                             this.columnSelector.selectedItems = localData.filter(item => this.selectedColumns.includes(item.id));
@@ -229,6 +221,14 @@ export class LinqDataTable {
             .then(data => {
                 this.data = data.items;
                 this.totalCount = data.totalCount;
+
+                // If the query includes a select or groupBy clause,
+                // derive the columns from the returned data.
+                if ((this.currentQuery.select && this.currentQuery.select.trim() !== "") ||
+                    (this.currentQuery.groupBy && this.currentQuery.groupBy.trim() !== "")) {
+                    this.queryBuilder._updateUI();
+                }
+
                 this._renderTable();
                 this._renderPager();
             })
@@ -268,30 +268,43 @@ export class LinqDataTable {
             return;
         }
 
-        // Determine which properties to display based on column selection
-        let visibleProperties = this.entityProperties;
-        if (this.select2Columns && this.selectedColumns && this.selectedColumns.length > 0) {
-            visibleProperties = this.entityProperties.filter(p => this.selectedColumns.includes(p.name));
-            // Sort the visibleProperties so that 'id' is always first
-            visibleProperties.sort((a, b) => {
-                if (a.name.toLowerCase() === "id") return -1;
-                if (b.name.toLowerCase() === "id") return 1;
-                return 0;
-            });
-            if (visibleProperties.length === 0) {
-                this.tableElm.innerHTML = "<tr><td colspan='100%'>No columns selected.</td></tr>";
-                return;
+        // Determine visible properties based on the query:
+        let visibleProperties = [];
+        if ((this.currentQuery.select && this.currentQuery.select.trim() !== "") ||
+            (this.currentQuery.groupBy && this.currentQuery.groupBy.trim() !== "")) {
+            // Derive columns dynamically from the first returned data item.
+            const dataKeys = Object.keys(this.data[0]);
+            visibleProperties = dataKeys.map(key => ({ name: key, kind: "simple" }));
+        } else {
+            // Use the fetched entityProperties.
+            // Filter out items with type "displayproperty" (they are not for grid columns).
+            visibleProperties = (this.entityProperties || [])
+                .filter(p => p.type.toLowerCase() !== "displayproperty");
+
+            // If using select2Columns, further filter based on selectedColumns.
+            if (this.select2Columns && this.selectedColumns && this.selectedColumns.length > 0) {
+                visibleProperties = visibleProperties.filter(p => this.selectedColumns.includes(p.name));
             }
         }
 
+        // Ensure 'id' always comes first (if exists).
+        visibleProperties.sort((a, b) => {
+            if (a.name.toLowerCase() === "id") return -1;
+            if (b.name.toLowerCase() === "id") return 1;
+            return 0;
+        });
+
+        if (visibleProperties.length === 0) {
+            this.tableElm.innerHTML = "<tr><td colspan='100%'>No columns selected.</td></tr>";
+            return;
+        }
+
+        // Render header.
         const header = this.tableElm.createTHead();
         const headerRow = header.insertRow();
-
-        // Render header cells using the filtered properties
-        for (const prop of visibleProperties) {
+        visibleProperties.forEach(prop => {
             const th = document.createElement("th");
             th.textContent = prop.name;
-            // Enable sorting only for simple types
             if (prop.kind === "simple") {
                 th.style.cursor = "pointer";
                 th.addEventListener("click", () => this._onHeaderClick(prop.name));
@@ -299,19 +312,17 @@ export class LinqDataTable {
                     th.textContent += this.currentQuery.desc ? " ▲" : " ▼";
                 }
             } else {
-                // For complex types, disable click events
                 th.style.cursor = "default";
                 th.style.pointerEvents = "none";
             }
             headerRow.appendChild(th);
-        }
-
-        // Add an extra header for actions
+        });
+        // Extra header for actions.
         const actionTh = document.createElement("th");
         actionTh.textContent = "Actions";
         headerRow.appendChild(actionTh);
 
-        // Render table body rows using the filtered properties
+        // Render body rows.
         const body = this.tableElm.createTBody();
         this.data.forEach((item, index) => {
             const row = body.insertRow();
@@ -322,13 +333,11 @@ export class LinqDataTable {
                 if (prop.kind === "simple") {
                     cell.textContent = (value == null) ? "" : value;
                 } else {
-                    // For complex and complexList types: show a '+' button if value exists; otherwise, show nothing.
                     if (value) {
                         const plusBtn = document.createElement("button");
                         plusBtn.textContent = "+";
                         plusBtn.className = "btn btn-sm btn-secondary";
                         plusBtn.addEventListener("click", () => {
-                            // In a real implementation, you might open a modal to show details.
                             alert(`Details for ${prop.name}: ${JSON.stringify(value)}`);
                         });
                         cell.appendChild(plusBtn);
@@ -337,7 +346,7 @@ export class LinqDataTable {
                     }
                 }
             }
-            // Render action buttons (edit, nested grid)
+            // Actions cell.
             const actionCell = row.insertCell();
             const editBtn = document.createElement("button");
             editBtn.textContent = "Edit";
@@ -347,10 +356,10 @@ export class LinqDataTable {
             const nestBtn = document.createElement("button");
             nestBtn.textContent = "Nested";
             nestBtn.className = "btn btn-sm btn-info";
-            //nestBtn.addEventListener("click", () => this.openNestedGrid(index));
             actionCell.appendChild(nestBtn);
         });
     }
+
 
 
 
@@ -721,65 +730,4 @@ export class LinqDataTable {
             }
         });
     }
-
-    /**
-     * Seçilen satırın altında yeni bir alt grid (nested grid) açar veya zaten açıksa kapatır.
-     //* @param {number} index - Alt grid açılacak üst satır indeksi.
-     //* @param {string} [nestedController] - Alt grid için kullanılacak farklı bir controller adı. Verilmezse üst grid ile aynı kullanılır.
-     //* @param {string} [foreignKeyField] - Alt grid filtresi için üst kaydın anahtar alanı (örn: "ParentId"). Verilmezse üst kaydın ID'sine göre otomatik türetilir.
-     */
-    //openNestedGrid(index, nestedController = null, foreignKeyField = null) {
-    //    const parentRow = this.tableElm.querySelector(`tr[data-index='${index}']`);
-    //    if (!parentRow) return;
-    //    // Eğer zaten bu satırın altında bir alt grid açıksa, onu kapat (satırı kaldır)
-    //    const nextRow = parentRow.nextElementSibling;
-    //    if (nextRow && nextRow.classList.contains("linq-nested-row")) {
-    //        this.tableElm.deleteRow(nextRow.rowIndex);
-    //        return;
-    //    }
-    //    // Alt grid açık değilse, yeni bir satır ekleyerek alt grid konteynerini oluştur
-    //    const colCount = parentRow.cells.length;
-    //    const nestedRow = this.tableElm.insertRow(parentRow.rowIndex + 1);
-    //    nestedRow.className = "linq-nested-row";
-    //    const nestedCell = nestedRow.insertCell();
-    //    nestedCell.colSpan = colCount;
-    //    // Alt grid içeriği için bir div oluştur
-    //    const nestedContainer = document.createElement("div");
-    //    nestedContainer.className = "linq-nested-container";
-    //    nestedCell.appendChild(nestedContainer);
-    //    // Alt grid için kullanılacak controller belirle
-    //    const childController = nestedController || this.controller;
-    //    // Alt grid için ayrı bir durum yöneticisi oluştur (üst grid'inkinden bağımsız olmalı)
-    //    const childState = new StateManager();
-    //    // Eğer foreignKeyField belirtilmemişse, controller adına göre tahmin et
-    //    if (!foreignKeyField) {
-    //        // Örneğin üst controller "Customers" ise foreignKey "CustomerId" olabilir
-    //        const parentIdField = Object.keys(this.data[index]).find(k => k.toLowerCase() === "id");
-    //        let controllerName = this.controller;
-    //        if (controllerName.endsWith("s")) {
-    //            controllerName = controllerName.slice(0, -1);
-    //        }
-    //        foreignKeyField = controllerName + "Id";
-    //        if (parentIdField && this.data[index][parentIdField] != null) {
-    //            // Alt grid state'ine foreign key koşulunu başlangıçta ekle
-    //            childState.setState("query", { [foreignKeyField]: this.data[index][parentIdField] });
-    //        } else {
-    //            console.warn("Üst kaydın ID değeri bulunamadı veya tanımsız, alt grid filtresi uygulanamadı.");
-    //        }
-    //    } else {
-    //        // foreignKey alan adı verilmişse, üst veriden ID değerini alarak alt grid query'sine koy
-    //        const parentIdField = Object.keys(this.data[index]).find(k => k.toLowerCase() === "id");
-    //        if (parentIdField) {
-    //            childState.setState("query", { [foreignKeyField]: this.data[index][parentIdField] });
-    //        }
-    //    }
-    //    // Yeni bir LinqDataTable örneği oluştur (alt grid)
-    //    new LinqDataTable({
-    //        container: nestedContainer,
-    //        controller: childController,
-    //        apiPrefix: this.apiPrefix,
-    //        stateManager: childState,
-    //        autoCreateQueryBuilder: false // alt grid'de filtre arayüzü otomatik oluşturulmaz (isterse harici eklenir)
-    //    });
-    //}
 }

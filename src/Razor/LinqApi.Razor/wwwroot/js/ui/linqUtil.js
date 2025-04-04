@@ -143,7 +143,6 @@ export const analyzePropertyType = (typeStr) => {
     };
 };
 
-
 export const fetchProperties = async (controller, apiPrefix = "/api") => {
     const url = `${apiPrefix.replace(/\/+$/, "")}/${controller}/properties`;
     return fetch(url)
@@ -154,15 +153,28 @@ export const fetchProperties = async (controller, apiPrefix = "/api") => {
             return response.json();
         })
         .then(data => {
-            // Enhance each property with its type analysis.
-            return data.map(prop => {
+            // Enhance each property with additional metadata
+            const enhanced = data.map(prop => {
                 const analysis = analyzePropertyType(prop.type);
-                return { ...prop, kind: analysis.kind, baseType: analysis.baseType };
+                return {
+                    ...prop,
+                    kind: analysis.kind,
+                    baseType: analysis.baseType,
+                    displayProperties: prop.displayProperties || []  // New field
+                };
             });
+            // Filter out items with type "displayproperty"
+            const normalProps = enhanced.filter(p =>
+                typeof p.type === "string" && p.type.toLowerCase() !== "displayproperty"
+            );
+            // Optionally, if you need the display property metadata separately, you can store:
+            // const displayProps = enhanced.filter(p => 
+            //     typeof p.type === "string" && p.type.toLowerCase() === "displayproperty"
+            // );
+            return normalProps;
         })
         .catch(error => {
             console.error("fetchProperties error:", error);
             throw error;
         });
 };
-

@@ -63,15 +63,24 @@
         </div>
         <!-- Main Content -->
         <div class="flex-grow-1 p-3" style="overflow-y: auto;">
-            <!-- Tabs Nav -->
-            <button class="nav-link active" id="grid-tab" data-bs-toggle="tab" data-bs-target="#gridTab"
-                    type="button" role="tab" aria-controls="gridTab" aria-selected="true">
-                Grid & QueryBuilder
-            </button>
-            <button class="nav-link" id="select2-tab" data-bs-toggle="tab" data-bs-target="#select2Tab"
-                    type="button" role="tab" aria-controls="select2Tab" aria-selected="false">
-                Select2 Examples
-            </button>
+            <!-- Tabs Navigation -->
+            <ul class="nav nav-tabs" id="mainTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="grid-tab" data-bs-toggle="tab" data-bs-target="#gridTab" type="button" role="tab" aria-controls="gridTab" aria-selected="true">
+                        Grid & QueryBuilder
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="select2-tab" data-bs-toggle="tab" data-bs-target="#select2Tab" type="button" role="tab" aria-controls="select2Tab" aria-selected="false">
+                        Select2 Examples
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="chart-tab" data-bs-toggle="tab" data-bs-target="#chartTab" type="button" role="tab" aria-controls="chartTab" aria-selected="false">
+                        Chart Examples
+                    </button>
+                </li>
+            </ul>
 
             <!-- Tabs Content -->
             <div class="tab-content" id="mainTabContent">
@@ -86,7 +95,6 @@
                     <div class="alert alert-warning d-none" id="select2-warning">
                         Lütfen önce sol menüden bir entity seçin.
                     </div>
-
                     <h5 class="mt-3">Server-Fetched Select2 Components</h5>
                     <div class="select2-example">
                         <strong>Single Selection (Render: Grid)</strong>
@@ -100,18 +108,22 @@
                         <strong>Multi Selection (Render: Tag)</strong>
                         <div id="server-tag-multi"></div>
                     </div>
-
                     <hr />
-
                     <h5 class="mt-4">Client-Side (Static Data) Select2 Component</h5>
                     <div class="select2-example">
                         <strong>Single Selection (Client Mode, Grid)</strong>
                         <div id="client-grid-single"></div>
                     </div>
                 </div>
+
+                <!-- Chart Examples Tab -->
+                <div class="tab-pane fade" id="chartTab" role="tabpanel" aria-labelledby="chart-tab">
+                    <h5 class="mt-3">Chart Examples</h5>
+                    <p>Here you can display chart examples. (Content will be added soon.)</p>
+                    <!-- You can later add your chart components, e.g., using Chart.js or another library -->
+                </div>
             </div>
         </div>
-
     </div>
 
     <!-- Include Bootstrap JS Bundle -->
@@ -119,40 +131,55 @@
 
     <!-- Module Script -->
     <script type="module">
-        import { LinqDataTable } from '/_content/LinqApi.Razor/js/index.js';
+          import { LinqDataTable } from '/_content/LinqApi.Razor/js/index.js';
         import { defaults } from '/_content/LinqApi.Razor/js/index.js';
         import { LinqSelect2 } from '/_content/LinqApi.Razor/js/index.js';
+
 
         let currentEntity = null;
         let dtInstance = null;
 
-        // loadEntity: Sol menüden tıklanan entity'yi, grid tabında tam özellikli (edit, create vs.) bir datatable olarak açar.
+        // loadEntity: Opens the grid view for the selected entity.
         function loadEntity(entityName, routePrefix) {
             currentEntity = entityName;
 
-            // Grid tabındaki datatable container'ını temizle
+            // Clear the datatable container in the Grid tab.
             const dtContainer = document.getElementById("dataTableContainer");
             dtContainer.innerHTML = "";
 
             const qbContainer = document.getElementById("queryBuilderContainer");
             qbContainer.innerHTML = "";
 
-
-            // LinqDataTable, autoCreateQueryBuilder true olarak oluşturuluyor.
             dtInstance = new LinqDataTable({
                 controller: entityName,
                 queryBuilderContainer: qbContainer,
                 container: dtContainer,
                 apiPrefix: routePrefix || defaults.apiPrefix,
                 autoCreateQueryBuilder: true,
-                select2Columns:true
+                select2Columns: true
             });
         }
 
-        function initSelect2Components() {
+                function initSelect2Components() {
             if (!currentEntity) {
                 console.warn("Önce soldan bir entity seçin.");
                 return;
+            }
+
+            // Suppose dtInstance.entityProperties holds the fetched properties for the current entity.
+            // Try to extract displayProperties if defined.
+            let displayProp = ["name"]; // default fallback
+            if (dtInstance && dtInstance.entityProperties) {
+                const dpItem = dtInstance.entityProperties.find(p =>
+                    typeof p.type === "string" && p.type.toLowerCase() === "displayproperty"
+                );
+                if (dpItem && Array.isArray(dpItem.properties) && dpItem.properties.length > 0) {
+                    displayProp = dpItem.properties;
+                } else {
+                    // Fallback: if "name" doesn't exist in the schema, use "id"
+                    const nameProp = dtInstance.entityProperties.find(p => p.name.toLowerCase() === "name");
+                    displayProp = nameProp ? ["name"] : ["id"];
+                }
             }
 
             const commonServerConfig = {
@@ -160,7 +187,8 @@
                 controller: currentEntity,
                 apiPrefix: defaults.apiPrefix,
                 searchProperty: "name",
-                displayProperty: ["name"],
+                // Use the computed displayProp array for the displayProperty setting.
+                displayProperty: displayProp,
                 valueField: "id",
                 multiselect: false,
                 fetchMode: "server",
@@ -188,13 +216,13 @@
                 renderMode: "tag",
             });
 
-            // Client-side örneği (statik data ile):
+            // Client-side example (static data):
             new LinqSelect2({
                 container: document.getElementById("client-grid-single"),
                 fetchMode: "client",
                 renderMode: "grid",
                 searchProperty: "name",
-                displayProperty: "name",
+                displayProperty: displayProp,
                 valueField: "id",
                 localData: [
                     { id: 1, name: "Item One" },
@@ -205,7 +233,8 @@
             });
         }
 
-        // Sidebar tıklama olayları: Her tıklamada loadEntity() çağrılarak ilgili entity grid tabında açılır.
+
+        // Sidebar click events: When a link is clicked, loadEntity() is called.
         document.querySelectorAll(".linq-api-link").forEach(link => {
             link.onclick = (e) => {
                 e.preventDefault();
@@ -215,10 +244,10 @@
             };
         });
 
-        // Select2 sekmesi açıldığında ilgili komponentler başlatılır.
+        // Initialize Select2 components when the Select2 tab is clicked.
         document.getElementById("select2-tab").onclick = initSelect2Components;
 
-        // Sayfa yüklendiğinde ilk entity seçilirse grid otomatik açılır.
+        // On page load, auto-click the first entity link if available.
         document.addEventListener("DOMContentLoaded", () => {
             const defaultLink = document.querySelector(".linq-api-link");
             if (defaultLink) defaultLink.click();

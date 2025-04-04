@@ -309,13 +309,13 @@ getValue() {
  * @param {object} item - The data item.
  * @returns {string} The display text.
  */
-getDisplayText(item) {
-    if (Array.isArray(this.cfg.displayProperty)) {
-        return this.cfg.displayProperty
-            .map(prop => item[prop])
-            .filter(val => val != null)
-            .join(" - ");
+    getDisplayText(item) {
+        if (Array.isArray(this.cfg.displayProperty)) {
+            return this.cfg.displayProperty
+                .map(prop => item[prop])
+                .filter(val => val != null)
+                .join(" - ");
+        }
+        return item[this.cfg.displayProperty] ?? "";
     }
-    return item[this.cfg.displayProperty] ?? "";
-}
 }

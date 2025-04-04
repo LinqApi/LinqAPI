@@ -1,3 +1,4 @@
+using LinqApi.Core;
 using LinqApi.Localization.LinqApi.Localization;
 
 namespace Posonl.Domain
@@ -6,6 +7,8 @@ namespace Posonl.Domain
     {
         public string ContentHtml { get; set; }
     }
+
+    [DisplayProperty("name")]
     public class PosCompany : BaseViewEntity
     {
         // Temel bilgiler

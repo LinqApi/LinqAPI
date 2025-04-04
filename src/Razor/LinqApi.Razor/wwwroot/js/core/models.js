@@ -77,16 +77,19 @@ export class Filter {
 }
 
 export class LogicalFilter extends Filter {
-  constructor(operator = "AND", filters = []) {
-    super();
-    this.operator = operator;
-    this.filters = filters;
-  }
+    constructor(operator = "AND", filters = []) {
+        super();
+        this.operator = operator;
+        this.filters = filters;
+    }
 
-  toString() {
-    if (!this.filters.length) return "1=1";
-    return `(${this.filters.map(f => f.toString()).join(` ${this.operator} `)})`;
-  }
+    toString() {
+        if (!this.filters.length) return "1=1";
+        // Join the filter strings using the operator.
+        const inner = this.filters.map(f => f.toString()).join(` ${this.operator} `);
+        // Optionally: only wrap with parentheses if more than one filter exists.
+        return this.filters.length > 1 ? `(${inner})` : inner;
+    }
 }
 
 export class ComparisonFilter extends Filter {

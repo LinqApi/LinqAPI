@@ -37,17 +37,13 @@ namespace LinqApi.Controller
             await _repo.DeleteAsync(id, cancellationToken);
             return NoContent();
         }
-
-
-
-
-
     }
     /// <summary>
     /// Provides helper methods to generate a property schema for entity types.
     /// </summary>
     public static class ViewModelSchemaHelper
     {
+        private const string displayPropertyName = "displayProperty";
         private static readonly ConcurrentDictionary<string, List<object>> _schemaCache = new();
 
         public static List<object> GetSchema(Type type)
@@ -67,6 +63,16 @@ namespace LinqApi.Controller
                 })
                 .Cast<object>()
                 .ToList();
+
+            var displayAttr = type.GetCustomAttribute<DisplayPropertyAttribute>();
+            if (displayAttr != null)
+            {
+                props.Add(new
+                {
+                    Type = displayPropertyName,
+                    Properties = displayAttr.Properties
+                });
+            }
 
             _schemaCache.TryAdd(cacheKey, props);
             return props;

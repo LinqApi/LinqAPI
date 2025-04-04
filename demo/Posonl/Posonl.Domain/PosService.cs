@@ -1,7 +1,9 @@
+using LinqApi.Core;
 using LinqApi.Localization.LinqApi.Localization;
 
 namespace Posonl.Domain
 {
+    [DisplayProperty("name")]
     public class PosService : BaseViewEntity
     {
         public long PosServiceCategoryId { get; set; }
@@ -15,6 +17,7 @@ namespace Posonl.Domain
 
     }
 
+    [DisplayProperty("name")]
     public class PosServiceCategory : BaseViewEntity
     {
         public virtual ICollection<PosService> PosServices { get; set; }

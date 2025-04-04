@@ -1,7 +1,9 @@
+using LinqApi.Core;
 using System.ComponentModel.DataAnnotations;
 
 namespace Posonl.Domain
 {
+    [DisplayProperty("name","code")]
     public class Country : BaseEntity
     {
         public string Name { get; set; }          // Örn: Türkiye, Almanya, İngiltere
