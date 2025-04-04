@@ -109,12 +109,8 @@ namespace Posonl.Web
             _ = services.AddSingleton<ILinqPayloadMasker, DefaultPayloadMasker>();
             _ = services.AddSingleton<ICorrelationIdGenerator, DefaultCorrelationIdGenerator>();
             _ = services.AddSingleton<IEpochProvider, DefaultLinqEpochProvider>();
-            //Register MassTransit consumers and configuration for AWS SQS outbox integration.
-            // LinqLoggingObserver'ı singleton olarak kaydediyoruz.
-            //_ = services.AddSingleton<LinqLoggingObserver>();
-            // Register HTTP Client with logging delegating handler
+            
             _ = services.AddTransient<LinqHttpDelegatingHandler>();
-            // ILinqLogger ve diğer bağımlılıklarınız scoped veya singleton olabilir:
             _ = services.AddScoped<ILinqLogger, LinqDbContextCallLogger>();
 
 
@@ -156,11 +152,7 @@ namespace Posonl.Web
                 loggingDbContext.Database.Migrate();
             }
 
-            using (var scope = app.Services.CreateScope())
-            {
-                var localizationDbContext = scope.ServiceProvider.GetRequiredService<LinqLocalizationContext>();
-                localizationDbContext.Database.Migrate();
-            }
+           
 
             if (app.Environment.IsDevelopment())
             {
