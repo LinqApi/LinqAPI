@@ -1,0 +1,40 @@
+@{
+    ViewData["Title"] = "Get Started";
+}
+
+<div class="container py-5">
+    <h1 class="mb-4">Get Started with LinqApi</h1>
+    <p class="lead">
+        Follow these simple steps to integrate LinqApi into your project:
+    </p>
+
+    <!-- Step 1: Install the NuGet Package -->
+    <section class="mb-5">
+        <h2>Step 1: Install the Package</h2>
+        <p>Install the LinqJsApi.Core package using the .NET CLI:</p>
+        <pre><code class="language-bash">
+dotnet add package LinqJsApi.Core --version 1.0.0-preview1
+        </code></pre>
+    </section>
+
+    <!-- Step 2: Configure the Service -->
+    <section class="mb-5">
+        <h2>Step 2: Configure the Service</h2>
+        <p>
+            In your Program.cs or Startup.cs, add and configure Dynamic LinqApi:
+        </p>
+        <pre><code class="language-csharp">
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDynamicLinqApi("", "Data Source=.\\SQLEXPRESS;Database=YourDB;Trusted_Connection=True;TrustServerCertificate=Yes");
+        </code></pre>
+    </section>
+
+    <!-- Step 3: Add Documentation and Explore -->
+    <section class="mb-5">
+        <h2>Step 3: Explore the Documentation</h2>
+        <p>
+            For further details, check out our complete documentation including API reference, example use-cases, and customization guides.
+        </p>
+        <a class="btn btn-primary" href="@Url.Action("Docs", "Documentation")">Read Documentation</a>
+    </section>
+</div>

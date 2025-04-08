@@ -1,0 +1,103 @@
+@{
+    ViewData["Title"] = "Documentation";
+    // Optionally, set other SEO values here or let your BaseController handle it.
+}
+
+<div class="container-fluid py-5">
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <aside class="col-md-3 d-none d-md-block border-end sticky-top" style="top: 80px;">
+            <nav class="nav flex-column">
+                <a class="nav-link" href="#getting-started">Getting Started</a>
+                <a class="nav-link" href="#nuget-integration">NuGet Integration</a>
+                <a class="nav-link" href="#javascript-usage">JavaScript Usage</a>
+                <a class="nav-link" href="#api-structure">API Structure</a>
+                <a class="nav-link" href="#extensibility">Extensibility</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="col-md-9">
+            <!-- Getting Started Section -->
+            <section id="getting-started" class="mb-5">
+                <h2>Getting Started</h2>
+                <p>
+                    To begin using LinqApi, install the core package from NuGet and configure it in your ASP.NET Core project.
+                </p>
+                <pre><code class="language-bash">dotnet add package LinqJsApi.Core --version 1.0.0-preview1</code></pre>
+                <pre><code class="language-csharp">
+// Sample code for configuration
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDynamicLinqApi("",
+    "Data Source=.\\SQLEXPRESS;Database=YourDB;Trusted_Connection=True;TrustServerCertificate=Yes");
+                </code></pre>
+            </section>
+
+            <!-- NuGet Integration Section -->
+            <section id="nuget-integration" class="mb-5">
+                <h2>NuGet Integration</h2>
+                <p>
+                    LinqApi is designed modularly. You can install individual packages based on your needs:
+                </p>
+                <ul>
+                    <li><code>LinqJsApi.Core</code> – core abstractions and helpers</li>
+                    <li><code>LinqJsApi.Razor</code> – Razor view components and extensions</li>
+                    <!-- Add more package names as needed -->
+                </ul>
+                <p>
+                    For example:
+                </p>
+                <pre><code class="language-bash">dotnet add package LinqJsApi.Core --version 1.0.0-preview1</code></pre>
+            </section>
+
+            <!-- JavaScript Usage Section -->
+            <section id="javascript-usage" class="mb-5">
+                <h2>JavaScript Usage</h2>
+                <p>
+                    To use LinqApi JS components, include the CDN script with integrity attributes:
+                </p>
+                <pre><code class="language-html">
+&lt;script src="https://cdn.linqjs.com/linq.v1.0.0.min.js"
+        integrity="sha384-RHlaXhs3O6e7jauYB0yQmcgbt2pmY3QCRXeNnMlth7vq+1OeJ9TRWywlGmurNtP8"
+        crossorigin="anonymous"
+        type="module"&gt;&lt;/script&gt;
+                </code></pre>
+                <p>
+                    And use components like this:
+                </p>
+                <pre><code class="language-js">
+import { LinqDataTable } from '/_content/LinqApi.Razor/js/index.js';
+
+const table = new LinqDataTable({
+    endpoint: '/api/products/filterpaged',
+    target: '#grid'
+});
+                </code></pre>
+            </section>
+
+            <!-- API Structure Section -->
+            <section id="api-structure" class="mb-5">
+                <h2>API Structure</h2>
+                <p>
+                    LinqApi follows a clean separation of concerns. For example, controllers can be auto-generated
+                    for CRUD operations. Here's a simple sample:
+                </p>
+                <pre><code class="language-csharp">
+public class ProductController : LinqVmController<Product, ProductDto>
+{
+    // Custom logic here.
+}
+                </code></pre>
+            </section>
+
+            <!-- Extensibility Section -->
+            <section id="extensibility" class="mb-5">
+                <h2>Extensibility</h2>
+                <p>
+                    LinqApi is designed to be extensible. You can override mappings, hook into queries,
+                    and replace components to suit your needs.
+                </p>
+            </section>
+        </main>
+    </div>
+</div>

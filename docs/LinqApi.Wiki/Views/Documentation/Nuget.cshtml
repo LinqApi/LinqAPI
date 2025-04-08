@@ -1,0 +1,39 @@
+@{
+    ViewData["Title"] = "NuGet Packages";
+}
+
+<div class="container py-5">
+    <h1 class="mb-4">NuGet Packages</h1>
+    <p class="lead">
+        LinqApi is delivered through modular NuGet packages. Choose the package you need and integrate it into your project.
+    </p>
+
+    <!-- Package Overview -->
+    <section class="mb-5">
+        <h2>Available Packages</h2>
+        <ul>
+            <li>
+                <strong>LinqJsApi.Core</strong> – Base package that includes core interfaces and extensions.
+                <br />
+                <em>Installation:</em>
+                <pre><code class="language-bash">dotnet add package LinqJsApi.Core --version 1.0.0-preview1</code></pre>
+            </li>
+            <li class="mt-4">
+                <strong>LinqJsApi.Razor</strong> – Provides Razor view components and helpers for easy UI integration.
+                <br />
+                <em>Installation:</em>
+                <pre><code class="language-bash">dotnet add package LinqJsApi.Razor --version 1.0.0-preview1</code></pre>
+            </li>
+            <!-- Add more packages as needed -->
+        </ul>
+    </section>
+
+    <!-- Best Practices for NuGet Integration -->
+    <section class="mb-5">
+        <h2>Best Practices</h2>
+        <p>
+            Make sure to version your packages properly and refer to our documentation for updates.
+            Use <code>--version</code> in your CLI commands to specify a preview version.
+        </p>
+    </section>
+</div>

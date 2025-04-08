@@ -1,0 +1,44 @@
+@{
+    ViewData["Title"] = "JavaScript Libraries";
+}
+
+<div class="container py-5">
+    <h1 class="mb-4">JavaScript Libraries</h1>
+    <p class="lead">
+        Integrate our lightweight, performant JavaScript libraries into your project effortlessly.
+    </p>
+
+    <!-- CDN Integration Section -->
+    <section class="mb-5">
+        <h2>CDN Integration</h2>
+        <p>Include the following script tag in your project to use LinqApi’s JavaScript components:</p>
+        <pre><code class="language-html">
+&lt;script src="https://cdn.linqjs.com/linq.v1.0.0.min.js"
+        integrity="sha384-RHlaXhs3O6e7jauYB0yQmcgbt2pmY3QCRXeNnMlth7vq+1OeJ9TRWywlGmurNtP8"
+        crossorigin="anonymous"
+        type="module"&gt;&lt;/script&gt;
+        </code></pre>
+    </section>
+
+    <!-- Usage Example Section -->
+    <section class="mb-5">
+        <h2>Using the Components</h2>
+        <p>Once the CDN script is loaded, you can import and utilize components in your JS modules like so:</p>
+        <pre><code class="language-js">
+import { LinqDataTable } from '/_content/LinqApi.Razor/js/index.js';
+
+const table = new LinqDataTable({
+    endpoint: '/api/products/filterpaged',
+    target: '#grid'
+});
+        </code></pre>
+    </section>
+
+    <!-- Additional Tips -->
+    <section>
+        <h2>Additional Tips</h2>
+        <p>
+            For more examples and advanced usage, refer to our documentation sections and GitHub repository.
+        </p>
+    </section>
+</div>

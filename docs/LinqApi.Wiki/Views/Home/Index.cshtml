@@ -1,0 +1,66 @@
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="container py-5">
+
+    <!-- Hero Section -->
+    <div class="row align-items-center mb-5">
+        <div class="col-md-7">
+            <h1 class="display-4 fw-bold text-primary">Welcome to LinqApi</h1>
+            <p class="lead text-secondary">
+                A modern, lightweight open source toolkit for dynamic API generation, extensible LINQ querying,
+                and more. Empower your development with our robust NuGet packages and JavaScript libraries.
+            </p>
+            <div class="mt-4">
+                <a class="btn btn-primary btn-lg me-2" href="@Url.Action("Docs", "Documentation")">Documentation</a>
+                <a class="btn btn-outline-primary btn-lg" href="https://github.com/LinqApi/LinqAPI" target="_blank">GitHub</a>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <!-- Optionally, insert an illustration or leave empty for a cleaner look -->
+        </div>
+    </div>
+
+    <hr class="my-5" />
+
+    <!-- Features Section -->
+    <section class="row text-center">
+        <div class="col-md-4 mb-4">
+            <i class="bi bi-box-seam display-4 text-primary"></i>
+            <h3 class="mt-3">NuGet Packages</h3>
+            <p class="text-muted">
+                Discover a suite of robust and extensible NuGet packages built for high performance and scalability.
+            </p>
+            <a class="btn btn-outline-primary" href="@Url.Action("NuGet", "Documentation")">Learn More</a>
+        </div>
+        <div class="col-md-4 mb-4">
+            <i class="bi bi-code-slash display-4 text-primary"></i>
+            <h3 class="mt-3">JavaScript Libraries</h3>
+            <p class="text-muted">
+                Integrate our lightweight, performant JS libraries into your projects with ease and confidence.
+            </p>
+            <a class="btn btn-outline-primary" href="@Url.Action("JavaScript", "Documentation")">Learn More</a>
+        </div>
+        <div class="col-md-4 mb-4">
+            <i class="bi bi-book display-4 text-primary"></i>
+            <h3 class="mt-3">Documentation</h3>
+            <p class="text-muted">
+                Browse comprehensive guides and API documentation to get started with LinqApi quickly.
+            </p>
+            <a class="btn btn-outline-primary" href="@Url.Action("Docs", "Documentation")">Learn More</a>
+        </div>
+    </section>
+
+    <hr class="my-5" />
+
+    <!-- Call to Action Section -->
+    <section class="text-center">
+        <h2 class="mb-4 text-primary">Get Started Today!</h2>
+        <p class="text-secondary">
+            Explore our preview packages and join our vibrant open source community. Follow our installation
+            guides to integrate LinqApi into your projects seamlessly.
+        </p>
+        <a class="btn btn-primary btn-lg" href="@Url.Action("GetStarted", "Documentation")">Get Started</a>
+    </section>
+</div>

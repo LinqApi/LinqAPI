@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Dynamic SEO meta tags -->
+    <title>@(ViewData["Title"] ?? "LinqApi - Open Source Toolkit") - LinqApi Documentation</title>
+    <meta name="description" content="@(ViewData["MetaDescription"] ?? "LinqApi provides a modern set of open source tools for .NET and JavaScript development, including dynamic APIs, extensible LINQ querying, and more.")" />
+    <link rel="canonical" href="@(ViewData["CanonicalUrl"] ?? "https://linqapi.com")" />
+
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="@(ViewData["Title"] ?? "LinqApi - Open Source Toolkit")" />
+    <meta property="og:description" content="@(ViewData["MetaDescription"] ?? "LinqApi provides a modern set of open source tools for .NET and JavaScript development.")" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="@(ViewData["CanonicalUrl"] ?? "https://linqapi.com")" />
+    <meta property="og:image" content="https://linqapi.com/images/linqapi-share.png" />
+
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="@(ViewData["Title"] ?? "LinqApi - Open Source Toolkit")" />
+    <meta name="twitter:description" content="@(ViewData["MetaDescription"] ?? "LinqApi provides a modern set of open source tools for .NET and JavaScript development.")" />
+    <meta name="twitter:image" content="https://linqapi.com/images/linqapi-share.png" />
+
+    <!-- JSON-LD Structured Data Example -->
+    <script type="application/ld+json">
+        {
+            "@@context": "https://schema.org",
+            "@@type": "WebSite",
+            "name": "LinqApi Documentation",
+            "url": "https://linqapi.com",
+            "potentialAction": {
+                "@@type": "SearchAction",
+                "target": "https://linqapi.com/search?q={search_term_string}",
+                "query-input": "required name=search_term_string"
+            }
+        }
+    </script>
+
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <!-- Inline Critical CSS for above-the-fold rendering -->
+    <style>
+        /* Minimal reset and critical styling */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .navbar-brand svg {
+            max-height: 50px;
+            width: auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <!-- Responsive Navbar using Bootstrap 5 -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
+            <div class="container">
+                <a class="navbar-brand" href="@Url.Action("Index", "Home")">
+                    <!-- Inline Logo SVG -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="200" height="50" viewBox="0 0 200 50">
+                        <text x="0" y="35" font-family="Trebuchet MS" font-size="36" fill="#6f42c1">LinqApi</text>
+                    </svg>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link" href="@Url.Action("Index", "Home")">Home</a></li>
+                        <li class="nav-item"><a class="nav-link" href="@Url.Action("NuGet", "Documentation")">NuGet</a></li>
+                        <li class="nav-item"><a class="nav-link" href="@Url.Action("JavaScript", "Documentation")">JavaScript</a></li>
+                        <li class="nav-item"><a class="nav-link" href="@Url.Action("Docs", "Documentation")">Docs</a></li>
+                        <li class="nav-item"><a class="nav-link" href="@Url.Action("Contact", "Home")">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content Container -->
+    <div class="container my-4">
+        <main role="main">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center py-3 border-top">
+        <div class="container">
+            <small>&copy; @DateTime.Now.Year - LinqApi. All rights reserved.</small>
+        </div>
+    </footer>
+
+    <!-- Scripts at the Bottom for Faster Page Load -->
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
