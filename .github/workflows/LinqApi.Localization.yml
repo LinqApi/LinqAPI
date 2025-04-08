@@ -7,7 +7,7 @@ on:
     paths:
       - '**/*'  # Tüm dosya değişiklikleri workflow'u tetikler
 env:
-  PROJECT_PATH: 'src/Core/LinqApi/LinqApi.csproj'
+  PROJECT_PATH: 'src/Localization/LinqApi.Localization/LinqApi.Localization.csproj'
   PACKAGE_OUTPUT_DIRECTORY: ${{ github.workspace }}\output
   NUGET_SOURCE_URL: 'https://api.nuget.org/v3/index.json'
 
@@ -27,15 +27,15 @@ jobs:
       - name: Get version from .csproj
         id: version
         run: |
-            VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" src/Core/LinqApi/LinqApi.csproj)
+            VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" src/Localization/LinqApi.Localization/LinqApi.Localization.csproj)
             echo "VERSION=$VERSION" >> $GITHUB_ENV
         
 
       - name: Restore Dependencies
-        run: dotnet restore src/Core/LinqApi/LinqApi.csproj
+        run: dotnet restore src/Localization/LinqApi.Localization/LinqApi.Localization.csproj
 
       - name: Build LinqApi Project
-        run: dotnet build src/Core/LinqApi/LinqApi.csproj --configuration Release --no-restore
+        run: dotnet build src/Localization/LinqApi.Localization/LinqApi.Localization.csproj --configuration Release --no-restore
 
 
 
@@ -44,4 +44,4 @@ jobs:
 
 
       - name: Publish NuGet Package
-        run: dotnet nuget push /home/runner/work/LinqAPI/LinqAPIoutput/LinqAPI.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_AUTH_TOKEN }} -s ${{ env.NUGET_SOURCE_URL }} --skip-duplicate
+        run: dotnet nuget push /home/runner/work/LinqAPI/LinqAPIoutput/LinqApi.Localization.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_AUTH_TOKEN }} -s ${{ env.NUGET_SOURCE_URL }} --skip-duplicate
