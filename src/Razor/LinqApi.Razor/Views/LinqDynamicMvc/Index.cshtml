@@ -128,13 +128,13 @@
 
     <!-- Include Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script src="https://cdn.linqjs.com/linq.v1.0.0.min.js"
+            integrity="sha384-RHlaXhs3O6e7jauYB0yQmcgbt2pmY3QCRXeNnMlth7vq+1OeJ9TRWywlGmurNtP8"
+            crossorigin="anonymous"
+            type="module"></script>
     <!-- Module Script -->
     <script type="module">
-          import { LinqDataTable } from '/_content/LinqApi.Razor/js/index.js';
-        import { defaults } from '/_content/LinqApi.Razor/js/index.js';
-        import { LinqSelect2 } from '/_content/LinqApi.Razor/js/index.js';
-
+         import { LinqDataTable, LinqSelect2, defaults } from 'https://cdn.linqjs.com/linq.v1.0.0.min.js';
 
         let currentEntity = null;
         let dtInstance = null;
