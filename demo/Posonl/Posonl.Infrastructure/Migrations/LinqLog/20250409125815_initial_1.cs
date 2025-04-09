@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Posonl.Infrastructure.Migrations
+namespace Posonl.Infrastructure.Migrations.LinqLog
 {
     /// <inheritdoc />
-    public partial class inital_1 : Migration
+    public partial class initial_1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -22,9 +22,9 @@ namespace Posonl.Infrastructure.Migrations
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CorrelationId = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ParentCorrelationId = table.Column<string>(type: "varchar(50)", maxLength: 100, nullable: false),
+                    ParentCorrelationId = table.Column<string>(type: "varchar(50)", maxLength: 100, nullable: true),
                     DurationMs = table.Column<long>(type: "bigint", nullable: false),
-                    Exception = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Exception = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsException = table.Column<bool>(type: "bit", nullable: false),
                     IsInternal = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -37,8 +37,8 @@ namespace Posonl.Infrastructure.Migrations
                     Method = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     OperationName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     QueueName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    RequestBody = table.Column<string>(type: "nvarchar(MAX)", nullable: false),
-                    ResponseBody = table.Column<string>(type: "nvarchar(MAX)", nullable: false),
+                    RequestBody = table.Column<string>(type: "nvarchar(MAX)", nullable: true),
+                    ResponseBody = table.Column<string>(type: "nvarchar(MAX)", nullable: true),
                     Url = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     UserAgent = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     StackTrace = table.Column<string>(type: "nvarchar(max)", nullable: true),

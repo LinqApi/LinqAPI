@@ -3,51 +3,47 @@
     ViewData["Title"] = "Country Query";
 }
 <div class="container mt-4">
-    <h2>LINQ Query Builder Demo (Country)</h2>
-    <!-- Container for the QueryBuilder UI -->
-    <div id="queryBuilderContainer"></div>
-    <hr>
-    <!-- Container for the dynamic data table -->
-    <div id="dataTableContainer"></div>
+    <h2>Countries</h2>
+    <!-- Tabs Navigation -->
 </div>
 
-   @section Scripts {
+<!-- Container for the QueryBuilder UI (LinqDataTable oluşturulurken otomatik yaratılacak) -->
+<div id="queryBuilderContainer" class="mb-3"></div>
+<!-- Container for the dynamic DataTable UI -->
+<div id="dataTableContainer"></div>
+@section Scripts {
     <script type="module">
-        import { QueryBuilder } from '/js/ui/QueryBuilder.js';
         import { LinqDataTable } from '/js/ui/LinqDataTable.js';
         import { StateManager } from '/js/core/State.js';
 
-        // Shared state manager instance.
+        // Ortak state manager örneği
         const state = new StateManager({ query: null });
 
-        // Initialize QueryBuilder
-        const qbContainer = document.getElementById("queryBuilderContainer");
-        const queryBuilder = new QueryBuilder({
-            container: qbContainer,
-            controller: "Country",
-            stateManager: state,
-            intellisense: false,
-            debug: true
-        });
-        queryBuilder.init();
+        // Özel aksiyon tanımı
+        const customActions = [
+            {
+                label: "Show ID",
+                className: "btn btn-sm btn-success ms-1",   // İsteğe bağlı CSS sınıfı
+                onClick: (rowData, rowIndex) => {
+                    // rowData nesnesi içindeki id alanını çekiyoruz (küçük harf duyarlılığı varsa toLowerCase() ile kontrol edebilirsiniz)
+                    alert(`Selected ID: ${rowData.id || rowData.ID}`);
+                }
+            }
+        ];
 
-        // Initialize LinqDataTable (benzer şekilde)
+        // LinqDataTable, QueryBuilder'ı container içine otomatik oluşturacak
         const dtContainer = document.getElementById("dataTableContainer");
+        const qbContainer = document.getElementById("queryBuilderContainer");
         const dataTable = new LinqDataTable({
             container: dtContainer,
+            queryBuilderContainer: qbContainer,
             controller: "Country",
             stateManager: state,
+            apiPrefix: "/api", // kök path olarak başında '/' olacak şekilde
+            autoCreateQueryBuilder: true,
+            select2Columns: true,
+            customActions: customActions,  // Ek aksiyonları buradan gönderiyoruz.
             debug: true
-        });
-        dataTable.init();
-
-        // Subscribe to state changes.
-        state.subscribe(async (s) => {
-            if (s.query) {
-                await dataTable.fetchDataFromQuery(s.query);
-                dataTable.render();
-            }
         });
     </script>
 }
-

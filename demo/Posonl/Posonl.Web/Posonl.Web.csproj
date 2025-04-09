@@ -55,7 +55,6 @@
 
   <ItemGroup>
     <Folder Include="Areas\Dashboard\Data\" />
-    <Folder Include="Areas\Dashboard\Models\" />
     <Folder Include="Areas\LinqApi\Controllers\" />
     <Folder Include="Areas\LinqApi\Data\" />
     <Folder Include="Areas\LinqApi\Models\" />

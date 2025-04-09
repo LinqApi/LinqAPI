@@ -1,56 +1,323 @@
 @{
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
-    ViewData["Title"] = "PosCompany";
+    ViewData["Title"] = "PosCompany Query";
 }
 <div class="container mt-4">
-    <h2>LINQ Query Builder Demo (Country)</h2>
-    <!-- Container for the QueryBuilder UI -->
-    <div id="queryBuilderContainer"></div>
-    <hr>
-    <h3>Data Table</h3>
-    <!-- Container for the dynamic data table -->
-    <div id="dataTableContainer"></div>
+    <h2>PosCompany Query</h2>
+    <!-- (Optional: Tab Navigation can be added here) -->
 </div>
+
+<!-- Supported Countries Modal (for REMOVAL) -->
+<div class="modal fade" id="posCompanyModal" tabindex="-1" aria-labelledby="posCompanyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="posCompanyModalLabel">Supported Countries for PosCompany</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Loading indicator -->
+                <div id="posCompanyModalLoading" class="text-center my-3" style="display:none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <!-- Container to render the list of supported countries with checkboxes -->
+                <div id="posCompanyCountryListContainer"></div>
+            </div>
+            <div class="modal-footer">
+                <!-- Removal button (red) -->
+                <button type="button" id="submitRemoveSupportedCountriesBtn" class="btn btn-danger">Remove Selected Countries</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Supported Country Modal (for ADDITION) -->
+<div class="modal fade" id="addExistingPosCompanyModal" tabindex="-1" aria-labelledby="addExistingPosCompanyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addExistingPosCompanyModalLabel">Add Supported Countries</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Loading indicator -->
+                <div id="availablePosCompanyLoading" class="text-center my-3" style="display:none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <!-- Container to render the list of available countries with checkboxes -->
+                <div id="availablePosCompanyContainer"></div>
+            </div>
+            <div class="modal-footer">
+                <!-- Addition button (green) -->
+                <button type="button" id="submitAddSupportedCountriesBtn" class="btn btn-success">Add Selected Countries</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Container for QueryBuilder UI (automatically created by LinqDataTable) -->
+<div id="queryBuilderContainer" class="mb-3"></div>
+<!-- Container for the dynamic DataTable UI -->
+<div id="dataTableContainer"></div>
 
 @section Scripts {
     <script type="module">
-        // Import modules from your built library
-        import { QueryBuilder } from '/js/ui/QueryBuilder.js';
         import { LinqDataTable } from '/js/ui/LinqDataTable.js';
         import { StateManager } from '/js/core/State.js';
 
-        // Create a shared state manager instance.
-        const state = new StateManager();
+        // Wait until DOM is ready
+        document.addEventListener("DOMContentLoaded", function() {
+            // Create a shared state manager.
+            const state = new StateManager({ query: null });
 
-        // Initialize QueryBuilder
-        const qbContainer = document.getElementById("queryBuilderContainer");
-        const queryBuilder = new QueryBuilder({
-            container: qbContainer,
-            controller: "PosCompany",
-            stateManager: state,
-            intellisense: false,
-            debug: true
-        });
-        queryBuilder.init();
+            // Define custom actions for PosCompany.
+            // Two actions: one to manage (remove) supported countries and one to add new ones.
+            const customActions = [
+                {
+                    label: "Manage Supported Countries",
+                    className: "btn btn-sm btn-primary ms-1",
+                    onClick: (rowData, rowIndex) => {
+                        openPosCompanyModal(rowData.id);
+                    }
+                },
+                {
+                    label: "Add Supported Country",
+                    className: "btn btn-sm btn-success ms-1",
+                    onClick: (rowData, rowIndex) => {
+                        openAddExistingPosCompanyModal(rowData.id);
+                    }
+                }
+            ];
 
-        // Initialize LinqDataTable
-        const dtContainer = document.getElementById("dataTableContainer");
-        const dataTable = new LinqDataTable({
-            container: dtContainer,
-            controller: "PosCompany",
-            stateManager: state, // Optionally, you can share state here as well
-            debug: true
-        });
-        dataTable.init();
+            // Initialize LinqDataTable for PosCompany.
+            const dtContainer = document.getElementById("dataTableContainer");
+            const qbContainer = document.getElementById("queryBuilderContainer");
+            const dataTable = new LinqDataTable({
+                container: dtContainer,
+                queryBuilderContainer: qbContainer,
+                controller: "PosCompany",
+                stateManager: state,
+                apiPrefix: "/api",
+                autoCreateQueryBuilder: true,
+                select2Columns: true,
+                customActions: customActions,
+                debug: true
+            });
 
-        // Subscribe to state changes so that when the QueryBuilder updates the query,
-        // the data table fetches new data based on that query.
-        state.subscribe(async (s) => {
-            if (s.query) {
-                // You could have a dedicated method to update the table from a query:
-                await dataTable.fetchDataFromQuery(s.query);
-                dataTable.render();
+            // Global variable to hold current PosCompany Id.
+            window.currentPosCompanyId = null;
+
+            // ------------------------------------------------------------------
+            // Functions for the "Manage Supported Countries" (Removal) Modal
+            // ------------------------------------------------------------------
+            function openPosCompanyModal(posCompanyId) {
+                window.currentPosCompanyId = posCompanyId;
+                document.getElementById('posCompanyModalLabel').textContent = `Supported Countries for PosCompany ID: ${posCompanyId}`;
+                document.getElementById('posCompanyCountryListContainer').innerHTML = "";
+                const modalEl = document.getElementById('posCompanyModal');
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+                loadPosCompanyCountryList(posCompanyId);
             }
+
+            function loadPosCompanyCountryList(posCompanyId) {
+                const loadingEl = document.getElementById('posCompanyModalLoading');
+                const container = document.getElementById('posCompanyCountryListContainer');
+                loadingEl.style.display = "block";
+                // Construct the payload to fetch supported countries.
+                // You need to adapt this filter to return countries that are in this PosCompany's SupportedCountries.
+                // For example, your API might use a filter like:
+                //   "SupportedCountries.Any(c => c.Id = <posCompanyId>)"
+                // Adjust the filter syntax based on your API's expectations.
+                const payload = {
+                    filter: `SupportedByPosCompanyId = ${posCompanyId}`,  // Example: adjust as needed!
+                    pager: { pageNumber: 1, pageSize: 500 },
+                    orderBy: "id",
+                    desc: true
+                };
+                fetch('/api/Country/filterpaged', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loadingEl.style.display = "none";
+                    renderPosCompanyCountryList(data);
+                })
+                .catch(error => {
+                    loadingEl.style.display = "none";
+                    container.innerHTML = `<div class="alert alert-danger">Error loading supported countries: ${error}</div>`;
+                });
+            }
+
+            function renderPosCompanyCountryList(data) {
+                const container = document.getElementById('posCompanyCountryListContainer');
+                if (!data.items || data.items.length === 0) {
+                    container.innerHTML = "<p>No supported countries found.</p>";
+                    return;
+                }
+                let html = '<table class="table table-bordered table-sm"><thead><tr>';
+                html += '<th>Select</th><th>Name</th><th>Code</th><th>ID</th>';
+                html += '</tr></thead><tbody>';
+                data.items.forEach(country => {
+                    html += `<tr>
+                                <td><input type="checkbox" class="poscompany-country-checkbox" data-country-id="${country.id}"></td>
+                                <td>${country.name}</td>
+                                <td>${country.code}</td>
+                                <td>${country.id}</td>
+                             </tr>`;
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            }
+
+            document.getElementById('submitRemoveSupportedCountriesBtn').addEventListener('click', function() {
+                const posCompanyId = window.currentPosCompanyId;
+                if (!posCompanyId) {
+                    alert("No PosCompany selected.");
+                    return;
+                }
+                const checkboxes = document.querySelectorAll('.poscompany-country-checkbox');
+                const selectedCountryIds = Array.from(checkboxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => parseInt(cb.getAttribute('data-country-id')));
+                if (selectedCountryIds.length === 0) {
+                    alert("Please select at least one country to remove.");
+                    return;
+                }
+                const payload = {
+                    posCompanyId: posCompanyId,
+                    countryIds: selectedCountryIds
+                };
+                fetch('/dashboard/api/DashboardPosCompany/RemoveSupportedCountries', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to remove selected countries.');
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    alert(result.Message || "Countries removed successfully.");
+                    loadPosCompanyCountryList(posCompanyId);
+                })
+                .catch(error => {
+                    alert("Error: " + error.message);
+                });
+            });
+
+            // ------------------------------------------------------------------
+            // Functions for the "Add Supported Country" Modal
+            // ------------------------------------------------------------------
+            function openAddExistingPosCompanyModal(posCompanyId) {
+                window.currentPosCompanyId = posCompanyId;
+                document.getElementById('addExistingPosCompanyModalLabel').textContent =
+                    `Add Supported Countries to PosCompany ID: ${posCompanyId}`;
+                document.getElementById('availablePosCompanyContainer').innerHTML = "";
+                const modalEl = document.getElementById('addExistingPosCompanyModal');
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+                loadAvailablePosCompanyCountries();
+            }
+
+            function loadAvailablePosCompanyCountries() {
+                const loadingEl = document.getElementById('availablePosCompanyLoading');
+                const container = document.getElementById('availablePosCompanyContainer');
+                loadingEl.style.display = "block";
+                // Build the payload to list available countries.
+                // Adjust the filter so that it returns countries not already supported by this posCompany.
+                const payload = {
+                    filter: "SupportedByPosCompanyId = null",  // Change as needed by your API.
+                    pager: { pageNumber: 1, pageSize: 500 },
+                    orderBy: "id",
+                    desc: true
+                };
+                fetch('/api/Country/filterpaged', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loadingEl.style.display = "none";
+                    renderAvailablePosCompanyCountries(data);
+                })
+                .catch(error => {
+                    loadingEl.style.display = "none";
+                    container.innerHTML = `<div class="alert alert-danger">Error loading available countries: ${error}</div>`;
+                });
+            }
+
+            function renderAvailablePosCompanyCountries(data) {
+                const container = document.getElementById('availablePosCompanyContainer');
+                if (!data.items || data.items.length === 0) {
+                    container.innerHTML = "<p>No available countries found.</p>";
+                    return;
+                }
+                let html = '<table class="table table-bordered table-sm"><thead><tr>';
+                html += '<th>Select</th><th>Name</th><th>Code</th><th>ID</th>';
+                html += '</tr></thead><tbody>';
+                data.items.forEach(country => {
+                    html += `<tr>
+                                <td><input type="checkbox" class="available-poscompany-checkbox" data-country-id="${country.id}"></td>
+                                <td>${country.name}</td>
+                                <td>${country.code}</td>
+                                <td>${country.id}</td>
+                             </tr>`;
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            }
+
+            document.getElementById('submitAddSupportedCountriesBtn').addEventListener('click', function () {
+                const posCompanyId = window.currentPosCompanyId;
+                if (!posCompanyId) {
+                    alert("No PosCompany selected.");
+                    return;
+                }
+                const checkboxes = document.querySelectorAll('.available-poscompany-checkbox');
+                const selectedCountryIds = Array.from(checkboxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => parseInt(cb.getAttribute('data-country-id')));
+                if (selectedCountryIds.length === 0) {
+                    alert("Please select at least one country to add.");
+                    return;
+                }
+                const payload = {
+                    posCompanyId: posCompanyId,
+                    countryIds: selectedCountryIds
+                };
+                fetch('/dashboard/api/DashboardPosCompany/AddSupportedCountries', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to add selected countries.');
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    alert(result.Message || "Countries added successfully.");
+                    const modalEl = document.getElementById('addExistingPosCompanyModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    modal.hide();
+                })
+                .catch(error => {
+                    alert("Error: " + error.message);
+                });
+            });
         });
     </script>
 }

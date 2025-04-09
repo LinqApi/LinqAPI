@@ -3,54 +3,311 @@
     ViewData["Title"] = "Country Group Query";
 }
 <div class="container mt-4">
-    <h2>LINQ Query Builder Demo (Country)</h2>
-    <!-- Container for the QueryBuilder UI -->
-    <div id="queryBuilderContainer"></div>
-    <hr>
-    <h3>Data Table</h3>
-    <!-- Container for the dynamic data table -->
-    <div id="dataTableContainer"></div>
+    <h2>Country Groups</h2>
+    <!-- Tabs Navigation can be added here if needed -->
 </div>
+
+<!-- Countries Modal (for Removing Countries from Group) -->
+<div class="modal fade" id="countryModal" tabindex="-1" aria-labelledby="countryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <!-- Using modal-lg for a larger modal -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="countryModalLabel">Countries for Group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Loading indicator -->
+                <div id="countryModalLoading" class="text-center my-3" style="display:none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <!-- Container to render the list of countries with checkboxes -->
+                <div id="countryListContainer"></div>
+            </div>
+            <div class="modal-footer">
+                <!-- Button to remove selected countries (styled in red) -->
+                <button type="button" id="submitRemoveCountriesBtn" class="btn btn-danger">Remove Selected Countries</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Existing Country Modal (for Adding Countries to Group) -->
+<div class="modal fade" id="addExistingCountryModal" tabindex="-1" aria-labelledby="addExistingCountryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addExistingCountryModalLabel">Add Existing Country</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Loading indicator -->
+                <div id="availableCountriesLoading" class="text-center my-3" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <!-- Container to render the list of available countries -->
+                <div id="availableCountriesContainer"></div>
+            </div>
+            <div class="modal-footer">
+                <!-- Button to add selected countries to the group -->
+                <button type="button" id="submitAddCountriesBtn" class="btn btn-success">Add to Group</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Container for the QueryBuilder UI (automatically created by LinqDataTable) -->
+<div id="queryBuilderContainer" class="mb-3"></div>
+<!-- Container for the dynamic DataTable UI -->
+<div id="dataTableContainer"></div>
 
 @section Scripts {
     <script type="module">
-        // Import modules from your built library
-        import { QueryBuilder } from '/js/ui/QueryBuilder.js';
         import { LinqDataTable } from '/js/ui/LinqDataTable.js';
         import { StateManager } from '/js/core/State.js';
 
-        // Create a shared state manager instance.
-        const state = new StateManager();
+        document.addEventListener("DOMContentLoaded", function() {
+            // Create a shared state manager.
+            const state = new StateManager({ query: null });
 
-        // Initialize QueryBuilder
-        const qbContainer = document.getElementById("queryBuilderContainer");
-        const queryBuilder = new QueryBuilder({
-            container: qbContainer,
-            controller: "CountryGroup",
-            stateManager: state,
-            intellisense: false,
-            debug: true
-        });
-        queryBuilder.init();
+            // Define custom actions: only a "Countries" button is used.
+            const customActions = [
+                {
+                    label: "Countries",
+                    className: "btn btn-sm btn-primary ms-1",
+                    onClick: (rowData, rowIndex) => {
+                        // Open the removal modal with the CountryGroup id.
+                        openCountriesModal(rowData.id);
+                    }
+                },
+                {
+        label: "Add Existing Country",
+        className: "btn btn-sm btn-success ms-1",
+        onClick: (rowData, rowIndex) => {
+            // Call our new modal function with the CountryGroup's ID (from the rowData)
+            openAddExistingCountryModal(rowData.id);
+        }
+                }
+            ];
 
-        // Initialize LinqDataTable
-        const dtContainer = document.getElementById("dataTableContainer");
-        const dataTable = new LinqDataTable({
-            container: dtContainer,
-            controller: "CountryGroup",
-            stateManager: state, // Optionally, you can share state here as well
-            debug: true
-        });
-        dataTable.init();
+            // Initialize LinqDataTable.
+            const dtContainer = document.getElementById("dataTableContainer");
+            const qbContainer = document.getElementById("queryBuilderContainer");
+            const dataTable = new LinqDataTable({
+                container: dtContainer,
+                queryBuilderContainer: qbContainer,
+                controller: "CountryGroup",
+                stateManager: state,
+                apiPrefix: "/api", // Use an absolute path starting with "/"
+                autoCreateQueryBuilder: true,
+                select2Columns: true,
+                customActions: customActions,
+                debug: true
+            });
 
-        // Subscribe to state changes so that when the QueryBuilder updates the query,
-        // the data table fetches new data based on that query.
-        state.subscribe(async (s) => {
-            if (s.query) {
-                // You could have a dedicated method to update the table from a query:
-                await dataTable.fetchDataFromQuery(s.query);
-                dataTable.render();
+            // ----------- Functions for Removal Modal -----------
+            function openCountriesModal(countryGroupId) {
+                window.currentCountryGroupId = countryGroupId;
+                document.getElementById('countryModalLabel').textContent = `Countries for Group ID: ${countryGroupId}`;
+                document.getElementById('countryListContainer').innerHTML = "";
+                const modalEl = document.getElementById('countryModal');
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+                loadCountryList(countryGroupId);
             }
+
+            function loadCountryList(countryGroupId) {
+                const loadingEl = document.getElementById('countryModalLoading');
+                const listContainer = document.getElementById('countryListContainer');
+                loadingEl.style.display = "block";
+                const payload = {
+                    filter: `CountryGroup.Id = ${countryGroupId}`,
+                    pager: { pageNumber: 1, pageSize: 500 },
+                    orderBy: "id",
+                    desc: true
+                };
+                fetch('/api/Country/filterpaged', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loadingEl.style.display = "none";
+                    renderCountryList(data);
+                })
+                .catch(error => {
+                    loadingEl.style.display = "none";
+                    listContainer.innerHTML = `<div class="alert alert-danger">Error loading countries: ${error}</div>`;
+                });
+            }
+
+            function renderCountryList(data) {
+                const container = document.getElementById('countryListContainer');
+                if (!data.items || data.items.length === 0) {
+                    container.innerHTML = "<p>No countries found for this group.</p>";
+                    return;
+                }
+                let html = '<table class="table table-bordered table-sm"><thead><tr>';
+                html += '<th>Select</th><th>Name</th><th>Code</th><th>Currency</th><th>Language Code</th><th>ID</th>';
+                html += '</tr></thead><tbody>';
+                data.items.forEach(country => {
+                    html += `<tr>
+                                <td><input type="checkbox" class="group-country-checkbox" data-country-id="${country.id}"></td>
+                                <td>${country.name}</td>
+                                <td>${country.code}</td>
+                                <td>${country.currency}</td>
+                                <td>${country.languageCode}</td>
+                                <td>${country.id}</td>
+                             </tr>`;
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            }
+
+            document.getElementById('submitRemoveCountriesBtn').addEventListener('click', function() {
+                const groupId = window.currentCountryGroupId;
+                if (!groupId) {
+                    alert("No group selected.");
+                    return;
+                }
+                const checkboxes = document.querySelectorAll('.group-country-checkbox');
+                const selectedCountryIds = Array.from(checkboxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => parseInt(cb.getAttribute('data-country-id')));
+                if (selectedCountryIds.length === 0) {
+                    alert("Please select at least one country to remove.");
+                    return;
+                }
+                const payload = {
+                    countryGroupId: groupId,
+                    countryIds: selectedCountryIds
+                };
+                fetch('/dashboard/api/DashboardCountry/RemoveFromGroup', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to remove selected countries from the group.');
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    alert(result.Message || "Countries removed successfully.");
+                    loadCountryList(groupId); // Refresh the removal modal list.
+                })
+                .catch(error => {
+                    alert("Error: " + error.message);
+                });
+            });
+
+            // ----------- Functions for Add Existing Country Modal -----------
+            function openAddExistingCountryModal(countryGroupId) {
+                window.currentCountryGroupId = countryGroupId;
+                document.getElementById('addExistingCountryModalLabel').textContent =
+                    `Add Existing Countries to Group ID: ${countryGroupId}`;
+                document.getElementById('availableCountriesContainer').innerHTML = "";
+                const modalEl = document.getElementById('addExistingCountryModal');
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+                loadAvailableCountries();
+            }
+
+            function loadAvailableCountries() {
+                const loadingEl = document.getElementById('availableCountriesLoading');
+                const container = document.getElementById('availableCountriesContainer');
+                loadingEl.style.display = "block";
+                const payload = {
+                    filter: "CountryGroup = null",
+                    pager: { pageNumber: 1, pageSize: 500 },
+                    orderBy: "id",
+                    desc: true
+                };
+                fetch('/api/Country/filterpaged', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loadingEl.style.display = "none";
+                    renderAvailableCountries(data);
+                })
+                .catch(error => {
+                    loadingEl.style.display = "none";
+                    container.innerHTML = `<div class="alert alert-danger">Error loading available countries: ${error}</div>`;
+                });
+            }
+
+            function renderAvailableCountries(data) {
+                const container = document.getElementById('availableCountriesContainer');
+                if (!data.items || data.items.length === 0) {
+                    container.innerHTML = "<p>No available countries found.</p>";
+                    return;
+                }
+                let html = '<table class="table table-bordered table-sm"><thead><tr>';
+                html += '<th>Select</th><th>Name</th><th>Code</th><th>ID</th>';
+                html += '</tr></thead><tbody>';
+                data.items.forEach(country => {
+                    html += `<tr>
+                                <td><input type="checkbox" class="available-country-checkbox" data-country-id="${country.id}"></td>
+                                <td>${country.name}</td>
+                                <td>${country.code}</td>
+                                <td>${country.id}</td>
+                             </tr>`;
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            }
+
+            document.getElementById('submitAddCountriesBtn').addEventListener('click', function () {
+                const groupId = window.currentCountryGroupId;
+                if (!groupId) {
+                    alert("No group selected.");
+                    return;
+                }
+                const checkboxes = document.querySelectorAll('.available-country-checkbox');
+                const selectedCountryIds = Array.from(checkboxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => parseInt(cb.getAttribute('data-country-id')));
+                if (selectedCountryIds.length === 0) {
+                    alert("Please select at least one country.");
+                    return;
+                }
+                const payload = {
+                    countryGroupId: groupId,
+                    countryIds: selectedCountryIds
+                };
+                fetch('/dashboard/api/DashboardCountry/AddToGroup', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to add selected countries to the group.');
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    alert(result.Message || "Countries added successfully.");
+                    // Close the add modal.
+                    const modalEl = document.getElementById('addExistingCountryModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    modal.hide();
+                })
+                .catch(error => {
+                    alert("Error: " + error.message);
+                });
+            });
         });
     </script>
 }

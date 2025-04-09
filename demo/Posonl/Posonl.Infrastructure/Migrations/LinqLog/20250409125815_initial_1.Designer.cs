@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Posonl.Infrastructure;
 
 #nullable disable
 
-namespace Posonl.Infrastructure.Migrations
+namespace Posonl.Infrastructure.Migrations.LinqLog
 {
     [DbContext(typeof(LinqLogContext))]
-    partial class LinqLogContextModelSnapshot : ModelSnapshot
+    [Migration("20250409125815_initial_1")]
+    partial class initial_1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

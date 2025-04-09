@@ -9,35 +9,37 @@ using LinqApi.Controller;
 using LinqApi.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.Linq;
+using System;
+using System.Collections.Generic;
+
+
 
 namespace LinqApi.Dynamic.Controller
 {
     public class LinqApiApmOptions
     {
         /// <summary>
-        /// Üretilecek controller'ların DbContext tipini belirtir.
+        /// Specifies the DbContext type whose DbSet properties are used to create dynamic controllers.
         /// </summary>
         public Type DbContextType { get; set; }
 
         /// <summary>
-        /// İsteğe göre, entity tiplerini filtrelemek için kullanılabilir.
-        /// Örneğin, bazı entity'ler için dinamik controller üretilmesin istenebilir.
-        /// Default'ta true döner, yani tüm entity'ler geçerli.
+        /// Optionally used to filter entity types (if you do not want controllers for some entities).
+        /// Defaults to a function that always returns true.
         /// </summary>
         public Func<Type, bool> EntityFilter { get; set; } = type => true;
 
         /// <summary>
-        /// Hangi LinqController tiplerinin üretileceğini tutan bir liste/dizi.
-        /// Örneğin: new[] { LinqControllerType.LinqReadonlyController, LinqControllerType.LinqController }
+        /// The controller type to be generated (for example, LinqController or LinqReadonlyController).
         /// </summary>
         public LinqControllerType ControllerType { get; set; } = LinqControllerType.LinqController;
 
         /// <summary>
-        /// Controller'ların yer alacağı "Area" ismi.
+        /// The area name for the generated controllers.
         /// </summary>
         public string AreaName { get; set; } = string.Empty;
     }
-
 
     public enum LinqControllerType
     {
@@ -47,9 +49,11 @@ namespace LinqApi.Dynamic.Controller
         LinqLogController = 30,
         LinqLocalizationController = 40
     }
+
     public static class LinqApiRegistry
     {
         private static readonly List<DynamicApiInfo> _apis = new List<DynamicApiInfo>();
+        private static readonly Dictionary<string, List<Type>> _extensions = new Dictionary<string, List<Type>>();
 
         public static IReadOnlyList<DynamicApiInfo> Apis => _apis;
 
@@ -62,15 +66,29 @@ namespace LinqApi.Dynamic.Controller
         {
             _apis.AddRange(infos);
         }
+
+        // Register an extension type for a given controller name.
+        public static void RegisterExtension(string controllerName, Type extensionType)
+        {
+            if (!_extensions.ContainsKey(controllerName))
+            {
+                _extensions[controllerName] = new List<Type>();
+            }
+            _extensions[controllerName].Add(extensionType);
+        }
+
+        // Expose the registered extensions (if needed for later processing)
+        public static IReadOnlyDictionary<string, List<Type>> Extensions => _extensions;
     }
 
     public class DynamicApiInfo
     {
         public string EntityName { get; set; }
         public string ControllerName { get; set; }
-        public string RoutePrefix { get; set; } // ex: "api/[area]/[controller]"
-        public string AreaName { get; set; }    // ex: "DynamicArea"
+        public string RoutePrefix { get; set; } // e.g., "api/[controller]"
+        public string AreaName { get; set; }    // e.g., "DynamicArea"
     }
+
     public class LinqApiControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
     {
         private readonly LinqApiApmOptions _options;
@@ -82,7 +100,9 @@ namespace LinqApi.Dynamic.Controller
 
         public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
         {
-            // 1) DbContext içindeki DbSet<> property'lerini bul.
+
+
+            // 2) Find entity types from the DbContext's DbSet<> properties.
             var entityTypes = _options.DbContextType
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p =>
@@ -90,32 +110,28 @@ namespace LinqApi.Dynamic.Controller
                     p.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>)
                 )
                 .Select(p => p.PropertyType.GetGenericArguments()[0])
-                // BaseEntity<TId> türevi ama *somut* mu (IsConcreteSubclassOfGenericBaseEntity)
                 .Where(IsConcreteSubclassOfGenericBaseEntity)
-                // Harici filter (opsiyonel)
                 .Where(_options.EntityFilter);
-            
-            // 2) Her entity tipi için, _options.ControllerTypes'te belirtilen her enum için controller yarat
+
+            // 3) Generate a dynamic controller for each entity.
             foreach (var entityType in entityTypes)
             {
-                // Nihayetinde BaseEntity<TId> olduğundan, TId tipini bulalım:
-                // (Artık en son kalıtım BaseEntity<T> hangi noktada ise oradan alacağız.)
+                // Get the ID type from the inheritance chain of BaseEntity<TId>.
                 var idType = FindBaseEntityIdType(entityType);
 
                 var controllerTypeEnum = _options.ControllerType;
-                    var baseControllerType = GetBaseControllerType(controllerTypeEnum);
-
+                var baseControllerType = GetBaseControllerType(controllerTypeEnum);
                 if (!TryMakeGenericController(baseControllerType, entityType, idType, out var constructedController))
                     continue;
 
-                // => Örneğin "CountryController"
+                // Construct the controller name, e.g., "CountryController"
                 var controllerName = $"{entityType.Name}Controller";
 
-                // Aynı isimde (class isminde) bir controller varsa eklemeyelim
+                // If a controller with the same name already exists, skip.
                 if (feature.Controllers.Any(c => c.Name == controllerName))
                     continue;
 
-                // Reflection.Emit ile runtime'da controller tipini üret
+                // Use Reflection.Emit to generate a dynamic controller type.
                 var dynamicControllerType = DefineDynamicControllerType(
                     constructedController,
                     controllerName,
@@ -125,40 +141,42 @@ namespace LinqApi.Dynamic.Controller
                 feature.Controllers.Add(dynamicControllerType.GetTypeInfo());
 
                 var routePrefix = string.IsNullOrEmpty(_options.AreaName)
-            ? $"api/[controller]"
-            : $"api/{_options.AreaName}/[controller]";
+                    ? $"api/[controller]"
+                    : $"api/{_options.AreaName}/[controller]";
+
                 LinqApiRegistry.Register(new DynamicApiInfo
                 {
                     EntityName = entityType.Name,
                     ControllerName = controllerName,
-                    RoutePrefix = routePrefix
+                    RoutePrefix = routePrefix,
+                    AreaName = _options.AreaName
                 });
-
             }
         }
+
         private Type DefineDynamicControllerType(
             Type baseControllerType,
             string controllerName,
             string areaName)
         {
-            // 1) Yeni tip oluştur
+            // 1) Create a new type.
             var typeBuilder = DynamicAssemblyHolder.ControllerModuleBuilder.DefineType(
                 controllerName,
                 TypeAttributes.Public | TypeAttributes.Class,
                 baseControllerType
             );
 
-            // 2) "CountryController" → "Country"
+            // 2) Remove the "Controller" suffix from the name (if present).
             var baseName = controllerName.EndsWith("Controller")
                 ? controllerName.Substring(0, controllerName.Length - "Controller".Length)
                 : controllerName;
 
-            // 3) Route string'i inşa et: "api/DynamicArea/Country" veya "api/Country"
+            // 3) Build the route string: "api/DynamicArea/Country" or "api/Country".
             var routeValue = string.IsNullOrEmpty(areaName)
                 ? $"api/{baseName}"
                 : $"api/{areaName}/{baseName}";
 
-            // 4) [Route("api/...")] attribute
+            // 4) Apply the [Route("...")] attribute.
             var routeAttrCtor = typeof(RouteAttribute).GetConstructor(new[] { typeof(string) });
             if (routeAttrCtor != null)
             {
@@ -166,7 +184,7 @@ namespace LinqApi.Dynamic.Controller
                 typeBuilder.SetCustomAttribute(routeAttrBuilder);
             }
 
-            // 5) [ApiController] attribute
+            // 5) Apply the [ApiController] attribute.
             var apiControllerAttrCtor = typeof(ApiControllerAttribute).GetConstructor(Type.EmptyTypes);
             if (apiControllerAttrCtor != null)
             {
@@ -174,7 +192,7 @@ namespace LinqApi.Dynamic.Controller
                 typeBuilder.SetCustomAttribute(apiControllerAttrBuilder);
             }
 
-            // 6) Base constructor kopyala
+            // 6) Copy the base constructor.
             var baseCtor = baseControllerType.GetConstructors().FirstOrDefault();
             if (baseCtor != null)
             {
@@ -194,29 +212,27 @@ namespace LinqApi.Dynamic.Controller
                 il.Emit(OpCodes.Ret);
             }
 
-            // 7) Tipi oluştur ve dön
+            // 7) Create and return the type.
             return typeBuilder.CreateType();
         }
 
         /// <summary>
-        /// T tipi nihayetinde BaseEntity<TId>’den türediği için, o TId tipini bulur.
+        /// Finds the ID type (TId) from the inheritance chain of BaseEntity&lt;TId&gt; for a given entity type.
         /// </summary>
         private static Type FindBaseEntityIdType(Type entityType)
         {
-            // Kalıtım zincirinde BaseEntity<>’yi arıyoruz
             var current = entityType;
             while (current != null && current != typeof(object))
             {
                 if (current.IsGenericType && current.GetGenericTypeDefinition() == typeof(BaseEntity<>))
                     return current.GetGenericArguments()[0];
-
                 current = current.BaseType;
             }
             throw new InvalidOperationException($"Could not find BaseEntity<TId> in inheritance chain of {entityType.Name}");
         }
 
         /// <summary>
-        /// LinqControllerType değerine göre, ilgili base generic controller tipini döndürür.
+        /// Returns the corresponding base generic controller type based on the LinqControllerType enumeration.
         /// </summary>
         private Type GetBaseControllerType(LinqControllerType controllerTypeEnum)
         {
@@ -227,15 +243,12 @@ namespace LinqApi.Dynamic.Controller
                 LinqControllerType.LinqVmController => typeof(LinqVmController<,,,>),
                 LinqControllerType.LinqLogController => null,
                 LinqControllerType.LinqLocalizationController => null,
-                _ => throw new NotSupportedException(
-                    $"Unsupported LinqControllerType: {controllerTypeEnum}")
+                _ => throw new NotSupportedException($"Unsupported LinqControllerType: {controllerTypeEnum}")
             };
         }
 
-
-
         /// <summary>
-        /// Base generic controller tipini, entity ve id tiplerine göre kapatmaya çalışır.
+        /// Attempts to create a closed generic controller type based on the provided template.
         /// </summary>
         private static bool TryMakeGenericController(Type controllerTemplate, Type entityType, Type idType, out Type constructedType)
         {
@@ -250,11 +263,8 @@ namespace LinqApi.Dynamic.Controller
                 }
                 else if (genericArgsCount == 4)
                 {
-                    // Örnek: LinqVmController<TEntity, TId, TVm, TMapper> gibi durumlar varsa...
-                    // constructedType = controllerTemplate.MakeGenericType(entityType, idType, ...);
-                    // burayı ihtiyaca göre uyarlamak gerekir.
+                    // Example: LinqVmController<TEntity, TId, TVm, TMapper> – adjust accordingly if needed.
                 }
-
                 return false;
             }
             catch
@@ -263,29 +273,21 @@ namespace LinqApi.Dynamic.Controller
             }
         }
 
-
         private static bool IsConcreteSubclassOfGenericBaseEntity(Type t)
         {
-            // Önce abstract mı diye bakıyoruz
             if (t.IsAbstract) return false;
-
-            // Kalıtım zinciri boyunca BaseEntity<TId> arıyoruz
             while (t != null && t != typeof(object))
             {
                 if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(BaseEntity<>))
                     return true;
-
                 t = t.BaseType;
             }
             return false;
         }
-
-
     }
 
     /// <summary>
-    /// Legacy or alternative feature provider that works off a ConcurrentDictionary<string, Type>.
-    /// You might separate this into another file or rename it if needed.
+    /// Legacy or alternative feature provider using a ConcurrentDictionary.
     /// </summary>
     public class DynamicLinqApiControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
     {
@@ -302,7 +304,7 @@ namespace LinqApi.Dynamic.Controller
         {
             foreach (var kvp in _entities)
             {
-                var fullKey = kvp.Key; // "schema.table" veya sadece "table"
+                var fullKey = kvp.Key; // "schema.table" or just "table"
                 var entityType = kvp.Value;
                 var idType = entityType.BaseType?.GetGenericArguments()[0] ?? typeof(long);
 
@@ -320,39 +322,34 @@ namespace LinqApi.Dynamic.Controller
                 var customControllerType = DefineDynamicControllerType(baseControllerType, controllerName, AreaName);
                 feature.Controllers.Add(customControllerType.GetTypeInfo());
 
-
                 LinqApiRegistry.Register(new DynamicApiInfo
                 {
                     EntityName = controllerName.Replace("Controller", string.Empty),
-                    ControllerName = controllerName.Replace("Controller",string.Empty),
+                    ControllerName = controllerName.Replace("Controller", string.Empty),
                     RoutePrefix = AreaName
                 });
             }
-              
         }
+
         private Type DefineDynamicControllerType(
             Type baseControllerType,
             string controllerName,
             string areaName)
         {
-            // 1) Yeni tip oluştur
             var typeBuilder = DynamicAssemblyHolder.ControllerModuleBuilder.DefineType(
                 controllerName,
                 TypeAttributes.Public | TypeAttributes.Class,
                 baseControllerType
             );
 
-            // 2) "CountryController" → "Country"
             var baseName = controllerName.EndsWith("Controller")
                 ? controllerName.Substring(0, controllerName.Length - "Controller".Length)
                 : controllerName;
 
-            // 3) Route string'i inşa et: "api/DynamicArea/Country" veya "api/Country"
             var routeValue = string.IsNullOrEmpty(areaName)
                 ? $"api/{baseName}"
                 : $"api/{areaName}/{baseName}";
 
-            // 4) [Route("api/...")] attribute
             var routeAttrCtor = typeof(RouteAttribute).GetConstructor(new[] { typeof(string) });
             if (routeAttrCtor != null)
             {
@@ -360,7 +357,6 @@ namespace LinqApi.Dynamic.Controller
                 typeBuilder.SetCustomAttribute(routeAttrBuilder);
             }
 
-            // 5) [ApiController] attribute
             var apiControllerAttrCtor = typeof(ApiControllerAttribute).GetConstructor(Type.EmptyTypes);
             if (apiControllerAttrCtor != null)
             {
@@ -368,7 +364,6 @@ namespace LinqApi.Dynamic.Controller
                 typeBuilder.SetCustomAttribute(apiControllerAttrBuilder);
             }
 
-            // 6) Base constructor kopyala
             var baseCtor = baseControllerType.GetConstructors().FirstOrDefault();
             if (baseCtor != null)
             {
@@ -388,9 +383,7 @@ namespace LinqApi.Dynamic.Controller
                 il.Emit(OpCodes.Ret);
             }
 
-            // 7) Tipi oluştur ve dön
             return typeBuilder.CreateType();
         }
-
     }
 }

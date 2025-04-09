@@ -14,6 +14,9 @@ namespace Posonl.Domain
         // (Opsiyonel) İlgili POS şirketleri – EF Core many-to-many join tablosunu otomatik oluşturur.
         public virtual ICollection<PosCompany>? PosCompanies { get; set; }
         public virtual ICollection<PosService>? PosServices { get; set; }
+
+        public virtual CountryGroup? CountryGroup { get; set; }
+        public long? CountryGroupId { get; set; }
     }
 
     public class CountryGroup : BaseEntity
@@ -23,7 +26,9 @@ namespace Posonl.Domain
         public string Name { get; set; }
 
         // Navigation
-        public virtual ICollection<PosService> PosServices { get; set; }
+        public virtual ICollection<PosService>? PosServices { get; set; }
+
+        public virtual ICollection<Country>? Countries { get; set; }
 
     }
 

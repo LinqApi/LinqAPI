@@ -40,11 +40,6 @@ namespace Posonl.Infrastructure
                     {
                         entity.Slug = SlugHelper.SlugifyWithTitle(entity.Title);
                     }
-
-                    if (entity.PublishedDate == default)
-                    {
-                        entity.PublishedDate = DateTime.UtcNow;
-                    }
                 }
             }
 
@@ -62,7 +57,7 @@ namespace Posonl.Infrastructure
             //modelBuilder.Entity<RatingCategory>().ToTable("RatingCategory", schema: _schema);
             //modelBuilder.Entity<PosCompanyType>().ToTable("PosCompanyType", schema: _schema);
             //modelBuilder.Entity<PosCompanyDescription>().ToTable("PosCompanyDescription", schema: _schema);
-            modelBuilder.Entity<PosCompanyRating>()
+            modelBuilder.Entity<PosCompanyRating>().ToTable("PosCompanyRating", schema: _schema)
      .HasOne(r => r.RatingCategory) // PosCompanyRating içerisindeki RatingCategory navigasyon property’si
      .WithMany() // RatingCategory’nin PosCompanyRatings koleksiyonu varsa
      .HasForeignKey(r => r.RatingCategoryId)

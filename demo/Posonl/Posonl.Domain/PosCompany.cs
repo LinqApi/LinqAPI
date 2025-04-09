@@ -26,16 +26,16 @@ namespace Posonl.Domain
         // İlişkiler
 
         // Bir POS şirketi birden fazla ülkede aktif olabilir.
-        public virtual ICollection<Country> SupportedCountries { get; set; }
+        public virtual ICollection<Country>? SupportedCountries { get; set; }
 
         // Birden fazla hizmet sunabilir.
-        public virtual ICollection<PosService> PosServices { get; set; }
+        public virtual ICollection<PosService>? PosServices { get; set; }
 
         // Ülkeye özel komisyon oranları
-        public virtual ICollection<PosCommissionRate> CommissionRates { get; set; }
+        public virtual ICollection<PosCommissionRate>? CommissionRates { get; set; }
 
         // Farklı puanlama kategorilerinde aldığı puanlar
-        public virtual ICollection<PosCompanyRating> Ratings { get; set; }
+        public virtual ICollection<PosCompanyRating>? Ratings { get; set; }
         public int FoundedYear { get; set; }
         public string StockTicker { get; set; }
 

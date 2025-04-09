@@ -3,20 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Posonl.Infrastructure;
 
 #nullable disable
 
-namespace Posonl.Infrastructure.Migrations
+namespace Posonl.Infrastructure.Migrations.LinqLog
 {
     [DbContext(typeof(LinqLogContext))]
-    [Migration("20250328095252_inital_1")]
-    partial class inital_1
+    partial class LinqLogContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -63,7 +60,6 @@ namespace Posonl.Infrastructure.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<string>("Exception")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsException")
@@ -86,7 +82,6 @@ namespace Posonl.Infrastructure.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("ParentCorrelationId")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("varchar(50)");
 
@@ -95,11 +90,9 @@ namespace Posonl.Infrastructure.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("RequestBody")
-                        .IsRequired()
                         .HasColumnType("nvarchar(MAX)");
 
                     b.Property<string>("ResponseBody")
-                        .IsRequired()
                         .HasColumnType("nvarchar(MAX)");
 
                     b.Property<string>("Url")
