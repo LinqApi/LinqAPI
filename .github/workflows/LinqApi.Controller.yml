@@ -1,4 +1,4 @@
-name: Build, Pack, and Publish NuGet Package
+name: Build, Pack, and Publish Controller Package
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     paths:
       - '**/*'  # Tüm dosya değişiklikleri workflow'u tetikler
 env:
-  PROJECT_PATH: 'src/Logging/LinqApi.Logging/LinqApi.Logging.csproj'
+  PROJECT_PATH: 'src/Controller/LinqApi.Controller/LinqApi.Controller.csproj'
   PACKAGE_OUTPUT_DIRECTORY: ${{ github.workspace }}\output
   NUGET_SOURCE_URL: 'https://api.nuget.org/v3/index.json'
 
@@ -27,15 +27,15 @@ jobs:
       - name: Get version from .csproj
         id: version
         run: |
-            VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" src/Logging/LinqApi.Logging/LinqApi.Logging.csproj)
+            VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" src/Controller/LinqApi.Controller/LinqApi.Controller.csproj)
             echo "VERSION=$VERSION" >> $GITHUB_ENV
         
 
       - name: Restore Dependencies
-        run: dotnet restore src/Logging/LinqApi.Logging/LinqApi.Logging.csproj
+        run: dotnet restore src/Controller/LinqApi.Controller/LinqApi.Controller.csproj
 
       - name: Build LinqApi Project
-        run: dotnet build src/Logging/LinqApi.Logging/LinqApi.Logging.csproj --configuration Release --no-restore
+        run: dotnet build src/Controller/LinqApi.Controller/LinqApi.Controller.csproj --configuration Release --no-restore
 
 
 
@@ -44,4 +44,4 @@ jobs:
 
 
       - name: Publish NuGet Package
-        run: dotnet nuget push /home/runner/work/LinqAPI/LinqAPIoutput/LinqApi.Logging.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_AUTH_TOKEN }} -s ${{ env.NUGET_SOURCE_URL }} --skip-duplicate
+        run: dotnet nuget push /home/runner/work/LinqAPI/LinqAPIoutput/LinqApi.Controller.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_AUTH_TOKEN }} -s ${{ env.NUGET_SOURCE_URL }} --skip-duplicate
