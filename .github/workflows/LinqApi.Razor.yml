@@ -1,0 +1,47 @@
+name: Build, Pack, and Publish Razor Package
+
+on:
+  push:
+    branches:
+      - '*'  # Tüm dallarda yapılan push'lar tetikler
+    paths:
+      - '**/*'  # Tüm dosya değişiklikleri workflow'u tetikler
+env:
+  PROJECT_PATH: 'src/Razor/LinqApi.Razor/LinqApi.Razor.csproj'
+  PACKAGE_OUTPUT_DIRECTORY: ${{ github.workspace }}\output
+  NUGET_SOURCE_URL: 'https://api.nuget.org/v3/index.json'
+
+jobs:
+  build-pack-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Get version from .csproj
+        id: version
+        run: |
+            VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" src/Razor/LinqApi.Razor/LinqApi.Razor.csproj)
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
+        
+
+      - name: Restore Dependencies
+        run: dotnet restore src/Razor/LinqApi.Razor/LinqApi.Razor.csproj
+
+      - name: Build LinqApi Project
+        run: dotnet build src/Razor/LinqApi.Razor/LinqApi.Razor.csproj --configuration Release --no-restore
+
+
+
+      - name: Pack NuGet Package
+        run: dotnet pack ${{ env.PROJECT_PATH }} --no-restore --no-build --configuration Release --include-symbols -p:PackageVersion=${{ env.VERSION }} --output ${{ env.PACKAGE_OUTPUT_DIRECTORY }}
+
+
+      - name: Publish NuGet Package
+        run: dotnet nuget push /home/runner/work/LinqAPI/LinqAPIoutput/LinqApi.Razor.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_AUTH_TOKEN }} -s ${{ env.NUGET_SOURCE_URL }} --skip-duplicate
