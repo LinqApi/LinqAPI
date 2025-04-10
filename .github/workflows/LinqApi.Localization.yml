@@ -1,4 +1,4 @@
-name: Build, Pack, and Publish NuGet Package
+name: Build, Pack, and Publish Localization Package
 
 on:
   push:
