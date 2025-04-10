@@ -77,30 +77,4 @@ namespace Posonl.Web.Controllers
         }
 
     }
-
-    [ApiController]
-    [Route("[controller]")]
-    public class InController : ControllerBase
-    {
-        private readonly DbContext _db;
-        public InController(DbContext db) => _db = db;
-
-        [HttpGet("{type}/{slug}")]
-        public IActionResult Detail(string type, string slug)
-        {
-            BaseViewEntity entity = type.ToLowerInvariant() switch
-            {
-                "poscompany" => _db.Set<PosCompany>().FirstOrDefault(x => x.Slug == slug),
-                "posservice" => _db.Set<PosService>().FirstOrDefault(x => x.Slug == slug),
-                "news" => _db.Set<News>().FirstOrDefault(x => x.Slug == slug),
-                _ => null
-            };
-
-            if (entity == null) return NotFound();
-            return Ok(entity);
-        }
-    }
-
-
-
 }

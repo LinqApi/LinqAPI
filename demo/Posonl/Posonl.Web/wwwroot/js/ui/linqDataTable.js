@@ -528,8 +528,8 @@ export class LinqDataTable {
 
         inputs.forEach(input => {
             const field = input.name;
-            // Find the property metadata for this field
             const propMeta = this.entityProperties.find(p => p.name.toLowerCase() === field.toLowerCase());
+
             let value;
             if (input.type === "checkbox") {
                 value = input.checked;
@@ -540,12 +540,24 @@ export class LinqDataTable {
             } else {
                 value = input.value;
             }
-            // Skip complex fields if the value is empty.
+
+            // 1. Boş olan complex/complexList alanları atla
             if (propMeta && (propMeta.kind === "complex" || propMeta.kind === "complexList") && (value === "" || value === null)) {
                 return;
             }
+
+            // 2. Diğer boş değerleri de filtrele (örneğin boş string vs)
+            if (
+                value === null ||
+                value === undefined ||
+                (typeof value === "string" && value.trim() === "")
+            ) {
+                return;
+            }
+
             updatedData[field] = value;
         });
+
 
         const idField = Object.keys(item).find(k => k.toLowerCase() === "id") || "id";
         const idValue = item[idField];
@@ -714,18 +726,30 @@ export class LinqDataTable {
         FormManager.createForm(formContainer, this.entityProperties, {}, {
             mode: "Create",
             onSave: (newRecord) => {
+                // Boş değerleri temizle
+                const cleanedRecord = {};
+                for (const key in newRecord) {
+                    const value = newRecord[key];
+                    if (
+                        value !== null &&
+                        value !== undefined &&
+                        (typeof value !== "string" || value.trim() !== "")
+                    ) {
+                        cleanedRecord[key] = value;
+                    }
+                }
+
                 const url = `${this.apiPrefix.replace(/\/+$/, "")}/${this.controller}`;
                 fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(newRecord)
+                    body: JSON.stringify(cleanedRecord) // Temizlenmiş obje gönderiliyor
                 })
                     .then(response => {
                         if (!response.ok) throw new Error(`Kayıt oluşturulamadı: ${response.status}`);
                         return response.json();
                     })
-                    .then(() => {
-                        // Kayıt oluşturulduktan sonra verileri yeniden çekiyoruz.
+                    .then(createdRecord => {
                         this._fetchData();
                     })
                     .catch(error => console.error("Yeni kayıt oluşturma hatası:", error));
@@ -744,25 +768,40 @@ export class LinqDataTable {
         FormManager.createForm(this.containerElm, simpleProperties, item, {
             mode: "Update",
             onSave: (updatedItem) => {
-                const idField = Object.keys(item).find(() => "id") || "id";
+                // Boş alanları temizle
+                const cleanedItem = {};
+                for (const key in updatedItem) {
+                    const value = updatedItem[key];
+                    if (
+                        value !== null &&
+                        value !== undefined &&
+                        (typeof value !== "string" || value.trim() !== "")
+                    ) {
+                        cleanedItem[key] = value;
+                    }
+                }
+
+                const idField = Object.keys(item).find(k => k.toLowerCase() === "id") || "id";
                 const idValue = item[idField];
                 const url = `${this.apiPrefix.replace(/\/+$/, "")}/${this.controller}/${idValue}`;
+
                 fetch(url, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(updatedItem)
+                    body: JSON.stringify(cleanedItem)
                 })
                     .then(response => {
-                        if (!response.ok) throw new Error(`Update Error: ${response.status}`);
+                        if (!response.ok) throw new Error(`Güncelleme hatası: ${response.status}`);
                         return response.json();
                     })
                     .then(updatedRecord => {
-                        // Güncellenen kaydı verilerimize yansıtıp, tabloyu yenileyelim.
                         this.data[index] = updatedRecord;
                         this._fetchData();
                     })
-                    .catch(error => console.error("Update entity error:", error));
+                    .catch(error => console.error("Kayıt güncelleme hatası:", error));
             }
+
+
         });
     }
 }

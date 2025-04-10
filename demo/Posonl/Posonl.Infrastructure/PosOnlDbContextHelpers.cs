@@ -111,16 +111,16 @@ namespace Posonl.Infrastructure
         {
             var categories = new List<PosServiceCategory>
             {
-                new PosServiceCategory {Title = "PaymentMethods",Slug = "PaymentMethods",MetaDescription = "",CultureId = 1, Id = 15001, Name = "PaymentMethods", Description = "PaymentMethodsDescription" },
-                new PosServiceCategory {Title = "HardwareSolutions",Slug = "HardwareSolutions",MetaDescription = "",CultureId = 1, Id = 15002, Name = "HardwareSolutions", Description = "HardwareSolutionsDescription" },
-                new PosServiceCategory {Title = "BillingAndAccounting",Slug = "BillingAndAccounting",MetaDescription = "",CultureId = 1, Id = 15003, Name = "BillingAndAccounting", Description = "BillingAndAccountingDescription" },
-                new PosServiceCategory {Title = "EcommerceAndOnlinePayments",Slug = "EcommerceAndOnlinePayments",MetaDescription = "",CultureId = 1, Id = 15004, Name = "EcommerceAndOnlinePayments", Description = "EcommerceAndOnlinePaymentsDescription" },
-                new PosServiceCategory {Title = "SecurityAndFraudPrevention",Slug = "SecurityAndFraudPrevention",MetaDescription = "",CultureId = 1, Id = 15005, Name = "SecurityAndFraudPrevention", Description = "SecurityAndFraudPreventionDescription" },
-                new PosServiceCategory {Title = "CustomerAndLoyaltyPrograms",Slug = "CustomerAndLoyaltyPrograms",MetaDescription = "",CultureId = 1, Id = 15006, Name = "CustomerAndLoyaltyPrograms", Description = "CustomerAndLoyaltyProgramsDescription" },
-                new PosServiceCategory {Title = "MultiCurrencyAndCrossBorderPayments",Slug = "MultiCurrencyAndCrossBorderPayments",MetaDescription = "",CultureId = 1, Id = 15007, Name = "MultiCurrencyAndCrossBorderPayments", Description = "MultiCurrencyAndCrossBorderPaymentsDescription" },
-                new PosServiceCategory {Title = "ReportingAndAnalytics",Slug = "ReportingAndAnalytics",MetaDescription = "",CultureId = 1, Id = 15008, Name = "ReportingAndAnalytics", Description = "ReportingAndAnalyticsDescription" },
-                new PosServiceCategory {Title = "SubscriptionAndRecurringPayments",Slug = "SubscriptionAndRecurringPayments",MetaDescription = "",CultureId = 1, Id = 15009, Name = "SubscriptionAndRecurringPayments", Description = "SubscriptionAndRecurringPaymentsDescription" },
-                new PosServiceCategory {Title = "RegionalSpecificPOSServices",Slug = "RegionalSpecificPOSServices",MetaDescription = "",CultureId = 1, Id = 15010, Name = "RegionalSpecificPOSServices", Description = "RegionalSpecificPOSServicesDescription" }
+                new PosServiceCategory {Id = 15001, Name = "PaymentMethods", Description = "PaymentMethodsDescription" },
+                new PosServiceCategory {Id = 15002, Name = "HardwareSolutions", Description = "HardwareSolutionsDescription" },
+                new PosServiceCategory { Id = 15003, Name = "BillingAndAccounting", Description = "BillingAndAccountingDescription" },
+                new PosServiceCategory {Id = 15004, Name = "EcommerceAndOnlinePayments", Description = "EcommerceAndOnlinePaymentsDescription" },
+                new PosServiceCategory { Id = 15005, Name = "SecurityAndFraudPrevention", Description = "SecurityAndFraudPreventionDescription" },
+                new PosServiceCategory { Id = 15006, Name = "CustomerAndLoyaltyPrograms", Description = "CustomerAndLoyaltyProgramsDescription" },
+                new PosServiceCategory { Id = 15007, Name = "MultiCurrencyAndCrossBorderPayments", Description = "MultiCurrencyAndCrossBorderPaymentsDescription" },
+                new PosServiceCategory { Id = 15008, Name = "ReportingAndAnalytics", Description = "ReportingAndAnalyticsDescription" },
+                new PosServiceCategory { Id = 15009, Name = "SubscriptionAndRecurringPayments", Description = "SubscriptionAndRecurringPaymentsDescription" },
+                new PosServiceCategory {Id = 15010, Name = "RegionalSpecificPOSServices", Description = "RegionalSpecificPOSServicesDescription"}
             };
             return categories;
         }
@@ -1434,15 +1434,7 @@ namespace Posonl.Infrastructure
     }
 };
 
-            foreach (var item in posCompanies)
-            {
-                item.Slug = item.Name.ToString();
-                item.MetaDescription = item.Description.ToString();
-                item.Title = item.Id.ToString();
-                item.CultureId = 1;
-                item.Title = item.Name;
-                item.Slug = item.Name;
-            }
+
             return posCompanies;
         }
 
@@ -1465,27 +1457,7 @@ namespace Posonl.Infrastructure
             var services = new List<PosService>();
             var serviceKeyToIdMap = new Dictionary<string, long>();
             long nextId = 1001;
-            foreach (var kvp in serviceData)
-            {
-                string key = kvp.Key;
-                var (name, description, category, isRegional) = kvp.Value;
-                services.Add(new PosService
-                {
-                    Id = nextId,
-                    Name = name,
-                    Slug = name,
-                    Title = name,
-                    MetaDescription = name,
-                    Description = description,
-                    // Kategori, resx verilerindeki key ile eşleşmeli; burada boşluk ve büyük/küçük harf farkı olmaması için:
-                    PosServiceCategoryId = getCatId(category.Replace(" ", "")),
-                    IsGlobal = true,
-                    IsRegional = isRegional,
-                    CultureId = 1
-                });
-                serviceKeyToIdMap[key] = nextId;
-                nextId++;
-            }
+
             builder.Entity<PosService>().HasData(services);
             return serviceKeyToIdMap;
         }

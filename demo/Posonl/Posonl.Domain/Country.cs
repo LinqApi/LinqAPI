@@ -3,18 +3,14 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Posonl.Domain
 {
-    [DisplayProperty("name","code")]
+    [DisplayProperty("name", "code")]
     public class Country : BaseEntity
     {
         public string Name { get; set; }          // Örn: Türkiye, Almanya, İngiltere
         public string Code { get; set; }          // İki harfli kod: "tr", "de", "uk"
         public string Currency { get; set; }      // Para birimi: TRY, EUR, GBP
         public string LanguageCode { get; set; }  // "tr-TR", "de-DE", "en-UK"
-
-        // (Opsiyonel) İlgili POS şirketleri – EF Core many-to-many join tablosunu otomatik oluşturur.
-        public virtual ICollection<PosCompany>? PosCompanies { get; set; }
         public virtual ICollection<PosService>? PosServices { get; set; }
-
         public virtual CountryGroup? CountryGroup { get; set; }
         public long? CountryGroupId { get; set; }
     }
@@ -27,6 +23,8 @@ namespace Posonl.Domain
 
         // Navigation
         public virtual ICollection<PosService>? PosServices { get; set; }
+
+        public virtual ICollection<PosCompany>? PosCompanies { get; set; }
 
         public virtual ICollection<Country>? Countries { get; set; }
 
@@ -54,8 +52,5 @@ namespace Posonl.Domain
         /// Verilen ülkeler listesini direkt döndürür. (Bu metod, okunabilirliği artırmak için yazılmıştır.)
         /// </summary>
         public static IEnumerable<Country> AllCountries(this IEnumerable<Country> countries) => countries;
-
-
     }
-
 }

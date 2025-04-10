@@ -11,26 +11,31 @@ namespace Posonl.Infrastructure
     {
         private readonly string _schema;
 
-        public PosOnlDbContext(DbContextOptions<LinqLocalizationDbContext> options, string schema) : base(options, schema)
+        public PosOnlDbContext(DbContextOptions<LinqLocalizationDbContext> options, string schema)
+            : base(options, schema)
         {
             _schema = schema ?? "posonl";
         }
 
-        public DbSet<News> News => Set<News>();
-
+        // Ana entity setleri
         public DbSet<Country> Countries { get; set; }
         public DbSet<CountryGroup> CountryGroups { get; set; }
         public DbSet<PosServiceCategory> PosServiceCategories { get; set; }
         public DbSet<PosService> PosServices { get; set; }
         public DbSet<RatingCategory> RatingCategories { get; set; }
         public DbSet<PosCompany> PosCompanies { get; set; }
-        public DbSet<PosCompanyType> PosCompanyTypes { get; set; }
-        public DbSet<PosCompanyDescription> PosCompanyDescriptions { get; set; }
         public DbSet<PosCompanyRating> PosCompanyRatings { get; set; }
         public DbSet<PosCommissionRate> PosCommissionRates { get; set; }
+
+        // (Opsiyonel) Localization entity setleri — eklenecekse:
+        // public DbSet<PosServiceLocalization> PosServiceLocalizations { get; set; }
+        // public DbSet<PosCompanyLocalization> PosCompanyLocalizations { get; set; }
+        // … Diğer localizable entity’lerin localization setleri
+
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            foreach (var entry in ChangeTracker.Entries<BaseViewEntity>())
+            // Artık SEO/localization alanları LocalizationBase üzerinden yönetildi.
+            foreach (var entry in ChangeTracker.Entries<LinqLocalizationBase>())
             {
                 if (entry.State == EntityState.Added)
                 {
@@ -46,32 +51,24 @@ namespace Posonl.Infrastructure
             return await base.SaveChangesAsync(cancellationToken);
         }
 
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            // Şema adını kullanarak entity konfigürasyonlarını yap
+
+            // Şema adını kullanarak tablo konfigürasyonları:
             modelBuilder.Entity<Country>().ToTable("Country", schema: _schema);
             modelBuilder.Entity<CountryGroup>().ToTable("CountryGroup", schema: _schema);
-            //modelBuilder.Entity<PosServiceCategory>().ToTable("PosServiceCategory", schema: _schema);
-            //modelBuilder.Entity<RatingCategory>().ToTable("RatingCategory", schema: _schema);
-            //modelBuilder.Entity<PosCompanyType>().ToTable("PosCompanyType", schema: _schema);
-            //modelBuilder.Entity<PosCompanyDescription>().ToTable("PosCompanyDescription", schema: _schema);
+            modelBuilder.Entity<PosServiceCategory>().ToTable("PosServiceCategory", schema: _schema);
+            modelBuilder.Entity<RatingCategory>().ToTable("RatingCategory", schema: _schema);
+
             modelBuilder.Entity<PosCompanyRating>().ToTable("PosCompanyRating", schema: _schema)
-     .HasOne(r => r.RatingCategory) // PosCompanyRating içerisindeki RatingCategory navigasyon property’si
-     .WithMany() // RatingCategory’nin PosCompanyRatings koleksiyonu varsa
-     .HasForeignKey(r => r.RatingCategoryId)
-     .OnDelete(DeleteBehavior.NoAction); // Cascade delete devre dışı bırakılıyor
+                .HasOne(r => r.RatingCategory)
+                .WithMany()  // Eğer RatingCategory tarafında koleksiyon varsa, .WithMany(c => c.PosCompanyRatings) olarak düzenleyebilirsiniz.
+                .HasForeignKey(r => r.RatingCategoryId)
+                .OnDelete(DeleteBehavior.NoAction); // Cascade delete devre dışı bırakıldı.
             modelBuilder.Entity<PosCommissionRate>().ToTable("PosCommissionRate", schema: _schema);
 
-            // Map the inheritance hierarchy (BaseViewEntity and its derived types) to a single table.
-            //modelBuilder.Entity<BaseViewEntity>().ToTable("BaseViewEntity", schema: _schema);
-            //modelBuilder.Entity<News>().ToTable("BaseViewEntity", schema: _schema);
-            //modelBuilder.Entity<PosService>().ToTable("BaseViewEntity", schema: _schema);
-            //modelBuilder.Entity<PosCompany>().ToTable("BaseViewEntity", schema: _schema);
-
-            // Diğer entity konfigürasyonları...
-
+            // Normal entity konfigürasyonları:
             modelBuilder.Entity<Country>(entity =>
             {
                 entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
@@ -80,29 +77,16 @@ namespace Posonl.Infrastructure
                 entity.Property(e => e.LanguageCode).HasMaxLength(10).IsRequired();
             });
 
-            // Discriminator yapılandırması:
-            modelBuilder.Entity<BaseViewEntity>(b =>
-            {
-                b.HasDiscriminator<string>("ViewType")
-                    .HasValue<News>("news")
-                    .HasValue<PosCompany>("poscompany")
-                    .HasValue<PosService>("posservice")
-                    .HasValue<PosCompanyType>("poscompanytype")  // Eğer varsa diğer türevler için
-                .HasValue<RatingCategory>("ratingcategory")  // Eğer varsa diğer türevler için
-                .HasValue<PosCompanyDescription>("posCompanyDescription");
-                b.Property("ViewType").HasMaxLength(50);
-                b.HasIndex("Slug").IsUnique();
-            });
+            // Eski discriminator (BaseViewEntity) yapılandırması tamamen kaldırıldı.
+            // Önceki discriminator bloklarını kaldırıyoruz, çünkü artık her entity kendi tablosunda yer alıyor
+            // ve localization alanları ayrık tablolar üzerinden yönetiliyor.
 
-            modelBuilder.Entity<News>().HasIndex(n => n.Slug).IsUnique();
-            modelBuilder.Entity<PosService>().HasIndex(p => p.Slug).IsUnique();
-            modelBuilder.Entity<PosCompany>().HasIndex(p => p.Slug).IsUnique();
+            // Eğer ana entity’lerin kendi ana slug alanlarına ihtiyaç duyuluyorsa, bunları ilgili localization entity’lerinde yönetebilirsiniz.
 
+            // Bazı alanlar isteğe bağlı olsun:
             modelBuilder.Entity<PosCompany>().Property(e => e.StockTicker).IsRequired(false);
-            modelBuilder.Entity<PosCompany>().Property(e => e.MetaKeywords).IsRequired(false);
-            modelBuilder.Entity<News>().Property(e => e.MetaKeywords).IsRequired(false);
-            modelBuilder.Entity<PosService>().Property(e => e.MetaKeywords).IsRequired(false);
 
+            // PosService yapılandırması:
             modelBuilder.Entity<PosService>(entity =>
             {
                 entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
@@ -112,6 +96,7 @@ namespace Posonl.Infrastructure
                     .HasForeignKey(s => s.PosServiceCategoryId).IsRequired(false);
             });
 
+            // CountryGroup yapılandırması:
             modelBuilder.Entity<CountryGroup>(entity =>
             {
                 entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
@@ -142,4 +127,5 @@ namespace Posonl.Infrastructure
             modelBuilder.Entity<PosCompany>().HasData(companies);
         }
     }
+
 }

@@ -25,6 +25,7 @@ export class LinqDataTable {
         stateManager = null,
         queryBuilderContainer = null,
         autoCreateQueryBuilder = true,
+        customActions = [],
         select2Columns = false // New config: enable column selection
     }) {
         // Find and assign the main container element
@@ -40,6 +41,7 @@ export class LinqDataTable {
         this.apiPrefix = apiPrefix;
         // Use provided StateManager or create a new one
         this.stateManager = stateManager || new StateManager();
+        this.customActions = customActions;
         // Component states
         this.data = [];          // Data for current page
         this.totalCount = 0;     // Total record count (for pagination)
@@ -133,7 +135,9 @@ export class LinqDataTable {
     _createColumnSelector() {
         // Filter out displayproperty items.
         const normalProps = this.entityProperties.filter(p =>
-            p.type.toLowerCase() !== "displayproperty"
+            p.type.toLowerCase() !== "displayproperty" &&
+            p.kind.toLowerCase() !== "complex" &&
+            p.kind.toLowerCase() !== "complexlist"
         );
         const localData = normalProps.map(p => ({ id: p.name, name: p.name }));
 
@@ -268,32 +272,7 @@ export class LinqDataTable {
             return;
         }
 
-        // Determine visible properties based on the query:
-        let visibleProperties = [];
-        if ((this.currentQuery.select && this.currentQuery.select.trim() !== "") ||
-            (this.currentQuery.groupBy && this.currentQuery.groupBy.trim() !== "")) {
-            // Derive columns dynamically from the first returned data item.
-            const dataKeys = Object.keys(this.data[0]);
-            visibleProperties = dataKeys.map(key => ({ name: key, kind: "simple" }));
-        } else {
-            // Use the fetched entityProperties.
-            // Filter out items with type "displayproperty" (they are not for grid columns).
-            visibleProperties = (this.entityProperties || [])
-                .filter(p => p.type.toLowerCase() !== "displayproperty");
-
-            // If using select2Columns, further filter based on selectedColumns.
-            if (this.select2Columns && this.selectedColumns && this.selectedColumns.length > 0) {
-                visibleProperties = visibleProperties.filter(p => this.selectedColumns.includes(p.name));
-            }
-        }
-
-        // Ensure 'id' always comes first (if exists).
-        visibleProperties.sort((a, b) => {
-            if (a.name.toLowerCase() === "id") return -1;
-            if (b.name.toLowerCase() === "id") return 1;
-            return 0;
-        });
-
+        const visibleProperties = this.getVisibleProperties();
         if (visibleProperties.length === 0) {
             this.tableElm.innerHTML = "<tr><td colspan='100%'>No columns selected.</td></tr>";
             return;
@@ -346,17 +325,9 @@ export class LinqDataTable {
                     }
                 }
             }
-            // Actions cell.
+            // Create an action cell before calling renderActionCell.
             const actionCell = row.insertCell();
-            const editBtn = document.createElement("button");
-            editBtn.textContent = "Edit";
-            editBtn.className = "btn btn-sm btn-primary me-1";
-            editBtn.addEventListener("click", () => this._openInlineEdit(index));
-            actionCell.appendChild(editBtn);
-            const nestBtn = document.createElement("button");
-            nestBtn.textContent = "Nested";
-            nestBtn.className = "btn btn-sm btn-info";
-            actionCell.appendChild(nestBtn);
+            this.renderActionCell(actionCell, item, index);
         });
     }
 
@@ -504,35 +475,28 @@ export class LinqDataTable {
      * @private
      */
     _openInlineEdit(index) {
-        if (this.editingIndex !== null && this.editingIndex !== index) {
-            this._cancelInlineEdit(this.editingIndex);
-        }
-        this.editingIndex = index;
+        // Use the centralized visible properties
+        const visibleProperties = this.getVisibleProperties();
         const row = this.tableElm.querySelector(`tr[data-index='${index}']`);
         if (!row) return;
         const item = this.data[index];
         const cells = row.cells;
-        const fieldCount = cells.length - 1;
-        const fields = Object.keys(item);
-        for (let i = 0; i < fieldCount; i++) {
-            const fieldName = fields[i];
-            if (fieldName === "id") {
-                continue;
+        // Assume the number of editable fields corresponds to visibleProperties (minus the last action cell)
+        visibleProperties.forEach((prop, i) => {
+            if (prop.name.toLowerCase() === "id") {
+                return; // skip editing the id
             }
             const cell = cells[i];
-            const oldValue = item[fieldName] == null ? "" : item[fieldName];
+            const oldValue = item[prop.name] == null ? "" : item[prop.name];
             cell.innerHTML = "";
             let inputType = "text";
-            const origType = typeof item[fieldName];
-            if (origType === "number") inputType = "number";
-            if (origType === "boolean") inputType = "checkbox";
-            if (origType === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(oldValue)) {
-                inputType = "date";
-            }
+            if (typeof item[prop.name] === "number") inputType = "number";
+            else if (typeof item[prop.name] === "boolean") inputType = "checkbox";
+            else if (typeof item[prop.name] === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(oldValue)) inputType = "date";
             const input = document.createElement("input");
-            input.name = fieldName;
+            input.name = prop.name;
             input.type = inputType;
-            input.className = "form-control"; // Bootstrap input class
+            input.className = "form-control";
             if (inputType === "checkbox") {
                 input.checked = Boolean(oldValue);
             } else if (inputType === "date") {
@@ -541,20 +505,14 @@ export class LinqDataTable {
                 input.value = oldValue;
             }
             cell.appendChild(input);
-        }
+        });
+        // Then update the action cell as before.
         const actionCell = cells[cells.length - 1];
         actionCell.innerHTML = "";
-        const saveBtn = document.createElement("button");
-        saveBtn.textContent = "Kaydet";
-        saveBtn.className = "btn btn-sm btn-success me-1";
-        saveBtn.addEventListener("click", () => this._saveInlineEdit(index));
-        const cancelBtn = document.createElement("button");
-        cancelBtn.textContent = "İptal";
-        cancelBtn.className = "btn btn-sm btn-secondary";
-        cancelBtn.addEventListener("click", () => this._cancelInlineEdit(index));
-        actionCell.appendChild(saveBtn);
-        actionCell.appendChild(cancelBtn);
+        this.renderInlineActionCell(actionCell, item, index);
+        this.editingIndex = index;
     }
+
 
     /**
      * Inline düzenleme modundaki satırı kaydeder (sunucuya güncelleme isteği gönderir).
@@ -570,8 +528,8 @@ export class LinqDataTable {
 
         inputs.forEach(input => {
             const field = input.name;
-            // Find the property metadata for this field
             const propMeta = this.entityProperties.find(p => p.name.toLowerCase() === field.toLowerCase());
+
             let value;
             if (input.type === "checkbox") {
                 value = input.checked;
@@ -582,12 +540,24 @@ export class LinqDataTable {
             } else {
                 value = input.value;
             }
-            // Skip complex fields if the value is empty.
+
+            // 1. Boş olan complex/complexList alanları atla
             if (propMeta && (propMeta.kind === "complex" || propMeta.kind === "complexList") && (value === "" || value === null)) {
                 return;
             }
+
+            // 2. Diğer boş değerleri de filtrele (örneğin boş string vs)
+            if (
+                value === null ||
+                value === undefined ||
+                (typeof value === "string" && value.trim() === "")
+            ) {
+                return;
+            }
+
             updatedData[field] = value;
         });
+
 
         const idField = Object.keys(item).find(k => k.toLowerCase() === "id") || "id";
         const idValue = item[idField];
@@ -607,7 +577,7 @@ export class LinqDataTable {
                 // Update local data and re-render row.
                 this.data[index] = updatedRecord;
                 this.editingIndex = null;
-                this._renderUpdatedRow(index);
+                this._renderTable();
             })
             .catch(error => {
                 console.error("Record update error:", error);
@@ -624,43 +594,103 @@ export class LinqDataTable {
         if (this.editingIndex === index) {
             this.editingIndex = null;
         }
-        this._renderUpdatedRow(index);
+        this._renderTable();
     }
 
     /**
-     * Belirli bir satırı (veri indeksine göre) this.data içeriğine göre yeniden oluşturur.
-     * @param {number} index - Güncellenecek satırın indeksi.
-     * @private
-     */
-    _renderUpdatedRow(index) {
-        const row = this.tableElm.querySelector(`tr[data-index='${index}']`);
-        if (!row) return;
-        const item = this.data[index];
-        const cells = row.cells;
-        const fieldCount = cells.length - 1;
-        const fields = Object.keys(item);
-        // Veri hücrelerini güncelle
-        for (let i = 0; i < fieldCount; i++) {
-            const fieldName = fields[i];
-            const cell = cells[i];
-            cell.innerHTML = "";
-            cell.textContent = item[fieldName] == null ? "" : item[fieldName];
+ * Returns an array of property metadata objects for grid display.
+ */
+    getVisibleProperties() {
+        let visibleProperties = [];
+        if ((this.currentQuery.select && this.currentQuery.select.trim() !== "") ||
+            (this.currentQuery.groupBy && this.currentQuery.groupBy.trim() !== "")) {
+            // Derive properties dynamically from the first data item.
+            const dataKeys = Object.keys(this.data[0] || {});
+            visibleProperties = dataKeys.map(key => ({ name: key, kind: "simple" }));
+        } else {
+            // Use fetched entityProperties and filter out non-grid fields.
+            visibleProperties = (this.entityProperties || []).filter(p =>
+                p.type.toLowerCase() !== "displayproperty" &&
+                p.kind.toLowerCase() !== "complex" &&
+                p.kind.toLowerCase() !== "complexlist"
+            );
+            if (this.select2Columns && this.selectedColumns && this.selectedColumns.length > 0) {
+                visibleProperties = visibleProperties.filter(p =>
+                    this.selectedColumns.includes(p.name)
+                );
+            }
         }
-        // İşlem hücresini tekrar düzenle/detay butonları ile donat
-        const actionCell = cells[cells.length - 1];
-        actionCell.innerHTML = "";
-        const editBtn = document.createElement("button");
-        editBtn.textContent = "Düzenle";
-        editBtn.className = "linq-edit-btn";
-        editBtn.addEventListener("click", () => this._openInlineEdit(index));
-
-        actionCell.appendChild(editBtn);
-        const nestBtn = document.createElement("button");
-        nestBtn.textContent = "Alt";
-        nestBtn.className = "linq-nest-btn";
-        nestBtn.addEventListener("click", () => this.openNestedGrid(index));
-        actionCell.appendChild(nestBtn);
+        // Ensure 'id' always comes first if it exists.
+        visibleProperties.sort((a, b) => {
+            if (a.name.toLowerCase() === "id") return -1;
+            if (b.name.toLowerCase() === "id") return 1;
+            return 0;
+        });
+        return visibleProperties;
     }
+
+    /**
+* Renders the action cell for a given row.
+* This method creates the default buttons (e.g., "Edit", "Nested")
+* and appends any custom actions provided.
+*
+* @param {HTMLTableCellElement} actionCell - The cell element where the buttons will be appended.
+* @param {object} item - The data item of the row.
+* @param {number} index - The index of the row.
+*/
+    renderActionCell(actionCell, item, index) {
+        // Clear the cell
+        actionCell.innerHTML = "";
+
+        // Create the default "Edit" button
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "Edit";
+        editBtn.className = "btn btn-sm btn-primary me-1";
+        editBtn.addEventListener("click", () => this._openInlineEdit(index));
+        actionCell.appendChild(editBtn);
+
+
+        // Add any custom actions
+        this.customActions.forEach(action => {
+            const btn = document.createElement("button");
+            btn.textContent = action.label;
+            btn.className = action.className || "btn btn-sm btn-warning ms-1";
+            btn.addEventListener("click", () => {
+                // Call the custom callback with the data item and its index.
+                action.onClick(item, index);
+            });
+            actionCell.appendChild(btn);
+        });
+    }
+
+
+    /**
+ * Renders the inline action cell that shows Save and Cancel buttons
+ * for the inline edit mode.
+ *
+ * @param {HTMLTableCellElement} actionCell - The cell element for inline buttons.
+ * @param {object} item - The data item of the row.
+ * @param {number} index - The index of the row.
+ */
+    renderInlineActionCell(actionCell, item, index) {
+        // Clear the cell
+        actionCell.innerHTML = "";
+
+        // Create the Save (Kaydet) button
+        const saveBtn = document.createElement("button");
+        saveBtn.textContent = "Save";
+        saveBtn.className = "btn btn-sm btn-success me-1";
+        saveBtn.addEventListener("click", () => this._saveInlineEdit(index));
+        actionCell.appendChild(saveBtn);
+
+        // Create the Cancel (İptal) button
+        const cancelBtn = document.createElement("button");
+        cancelBtn.textContent = "Cancel";
+        cancelBtn.className = "btn btn-sm btn-secondary";
+        cancelBtn.addEventListener("click", () => this._cancelInlineEdit(index));
+        actionCell.appendChild(cancelBtn);
+    }
+
 
     // LinqDataTable içinde _openCreateForm fonksiyonunu aşağıdaki gibi güncelleyin:
     _openCreateForm() {
@@ -671,31 +701,55 @@ export class LinqDataTable {
                     this._showCreateForm();
                 })
                 .catch(error => {
-                    console.error("Özellik listesi alınamadı, form oluşturulamıyor.", error);
+                    console.error("Prop List could not got error, Can not create the form", error);
                 });
         } else {
             this._showCreateForm();
         }
     }
 
+
     _showCreateForm() {
-        // FormManager üzerinden formu oluşturuyoruz.
-        // Container olarak dataTable'ın ana container'ını kullanabilirsiniz.
-        FormManager.createForm(this.containerElm, this.entityProperties, {}, {
+        // Eğer form-container adında bir element yoksa oluştur.
+        let formContainer = this.containerElm.querySelector('.form-container');
+        if (!formContainer) {
+            formContainer = document.createElement('div');
+            formContainer.className = 'form-container mb-3'; // mb-3 ile alt boşluk ekleniyor
+            // Form container'ı, tablo (this.tableElm) elementinin hemen öncesine ekliyoruz
+            this.containerElm.insertBefore(formContainer, this.tableElm);
+        } else {
+            // Önceki içeriği temizle
+            formContainer.innerHTML = '';
+        }
+
+        // Formu, oluşturduğumuz formContainer içine render ediyoruz.
+        FormManager.createForm(formContainer, this.entityProperties, {}, {
             mode: "Create",
             onSave: (newRecord) => {
+                // Boş değerleri temizle
+                const cleanedRecord = {};
+                for (const key in newRecord) {
+                    const value = newRecord[key];
+                    if (
+                        value !== null &&
+                        value !== undefined &&
+                        (typeof value !== "string" || value.trim() !== "")
+                    ) {
+                        cleanedRecord[key] = value;
+                    }
+                }
+
                 const url = `${this.apiPrefix.replace(/\/+$/, "")}/${this.controller}`;
                 fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(newRecord)
+                    body: JSON.stringify(cleanedRecord) // Temizlenmiş obje gönderiliyor
                 })
                     .then(response => {
                         if (!response.ok) throw new Error(`Kayıt oluşturulamadı: ${response.status}`);
                         return response.json();
                     })
                     .then(createdRecord => {
-                        // Kayıt başarıyla oluşturuldu, veriyi yeniden çek.
                         this._fetchData();
                     })
                     .catch(error => console.error("Yeni kayıt oluşturma hatası:", error));
@@ -703,31 +757,51 @@ export class LinqDataTable {
         });
     }
 
+
     _openUpdateForm(index) {
+        const simpleProperties = this.entityProperties.filter(p =>
+            p.kind.toLowerCase() !== "complex" &&
+            p.kind.toLowerCase() !== "complexlist"
+        );
         const item = this.data[index];
         // FormManager ile update formunu açıyoruz; initialData olarak mevcut item'ı gönderiyoruz.
-        FormManager.createForm(this.containerElm, this.entityProperties, item, {
+        FormManager.createForm(this.containerElm, simpleProperties, item, {
             mode: "Update",
             onSave: (updatedItem) => {
-                const idField = Object.keys(item).find(k => "id") || "id";
+                // Boş alanları temizle
+                const cleanedItem = {};
+                for (const key in updatedItem) {
+                    const value = updatedItem[key];
+                    if (
+                        value !== null &&
+                        value !== undefined &&
+                        (typeof value !== "string" || value.trim() !== "")
+                    ) {
+                        cleanedItem[key] = value;
+                    }
+                }
+
+                const idField = Object.keys(item).find(k => k.toLowerCase() === "id") || "id";
                 const idValue = item[idField];
                 const url = `${this.apiPrefix.replace(/\/+$/, "")}/${this.controller}/${idValue}`;
+
                 fetch(url, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(updatedItem)
+                    body: JSON.stringify(cleanedItem)
                 })
                     .then(response => {
                         if (!response.ok) throw new Error(`Güncelleme hatası: ${response.status}`);
                         return response.json();
                     })
                     .then(updatedRecord => {
-                        // Güncellenen kaydı verilerimize yansıtıp, tabloyu yenileyelim.
                         this.data[index] = updatedRecord;
                         this._fetchData();
                     })
                     .catch(error => console.error("Kayıt güncelleme hatası:", error));
             }
+
+
         });
     }
 }

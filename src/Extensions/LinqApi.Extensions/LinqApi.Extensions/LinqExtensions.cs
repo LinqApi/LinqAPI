@@ -32,8 +32,6 @@ namespace LinqApi.Localization.Extensions
         public static IServiceCollection AddDefaultLinqLocalization(this IServiceCollection services, IConfiguration configuration)
         {
             // Register the repository for localization entities.
-            // Assumes you have an EF Core DbContext for localization, e.g. LinqLocalizationDbContext.
-            services.AddScoped<ILocalizationRepository, LocalizationRepository>();
 
             // Register a default in-memory localization provider.
             // This provider will first check the cache and then the repository.

@@ -11,19 +11,15 @@ namespace LinqApi.Localization
         /// </summary>
         public class Culture : BaseEntity<short>
         {
-            /// <summary>
-            /// Gets or sets the culture code (e.g. "en-US", "tr-TR").
-            /// </summary>
             [Required, MaxLength(10)]
             public string Code { get; set; }
 
-            /// <summary>
-            /// Gets or sets the display name of the culture (e.g. "English (United States)").
-            /// </summary>
             [Required, MaxLength(100)]
             public string DisplayName { get; set; }
 
-            public virtual ICollection<LinqLocalizationEntity> LocalizationEntities { get; set; }
+            // Eğer isterseniz, ilişkisel navigasyon ekleyebilirsiniz, fakat 
+            // localizable entity’lerimiz artık her biri kendi tablosunda olacak.
+            // public virtual ICollection<HomePageLocalization> HomePageLocalizations { get; set; }
         }
     }
 

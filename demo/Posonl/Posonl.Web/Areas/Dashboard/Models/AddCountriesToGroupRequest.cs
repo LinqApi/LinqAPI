@@ -8,14 +8,14 @@ namespace Posonl.Web.Areas.Dashboard.Models
 
 
     // Request model for adding supported countries.
-    public class AddSupportedCountriesRequest
+    public class AddSupportedCountryGroupsRequest
     {
         public long PosCompanyId { get; set; }
         public long[] CountryIds { get; set; }
     }
 
     // Request model for removing supported countries.
-    public class RemoveSupportedCountriesRequest
+    public class RemoveSupportedCountryGroupsRequest
     {
         public long PosCompanyId { get; set; }
         public long[] CountryIds { get; set; }
