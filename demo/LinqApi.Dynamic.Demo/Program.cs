@@ -6,9 +6,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-builder.Services.AddDynamicLinqApi(string.Empty, "Data Source=.\\SQLEXPRESS;Database=ppp4;Trusted_Connection=True;TrustServerCertificate=Yes");
+builder.Services.AddDynamicLinqApi(string.Empty, "Data Source=.\\SQLEXPRESS;Database=ppp8;Trusted_Connection=True;TrustServerCertificate=Yes");
 
 builder.Services.AddHttpContextAccessor();
+
+
 
 // MVC'yi view desteğiyle birlikte ekleyin
 builder.Services.AddControllersWithViews()
@@ -26,7 +28,7 @@ var app = builder.Build();
 
 app.UseRouting();
 
-
+app.UseStaticFiles();
 
 _ = app.MapControllerRoute(
                name: "default",

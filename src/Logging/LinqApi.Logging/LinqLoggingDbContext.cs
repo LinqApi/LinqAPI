@@ -35,7 +35,8 @@ namespace LinqApi.Logging
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             UpdateEpochValues();
-            return await base.SaveChangesAsync(cancellationToken);
+            //return await base.SaveChangesAsync(cancellationToken);
+            return await Task.FromResult(0);
         }
 
         private void UpdateEpochValues()
@@ -45,7 +46,7 @@ namespace LinqApi.Logging
                 if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
                 {
                     // Her kayıtta, CreatedAt'e göre epoch hesapla.
-                    entry.Entity.Epoch = _epochProvider.GetEpoch(entry.Entity.CreatedAt);
+                    //entry.Entity.Epoch = _epochProvider.GetEpoch(entry.Entity.CreatedAt);
                 }
             }
         }

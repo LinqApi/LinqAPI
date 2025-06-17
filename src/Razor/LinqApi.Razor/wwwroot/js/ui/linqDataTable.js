@@ -1,6 +1,6 @@
 import { StateManager } from "../core/state.js";
 import { QueryBuilder } from "./queryBuilder.js";
-import { defaults, fetchProperties, fetchPagedData, FormManager } from "./linqutil.js";
+import { defaults, fetchProperties, fetchPagedData, FormManager } from "./linqUtil.js";
 import { Query, LogicalFilter, Pager } from "../core/models.js";
 import { LinqSelect2 } from "./linqASelect2.js";
 /**

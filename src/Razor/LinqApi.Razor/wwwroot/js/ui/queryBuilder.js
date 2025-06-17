@@ -1,4 +1,4 @@
-import { defaults, fetchProperties } from "./linqutil.js";
+import { defaults, fetchProperties } from "./linqUtil.js";
 import { Query, LogicalFilter, Include, Pager } from "../core/models.js";
 
 export class QueryBuilder {

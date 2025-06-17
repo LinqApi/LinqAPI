@@ -33,8 +33,7 @@ namespace LinqApi.Localization
                 var entries = await _repository.GetAllAsync(cancellationToken);
                 foreach (var entry in entries)
                 {
-                    var key = entry.GetLocalizationKeyPrefix() + "Name";
-                    await _provider.GetLocalizedValueAsync(key, cancellationToken);
+                    await _provider.GetLocalizedValueAsync(entry.Key, cancellationToken);
                 }
                 _logger.LogInformation("Localization seeding completed.");
             }
@@ -42,5 +41,4 @@ namespace LinqApi.Localization
             public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
         }
     }
-
 }

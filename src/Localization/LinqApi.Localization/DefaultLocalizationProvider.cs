@@ -28,10 +28,10 @@ namespace LinqApi.Repository
             foreach (var entry in entries)
             {
                 // Assume GetLocalizationKeyPrefix() + "Name" for example is the key.
-                var localizedKey = entry.GetLocalizationKeyPrefix() + "Name";
-                if (!_cache.ContainsKey(localizedKey))
+                
+                if (!_cache.ContainsKey(key))
                 {
-                    _cache.TryAdd(localizedKey, entry.Name);
+                    _cache.TryAdd(key, entry.Value);
                 }
             }
 

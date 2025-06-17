@@ -51,7 +51,7 @@ namespace LinqApi.Controller
         [HttpPost("filterpaged")]
         public virtual async Task<IActionResult> GetByFilterPaged([FromBody] LinqFilterModel model, CancellationToken cancellation)
         {
-          if (string.IsNullOrWhiteSpace(model.Filter))
+          if (string.IsNullOrWhiteSpace(model.Filter)) 
                 return BadRequest("Filter is required.");
             var result = await _repo.GetFilterPagedAsync(model, cancellation);
             return Ok(result);

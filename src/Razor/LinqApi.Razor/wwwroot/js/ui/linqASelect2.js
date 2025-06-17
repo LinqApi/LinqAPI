@@ -1,4 +1,4 @@
-import { debounce, fetchPagedData, defaults } from "./linqutil.js";
+import { debounce, fetchPagedData, defaults } from "./linqUtil.js";
 import { Query, LogicalFilter, Pager } from "../core/models.js";
 
 /**
