@@ -1,4 +1,4 @@
-name: Build, Pack, and Publish NuGet Package
+name: Build, Pack, and Publish Correlation Package
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
     paths:
       - '**/*'  # Tüm dosya değişiklikleri workflow'u tetikler
 env:
-  PROJECT_PATH: 'src/Core/LinqApi.Core/LinqApi.Core.csproj'
-  PACKAGE_OUTPUT_DIRECTORY: ${{ github.workspace }}/packages
+  PROJECT_PATH: 'src/Correlation/LinqApi.Correlation/LinqApi.Correlation.csproj'
+  PACKAGE_OUTPUT_DIRECTORY: ${{ github.workspace }}\output
   NUGET_SOURCE_URL: 'https://api.nuget.org/v3/index.json'
 
 jobs:
@@ -27,15 +27,15 @@ jobs:
       - name: Get version from .csproj
         id: version
         run: |
-            VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" src/Core/LinqApi.Core/LinqApi.Core.csproj)
+            VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" src/Correlation/LinqApi.Correlation/LinqApi.Correlation.csproj)
             echo "VERSION=$VERSION" >> $GITHUB_ENV
         
 
       - name: Restore Dependencies
-        run: dotnet restore src/Core/LinqApi.Core/LinqApi.Core.csproj
+        run: dotnet restore src/Correlation/LinqApi.Correlation/LinqApi.Correlation.csproj
 
       - name: Build LinqApi Project
-        run: dotnet build src/Core/LinqApi.Core/LinqApi.Core.csproj --configuration Release --no-restore
+        run: dotnet build src/Correlation/LinqApi.Correlation/LinqApi.Correlation.csproj --configuration Release --no-restore
 
 
 
@@ -44,4 +44,4 @@ jobs:
 
 
       - name: Publish NuGet Package
-        run: dotnet nuget push /home/runner/work/LinqAPI/LinqAPI/packages/LinqApi.Core.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_AUTH_TOKEN }} -s ${{ env.NUGET_SOURCE_URL }} --skip-duplicate
+        run: dotnet nuget push /home/runner/work/LinqAPI/LinqAPIoutput/LinqApi.Correlation.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_AUTH_TOKEN }} -s ${{ env.NUGET_SOURCE_URL }} --skip-duplicate
