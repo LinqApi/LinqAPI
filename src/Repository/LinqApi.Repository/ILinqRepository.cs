@@ -1,4 +1,4 @@
-using LinqApi.Core;
+using LinqApi.Logging;
 using System.Linq.Expressions;
 
 namespace LinqApi.Repository

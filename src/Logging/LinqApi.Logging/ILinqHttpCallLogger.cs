@@ -1,4 +1,4 @@
-using LinqApi.Core.Log;
+using LinqApi.Logging.Log;
 using Microsoft.Extensions.Logging;
 
 namespace LinqApi.Logging

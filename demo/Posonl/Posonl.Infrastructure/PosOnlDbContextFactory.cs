@@ -2,7 +2,6 @@ using LinqApi.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
-using System.Diagnostics;
 
 namespace Posonl.Infrastructure
 {

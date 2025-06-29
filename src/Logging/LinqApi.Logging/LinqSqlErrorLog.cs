@@ -1,5 +1,3 @@
-using System;
-
 namespace LinqApi.Logging
 {
     // Örneğin, Database error log

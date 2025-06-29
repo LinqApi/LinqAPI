@@ -9,12 +9,13 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.3" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.6" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Dynamic\LinqApi.Dynamic\LinqApi.Dynamic.csproj" />
     <ProjectReference Include="..\..\..\Localization\LinqApi.Localization\LinqApi.Localization.csproj" />
+    <ProjectReference Include="..\..\..\Logging\LinqApi.Logging\LinqApi.Logging.csproj" />
     <ProjectReference Include="..\..\..\Repository\LinqApi.Repository\LinqApi.Repository.csproj" />
   </ItemGroup>
 

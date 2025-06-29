@@ -1,7 +1,6 @@
 using LinqApi.Repository;
 using Microsoft.AspNetCore.Mvc;
 using Posonl.Domain;
-using Posonl.Web.Areas.Dashboard.Models;
 
 namespace Posonl.Web.Areas.Dashboard.Controllers
 {

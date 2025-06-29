@@ -1,6 +1,6 @@
 namespace LinqApi.Localization
 {
-    using global::LinqApi.Core;
+    using global::LinqApi.Logging;
     using System.ComponentModel.DataAnnotations;
 
     namespace LinqApi.Localization

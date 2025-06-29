@@ -1,16 +1,12 @@
-using LinqApi.Core;
-using LinqApi.Dynamic.Assembly;
+using LinqApi.Logging;
+using LinqApi.Logging.Module;
 using LinqApi.Localization.LinqApi.Localization.Extensions;
 using LinqApi.Repository;
 using LinqApi.Repository.LinqApi.Repository;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.Collections.Concurrent;
 using System.Reflection;
-using System.Reflection.Emit;
 
 namespace LinqApi.Localization.Extensions
 {
@@ -151,6 +147,66 @@ namespace LinqApi.Localization.Extensions
 
     }
 
+    public static class ModuleServiceCollectionExtensions
+    {
+        /// <summary>
+        /// CompositeDbContext + Modülleri bir arada register eder.
+        /// </summary>
+        public static IServiceCollection AddModularDbContext(
+            this IServiceCollection services,
+            string connectionString,
+            Action<ModuleRegistry> configure)
+        {
+            // 1) Module registry oluştur
+            var registry = new ModuleRegistry();
+            configure(registry);
 
+            // 2) Her modülün kendi servislerini register et
+            foreach (var module in registry.Modules)
+                module.RegisterServices(services);
+
+            // 3) Add DbContext<CompositeDbContext>
+            services.AddDbContext<CompositeDbContext>(opts =>
+                opts.UseSqlServer(connectionString));
+
+            // 4) Modülleri CompositeDbContext’e inject edecek
+            services.AddScoped<IEnumerable<IDbContextModule>>(sp =>
+                registry.Modules);
+
+            return services;
+        }
+
+
+        public static IServiceCollection AddModularDbContext(
+    this IServiceCollection services,
+    string connectionString,
+    Action<ModuleRegistry> configureModules,
+    Action<IServiceProvider, DbContextOptionsBuilder>? configureOptions = null)
+        {
+            // 1) Module registry oluştur
+            var registry = new ModuleRegistry();
+            configureModules(registry);
+
+            // 2) Her modülün kendi servislerini register et
+            foreach (var module in registry.Modules)
+                module.RegisterServices(services);
+
+            // 3) Add DbContext<CompositeDbContext> with extra config
+            services.AddDbContext<CompositeDbContext>((sp, opts) =>
+            {
+                opts.UseSqlServer(connectionString);
+
+                // Opsiyonel interceptor ve benzeri konfigürasyonlar
+                configureOptions?.Invoke(sp, opts);
+            });
+
+            // 4) Modülleri inject et
+            services.AddScoped<IEnumerable<IDbContextModule>>(_ => registry.Modules);
+
+            return services;
+        }
+    }
+
+  
 
 }

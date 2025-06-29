@@ -1,4 +1,4 @@
-namespace LinqApi.Core
+namespace LinqApi.Logging
 {
     /// <summary>
     /// Simple user context. In production, inject a proper IUserContext.

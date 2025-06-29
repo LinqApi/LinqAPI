@@ -7,9 +7,8 @@ namespace LinqApi.Controller
     using System;
     using LinqApi.Repository;
     using System.Reflection;
-    using LinqApi.Core;
+    using LinqApi.Logging;
     using System.Collections.Concurrent;
-    using Microsoft.AspNetCore.Routing;
 
     [ApiController]
     public class LinqController<TEntity, TId>(ILinqRepository<TEntity, TId> repo) : LinqReadonlyController<TEntity, TId>(repo)

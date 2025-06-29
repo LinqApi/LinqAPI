@@ -1,7 +1,7 @@
 using LinqApi.Dynamic.Assembly;
 using System.Reflection.Emit;
 using System.Reflection;
-using LinqApi.Core;
+using LinqApi.Logging;
 
 namespace LinqApi.Dynamic.Extensions
 {

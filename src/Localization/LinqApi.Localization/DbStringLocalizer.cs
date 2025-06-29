@@ -1,11 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LinqApi.Localization
 {
@@ -71,9 +66,9 @@ namespace LinqApi.Localization
 
     public class DbStringLocalizer : IStringLocalizer
     {
-        private readonly LinqLocalizationDbContext _dbContext;
+        private readonly ILinqLocalizationDbContextAdapter _dbContext;
 
-        public DbStringLocalizer(LinqLocalizationDbContext dbContext)
+        public DbStringLocalizer(ILinqLocalizationDbContextAdapter dbContext)
         {
             _dbContext = dbContext;
         }

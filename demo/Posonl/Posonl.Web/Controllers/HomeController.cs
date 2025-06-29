@@ -1,8 +1,6 @@
-using LinqApi.Localization.LinqApi.Localization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Posonl.Domain;
 using Posonl.Infrastructure;
 using System.Globalization;
 using System.Text.RegularExpressions;

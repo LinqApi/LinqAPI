@@ -1,6 +1,5 @@
 using LinqApi.Localization;
 using LinqApi.Localization.LinqApi.Localization;
-using LinqApi.Localization.LinqApi.Localization.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Posonl.Domain;
 
@@ -35,16 +34,13 @@ namespace Posonl.Infrastructure
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             // Artık SEO/localization alanları LocalizationBase üzerinden yönetildi.
-            foreach (var entry in ChangeTracker.Entries<LinqLocalizationBase>())
+            foreach (var entry in ChangeTracker.Entries<LinqLocalizationEntity>())
             {
                 if (entry.State == EntityState.Added)
                 {
                     var entity = entry.Entity;
 
-                    if (string.IsNullOrWhiteSpace(entity.Slug) && !string.IsNullOrWhiteSpace(entity.Title))
-                    {
-                        entity.Slug = SlugHelper.SlugifyWithTitle(entity.Title);
-                    }
+                   
                 }
             }
 

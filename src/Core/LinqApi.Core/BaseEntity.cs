@@ -1,4 +1,4 @@
-namespace LinqApi.Core
+namespace LinqApi.Logging
 {
     /// <summary>
     /// Provides a base class for all entities with a strongly typed primary key.

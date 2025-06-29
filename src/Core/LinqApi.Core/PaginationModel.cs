@@ -1,4 +1,4 @@
-namespace LinqApi.Core
+namespace LinqApi.Logging
 {
     /// <summary>
     /// Represents a paginated result set.

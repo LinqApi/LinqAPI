@@ -1,5 +1,4 @@
 using LinqApi.Correlation;
-using LinqApi.Logging;
 using Microsoft.Extensions.Options;
 
 using System.Diagnostics;

@@ -1,7 +1,6 @@
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 
-namespace LinqApi.Core
+namespace LinqApi.Logging
 {
     /// <summary>
     /// Represents the filtering, ordering, grouping, selecting, and paging logic for dynamic LINQ queries.

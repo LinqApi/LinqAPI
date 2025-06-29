@@ -7,7 +7,7 @@ namespace LinqApi.Logging
     using System.Threading;
     using System.Threading.Tasks;
     using System;
-    using global::LinqApi.Core;
+    using global::LinqApi.Logging;
 
     namespace LinqApi.Core
     {
@@ -143,16 +143,19 @@ namespace LinqApi.Logging
             // Synchronous logging helper.
             private async Task LogSql(DbCommand command, long durationMs, string commandType, CommandExecutedEventData eventData, CancellationToken cancellationToken)
             {
+                // RECURSIVE LOGGING GUARD:
+                if (command.CommandText.Contains("LinqSqlLog", StringComparison.OrdinalIgnoreCase))
+                    return;
+
                 var sqlLog = new LinqSqlLog
                 {
                     QueryText = command.CommandText,
                     DurationMs = durationMs,
-                    UserId = userContext.Id,  // Replace with your actual user retrieval logic
+                    UserId = userContext.Id,
                     ExecutedAt = DateTime.UtcNow,
                     CommandType = commandType,
                 };
 
-                // Fire and forget logging (you might want to await in production)
                 await _linqLogger.LogAsync(sqlLog, cancellationToken).ConfigureAwait(false);
             }
         }

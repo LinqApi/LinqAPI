@@ -1,4 +1,4 @@
-using LinqApi.Core.Log;
+using LinqApi.Logging.Log;
 using LinqApi.Correlation;
 using LinqApi.Logging;
 using MassTransit;
@@ -241,4 +241,6 @@ namespace LinqApi.MassTransit
         }
     }
 
+
+    
 }

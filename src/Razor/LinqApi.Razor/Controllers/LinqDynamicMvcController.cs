@@ -1,6 +1,4 @@
 using LinqApi.Dynamic;
-using LinqApi.Dynamic.Assembly;
-using LinqApi.Dynamic.Configuration;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LinqApi.Razor
