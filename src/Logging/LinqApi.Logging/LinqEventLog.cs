@@ -44,10 +44,6 @@ namespace LinqApi.Logging
         /// </summary>
         public bool Success { get; set; }
 
-        /// <summary>
-        /// Gets or sets the type of the log, defaulting to "Event".
-        /// </summary>
-        public override string LogType { get; set; } = "Event";
     }
 }
 

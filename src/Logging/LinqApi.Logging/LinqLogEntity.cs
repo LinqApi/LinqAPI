@@ -25,17 +25,14 @@ namespace LinqApi.Logging.Log
         public long? CreatedBy { get; set; }
 
         // Discriminator olarak kullanılacak; her türetilmiş sınıf override eder.
-        public virtual string LogType { get; set; }
     }
 
     public class InboundHttpCallLog : LinqHttpCallLog
     {
-        public override string LogType => "InboundHttpCallLog";
     }
 
     public class OutboundHttpCallLog : LinqHttpCallLog
     {
-        public override string LogType => "OutboundHttpCallLog";
     }
 }
 

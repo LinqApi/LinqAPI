@@ -78,6 +78,8 @@ namespace LinqApi.Repository
         /// A <see cref="PaginationModel{T}"/> object containing the dynamic result set and total record count.
         /// </returns>
         Task<PaginationModel<dynamic>> GetFilterPagedAsync(LinqFilterModel filterModel, CancellationToken cancellationToken = default);
+
+        Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
     }
 
 }

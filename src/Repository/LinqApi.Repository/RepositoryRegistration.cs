@@ -1,6 +1,5 @@
 using LinqApi.Logging;
 using LinqApi.Repository;
-using LinqApi.Repository.LinqApi.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 

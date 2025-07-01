@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LinqApi.Logging.Module
@@ -12,7 +13,7 @@ namespace LinqApi.Logging.Module
         /// <summary>
         /// Register module-specific services (behaviors, providers, etc.)
         /// </summary>
-        void RegisterServices(IServiceCollection services);
+        void RegisterServices(IServiceCollection services, IConfiguration config);
 
         /// <summary>
         /// Apply EF Core model configuration (OnModelCreating).

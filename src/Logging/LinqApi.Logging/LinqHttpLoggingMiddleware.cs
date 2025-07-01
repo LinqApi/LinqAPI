@@ -19,10 +19,10 @@ namespace LinqApi.Logging
 
         public LinqHttpLoggingMiddleware(
             RequestDelegate next,
-            ILinqPayloadMasker masker,
-            ICorrelationIdGenerator correlationGenerator,
-            IOptions<LinqLoggingOptions> options,
-            IServiceScopeFactory scopeFactory)
+            ILinqPayloadMasker? masker = null,
+            ICorrelationIdGenerator? correlationGenerator = null,
+            IOptions<LinqLoggingOptions>? options = null,
+            IServiceScopeFactory? scopeFactory = null)
         {
             _next = next;
             _masker = masker;
@@ -35,7 +35,7 @@ namespace LinqApi.Logging
         {
             var sw = Stopwatch.StartNew();
             string reqBody = string.Empty;
-              
+
             // Enable buffering to read the request body.
             context.Request.EnableBuffering();
             if (context.Request.ContentLength.GetValueOrDefault() > 0)
@@ -101,7 +101,6 @@ namespace LinqApi.Logging
                     IsException = exception != null,
                     CreatedAt = DateTime.UtcNow,
                     // Inbound çağrı için CallType ayarlanabilir.
-                    LogType = "HttpCallInbound", // Ekstra property; LinqHttpCallLog'a ekleyebilirsiniz.
                     UserAgent = context.Request.Headers["User-Agent"].ToString() ?? string.Empty,
                     Controller = controller,
                     Action = action

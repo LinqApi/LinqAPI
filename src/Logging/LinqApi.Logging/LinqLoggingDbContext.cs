@@ -101,14 +101,12 @@ namespace LinqApi.Logging
             // CorrelationId'yi primary key olarak ayarlıyoruz ve kolon adını "CorrelationId" yapıyoruz.
             logEntity.HasKey(x => x.Id);
 
-            //logEntity.Property(x => x.Id).HasMaxLength(50).IsRequired();
             logEntity.Property(x => x.DurationMs).IsRequired();
             logEntity.Property(x => x.CorrelationId).IsRequired();
             logEntity.Property(x => x.Exception).HasColumnType("nvarchar(max)").IsRequired(false);
             logEntity.Property(x => x.ParentCorrelationId).HasColumnType("varchar(50)").IsRequired(false);
             logEntity.Property(x => x.IsException).IsRequired();
             logEntity.Property(x => x.IsInternal).IsRequired();
-            logEntity.Property(x => x.LogType).IsRequired();
 
             // Gölgeli özellikler
             logEntity.Property<string>("ParentCorrelationId").HasMaxLength(100);
@@ -129,8 +127,6 @@ namespace LinqApi.Logging
             // Epoch artık computed column değil, uygulama tarafından set edilecek normal bir property.
             logEntity.Property(x => x.Epoch).IsRequired();
 
-            //logEntity.HasIndex("Epoch").
-            //         .IncludeProperties("DurationMs", "CorrelationId", "LogType", "ParentCorrelationId", "Url", "Method", "IsInternal");
 
             // Ortak özellikleri tanımla
             modelBuilder.Entity<LinqLogEntity>(logEntity =>
@@ -150,13 +146,8 @@ namespace LinqApi.Logging
             modelBuilder.Entity<LinqConsumeErrorLog>().ToTable("ConsumeErrorLogs", "log");
             modelBuilder.Entity<LinqPublishErrorLog>().ToTable("PublishErrorLogs", "log");
 
-
-
         }
 
-
-
-       
     }
 
     /// <summary>
@@ -208,9 +199,6 @@ namespace LinqApi.Logging
             mb.Entity<LinqHttpCallLog>().ToTable("HttpCallLogs", schema);
             mb.Entity<OutboundHttpCallError>().ToTable("HttpCallOutboundErrors", schema);
             mb.Entity<HttpCallInboundError>().ToTable("HttpCallInboundErrors", schema);
-
         }
-
-
     }
 }

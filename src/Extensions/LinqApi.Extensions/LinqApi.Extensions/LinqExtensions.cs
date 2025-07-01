@@ -2,7 +2,6 @@ using LinqApi.Logging;
 using LinqApi.Logging.Module;
 using LinqApi.Localization.LinqApi.Localization.Extensions;
 using LinqApi.Repository;
-using LinqApi.Repository.LinqApi.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -155,7 +154,9 @@ namespace LinqApi.Localization.Extensions
         public static IServiceCollection AddModularDbContext(
             this IServiceCollection services,
             string connectionString,
-            Action<ModuleRegistry> configure)
+            IConfiguration configuration,
+            Action<ModuleRegistry> configure,
+            Action<IServiceProvider, DbContextOptionsBuilder>? configureOptions = null)
         {
             // 1) Module registry oluştur
             var registry = new ModuleRegistry();
@@ -163,7 +164,7 @@ namespace LinqApi.Localization.Extensions
 
             // 2) Her modülün kendi servislerini register et
             foreach (var module in registry.Modules)
-                module.RegisterServices(services);
+                module.RegisterServices(services, configuration);
 
             // 3) Add DbContext<CompositeDbContext>
             services.AddDbContext<CompositeDbContext>(opts =>
@@ -179,6 +180,7 @@ namespace LinqApi.Localization.Extensions
 
         public static IServiceCollection AddModularDbContext(
     this IServiceCollection services,
+    IConfiguration configuration,
     string connectionString,
     Action<ModuleRegistry> configureModules,
     Action<IServiceProvider, DbContextOptionsBuilder>? configureOptions = null)
@@ -189,7 +191,7 @@ namespace LinqApi.Localization.Extensions
 
             // 2) Her modülün kendi servislerini register et
             foreach (var module in registry.Modules)
-                module.RegisterServices(services);
+                module.RegisterServices(services, configuration);
 
             // 3) Add DbContext<CompositeDbContext> with extra config
             services.AddDbContext<CompositeDbContext>((sp, opts) =>
@@ -207,6 +209,6 @@ namespace LinqApi.Localization.Extensions
         }
     }
 
-  
+
 
 }

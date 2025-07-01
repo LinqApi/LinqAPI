@@ -32,7 +32,6 @@ namespace LinqApi.Logging
         /// </summary>
         public string? CommandType { get; set; }
 
-        public override string LogType => "Database";
     }
 
 }

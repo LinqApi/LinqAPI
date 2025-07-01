@@ -9,11 +9,6 @@ namespace LinqApi.Logging
     /// </remarks>
     public class LinqConsumeErrorLog : LinqErrorLog
     {
-        /// <summary>
-        /// Gets or sets the type of the log entry. Default is "ConsumeError".
-        /// </summary>
-        /// <value>A string that identifies this log as a consume error.</value>
-        public override string LogType { get; set; } = "ConsumeError";
     }
 }
 

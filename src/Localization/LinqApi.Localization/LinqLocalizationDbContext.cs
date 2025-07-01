@@ -7,10 +7,10 @@ namespace LinqApi.Localization
     {
         protected internal readonly string _schema;
 
-        public LinqLocalizationDbContext(DbContextOptions<LinqLocalizationDbContext> options, string schema)
+        public LinqLocalizationDbContext(DbContextOptions<LinqLocalizationDbContext> options)
             : base(options)
         {
-            _schema = schema;
+            _schema = "loc";
         }
 
         public DbSet<LinqLocalizationEntity> Localizations { get; set; }
@@ -39,7 +39,7 @@ namespace LinqApi.Localization
         {
             mb.HasDefaultSchema(schema);
             mb.Entity<LinqLocalizationEntity>()
-              .ToTable("Localizations");
+              .ToTable("Localizations",schema :schema);
         }
     }
 

@@ -145,23 +145,24 @@ namespace LinqApi.Logging
             switch (log)
             {
                 case LinqHttpCallLog httpLog:
-                    _db.HttpCallLogs.Add(httpLog);
+                    await _db.HttpCallLogs.AddAsync(httpLog);
                     break;
                 case LinqSqlErrorLog dbError:
-                    _db.LinqDatabaseErrorLogs.Add(dbError);
+                    await _db.LinqDatabaseErrorLogs.AddAsync(dbError);
                     break;
                 case LinqConsumeErrorLog consumeError:
-                    _db.LinqConsumeErrorLogs.Add(consumeError);
+                    await _db.LinqConsumeErrorLogs.AddAsync(consumeError);
                     break;
                 case LinqPublishErrorLog publishError:
-                    _db.LinqPublishErrorLogs.Add(publishError);
+                    await _db.LinqPublishErrorLogs.AddAsync(publishError);
                     break;
                 case LinqEventLog eventLog:
-                    _db.EventLogs.Add(eventLog);
+                    await _db.EventLogs.AddAsync(eventLog);
                     break;
                 case LinqSqlLog linqSqlLog:
-                    _db.SqlLogs.Add(linqSqlLog);
+                    await _db.SqlLogs.AddAsync(linqSqlLog);
                     break;
+                
                 default:
                     _db.Logs.Add(log);
                     break;

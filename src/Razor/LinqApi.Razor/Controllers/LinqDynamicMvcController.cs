@@ -35,6 +35,8 @@ namespace LinqApi.Razor
         public virtual IActionResult Index()
         
         {
+
+
             return View("Index");
         }
 

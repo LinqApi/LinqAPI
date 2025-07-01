@@ -80,9 +80,9 @@ namespace LinqApi.Logging
                 var url = request.RequestUri?.ToString() ?? string.Empty;
                 var maskedRequest = _masker.MaskRequest(reqBody) ?? string.Empty;
                 string maskedResponse = _masker.MaskResponse(resBody) ?? string.Empty;
-                if (ex!= null)
+                if (ex != null)
                 {
-                    
+
                     logEntry = new OutboundHttpCallError
                     {
                         ParentCorrelationId = headerCorrelation,
@@ -94,13 +94,12 @@ namespace LinqApi.Logging
                         Exception = ex?.ToString() ?? string.Empty,
                         IsException = ex != null,
                         CreatedAt = DateTime.UtcNow,
-                        LogType = "OutboundHttpCallError", // Outbound çağrılar için
                         UserAgent = request.Headers.UserAgent?.ToString() ?? string.Empty,
                         Controller = string.Empty, // Outbound çağrılarda controller/action yoktur.
                         Action = string.Empty
                     };
                 }
-                
+
 
                 if (!_options.Value.LogViewContent &&
                     url.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
