@@ -2,6 +2,7 @@ using LinqApi.Epoch;
 using LinqApi.Logging.Log;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Reflection.Emit;
 
 namespace LinqApi.Logging
@@ -23,7 +24,6 @@ namespace LinqApi.Logging
             _schema = "log";
         }
 
-        public DbSet<LinqLogEntity> Logs { get; set; }
         public DbSet<LinqEventLog> EventLogs { get; set; }
         public DbSet<LinqHttpCallLog> HttpCallLogs { get; set; }
         public DbSet<LinqConsumeErrorLog> LinqConsumeErrorLogs { get; set; }
@@ -40,7 +40,12 @@ namespace LinqApi.Logging
 
         public override int SaveChanges()
         {
-            UpdateLogTimestampsAndEpoch();
+            foreach (var entry in ChangeTracker.Entries<LinqLogEntity>())
+            {
+
+                UpdateLogTimestampsAndEpoch(entry);
+                ModifiedDoes(entry);
+            }
             return base.SaveChanges();
         }
 
@@ -48,19 +53,16 @@ namespace LinqApi.Logging
         {
             foreach (var entry in ChangeTracker.Entries<LinqLogEntity>())
             {
-                if (entry.State == EntityState.Added)
-                {
-                    entry.Entity.CreatedAt = DateTime.Now;
-                }
 
+                UpdateLogTimestampsAndEpoch(entry);
                 ModifiedDoes(entry);
             }
 
-            UpdateLogTimestampsAndEpoch();
+
             return await base.SaveChangesAsync(cancellationToken); // eski hali yanlış
         }
 
-        private void ModifiedDoes(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<LinqLogEntity> entry)
+        private void ModifiedDoes(EntityEntry<LinqLogEntity> entry)
         {
             if (entry.State == EntityState.Modified)
             {
@@ -77,63 +79,18 @@ namespace LinqApi.Logging
             }
         }
 
-        private void UpdateLogTimestampsAndEpoch()
+        private void UpdateLogTimestampsAndEpoch(EntityEntry<LinqLogEntity> entry)
         {
-            foreach (var entry in ChangeTracker.Entries<LinqLogEntity>())
+            if (entry.State == EntityState.Added)
             {
-                if (entry.State == EntityState.Added)
-                {
-                    entry.Entity.CreatedAt = DateTime.Now;
-                    entry.Entity.Epoch = _epochProvider.GetEpoch(entry.Entity.CreatedAt);
-                }
+                entry.Entity.CreatedAt = DateTime.Now;
+                entry.Entity.Epoch = _epochProvider.GetEpoch(entry.Entity.CreatedAt);
             }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            var logEntity = modelBuilder.Entity<LinqLogEntity>();
-
-            // Tablo ve şema ayarı
-            logEntity.ToTable("Logs", _schema);
-
-            // CorrelationId'yi primary key olarak ayarlıyoruz ve kolon adını "CorrelationId" yapıyoruz.
-            logEntity.HasKey(x => x.Id);
-
-            logEntity.Property(x => x.DurationMs).IsRequired();
-            logEntity.Property(x => x.CorrelationId).IsRequired();
-            logEntity.Property(x => x.Exception).HasColumnType("nvarchar(max)").IsRequired(false);
-            logEntity.Property(x => x.ParentCorrelationId).HasColumnType("varchar(50)").IsRequired(false);
-            logEntity.Property(x => x.IsException).IsRequired();
-            logEntity.Property(x => x.IsInternal).IsRequired();
-
-            // Gölgeli özellikler
-            logEntity.Property<string>("ParentCorrelationId").HasMaxLength(100);
-            logEntity.Property<string>("Url").HasMaxLength(500).IsRequired(false);
-            logEntity.Property<string>("Method").HasMaxLength(50).IsRequired(false);
-            logEntity.Property<string>("RequestBody").HasColumnType("nvarchar(MAX)").IsRequired(false);
-            logEntity.Property<string>("ResponseBody").HasColumnType("nvarchar(MAX)").IsRequired(false);
-            logEntity.Property<string>("Controller").HasMaxLength(100).IsRequired(false);
-            logEntity.Property<string>("Action").HasMaxLength(100).IsRequired(false);
-            logEntity.Property<string>("UserAgent").HasMaxLength(500).IsRequired(false);
-            logEntity.Property<string>("ClientIP").HasMaxLength(50).IsRequired(false);
-            logEntity.Property<string>("QueueName").HasMaxLength(100).IsRequired(false);
-            logEntity.Property<string>("OperationName").HasMaxLength(100).IsRequired(false);
-            logEntity.Property<string>("AdditionalData").HasMaxLength(500).IsRequired(false);
-
-            logEntity.Property(x => x.CreatedAt).IsRequired();
-
-            // Epoch artık computed column değil, uygulama tarafından set edilecek normal bir property.
-            logEntity.Property(x => x.Epoch).IsRequired();
-
-
-            // Ortak özellikleri tanımla
-            modelBuilder.Entity<LinqLogEntity>(logEntity =>
-            {
-                logEntity.Property(x => x.CreatedAt).IsRequired();
-                logEntity.Property(x => x.Epoch).IsRequired();
-            });
 
             // Her alt sınıfı ayrı tabloya ve schema'ya yönlendir
             modelBuilder.Entity<LinqEventLog>().ToTable("EventLogs", "log");
@@ -155,7 +112,6 @@ namespace LinqApi.Logging
     /// </summary>
     public interface ILinqLoggingDbContextAdapter
     {
-        DbSet<LinqLogEntity> Logs { get; }
         DbSet<LinqEventLog> EventLogs { get; }
         DbSet<LinqHttpCallLog> HttpCallLogs { get; }
         DbSet<LinqConsumeErrorLog> LinqConsumeErrorLogs { get; }
@@ -170,26 +126,7 @@ namespace LinqApi.Logging
     {
         public static void ApplyLoggingModel(this ModelBuilder mb, string schema)
         {
-            mb.HasDefaultSchema(mb.Model.GetDefaultSchema()!);
-            var log = mb.Entity<LinqLogEntity>();
-            log.ToTable("Logs", schema);
-
-            log.HasKey(x => x.Id);
-            log.Property(x => x.DurationMs).IsRequired();
-            log.Property(x => x.CorrelationId).IsRequired();
-            log.Property(x => x.Exception).HasColumnType("nvarchar(max)").IsRequired(false);
-            log.Property(x => x.ParentCorrelationId).HasColumnType("varchar(50)").IsRequired(false);
-            log.Property(x => x.IsException).IsRequired();
-            log.Property(x => x.IsInternal).IsRequired();
-
-            log.Property<string>("Url").HasMaxLength(500).IsRequired(false);
-            log.Property<string>("Method").HasMaxLength(50).IsRequired(false);
-            log.Property<string>("RequestBody").HasColumnType("nvarchar(MAX)").IsRequired(false);
-            log.Property<string>("ResponseBody").HasColumnType("nvarchar(MAX)").IsRequired(false);
-
-            mb.Entity<LinqLogEntity>().ToTable((string?)null); // base sınıfı tabloya bağlama
-            mb.Entity<LinqLogEntity>().Property(x => x.CreatedAt).IsRequired();
-            mb.Entity<LinqLogEntity>().Property(x => x.Epoch).IsRequired();
+            mb.HasDefaultSchema(schema);
 
             mb.Entity<LinqEventLog>().ToTable("EventLogs", schema);
             mb.Entity<LinqSqlLog>().ToTable("SqlLogs", schema);

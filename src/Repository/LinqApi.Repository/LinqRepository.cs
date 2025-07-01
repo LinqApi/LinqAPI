@@ -19,8 +19,8 @@ namespace LinqApi.Repository
     /// <typeparam name="TEntity">The type of the entity.</typeparam>
     /// <typeparam name="TId">The type of the entity identifier.</typeparam>
     public class LinqRepository<TDbContext, TEntity, TId> : ILinqRepository<TEntity, TId>
-        where TDbContext : DbContext
-        where TEntity : class
+    where TDbContext : DbContext
+    where TEntity : BaseEntity<TId>
     {
         /// <summary>
         /// Gets the database context instance.
@@ -93,7 +93,24 @@ namespace LinqApi.Repository
             await DbSet.Where(predicate).ToListAsync(cancellationToken).ConfigureAwait(false);
 
         public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default) =>
-           await DbSet.AnyAsync(predicate,cancellationToken).ConfigureAwait(false);
+           await DbSet.AnyAsync(predicate, cancellationToken).ConfigureAwait(false);
+
+        public async Task<(bool found, TEntity? entity)> TryFindFastAsync(
+    Expression<Func<TEntity, bool>> predicate,
+    CancellationToken cancellationToken = default)
+        {
+            // Bu metot sadece Id'yi çekiyor
+            var idOnly = await DbSet
+                .Where(predicate)
+                .Select(x => x.Id) // veya x.Id ama EF.Property daha generic
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (EqualityComparer<TId>.Default.Equals(idOnly, default))
+                return (false, null);
+
+            var entity = await DbSet.FirstAsync(x => x.Id!.Equals(idOnly), cancellationToken);
+            return (true, entity);
+        }
 
         /// <inheritdoc/>
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>

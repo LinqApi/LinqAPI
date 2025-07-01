@@ -6,13 +6,12 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace LinqApi.Logging
 {
-
     public interface ILogRule
     {
         void Apply(EntityEntry<LinqLogEntity> entry);
     }
 
-    public class TimestampLogRule : ILogRule
+    public sealed class TimestampLogRule : ILogRule
     {
         private readonly IEpochProvider _epochProvider;
 
@@ -31,7 +30,7 @@ namespace LinqApi.Logging
         }
     }
 
-    public class CreatedByLogRule : ILogRule
+    public sealed class CreatedByLogRule : ILogRule
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -51,7 +50,7 @@ namespace LinqApi.Logging
         }
     }
 
-    public class LinqLoggingBehavior
+    public sealed class LinqLoggingBehavior
     {
         private readonly IEnumerable<ILogRule> _rules;
 

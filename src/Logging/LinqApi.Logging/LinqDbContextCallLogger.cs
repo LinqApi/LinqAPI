@@ -127,7 +127,7 @@ namespace LinqApi.Logging
                     _db.SqlLogs.Add(databaseLog);
                     break;
                 default:
-                    _db.Logs.Add(logEntry);
+                    //_db.Logs.Add(logEntry);
                     break;
             }
 
@@ -162,9 +162,9 @@ namespace LinqApi.Logging
                 case LinqSqlLog linqSqlLog:
                     await _db.SqlLogs.AddAsync(linqSqlLog);
                     break;
-                
+
                 default:
-                    _db.Logs.Add(log);
+                    //TODO P1
                     break;
             }
             await _db.SaveChangesAsync(cancellationToken);

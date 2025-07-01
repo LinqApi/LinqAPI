@@ -124,6 +124,36 @@ namespace LinqApi.Localization.Extensions
             return services;
         }
 
+        public static IServiceCollection AddLazyRepositoriesForDbContext<TDbContext>(this IServiceCollection services)
+               where TDbContext : DbContext
+        {
+            var dbContextType = typeof(TDbContext);
+
+            var dbSetProperties = dbContextType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p => p.PropertyType.IsGenericType
+                            && p.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>));
+
+            foreach (var prop in dbSetProperties)
+            {
+                var entityType = prop.PropertyType.GetGenericArguments()[0];
+
+                if (TryGetBaseEntityIdType(entityType, out var idType))
+                {
+                    var repoInterface = typeof(ILinqRepository<,>).MakeGenericType(entityType, idType);
+                    var lazyRepoType = typeof(Lazy<>).MakeGenericType(repoInterface);
+
+                    services.AddScoped(lazyRepoType, sp =>
+                    {
+                        var inner = sp.GetRequiredService(repoInterface);
+                        return Activator.CreateInstance(lazyRepoType, new Func<object>(() => inner))!;
+                    });
+                }
+            }
+
+            return services;
+        }
+
+
         /// <summary>
         /// Sınıf hiyerarşisi içinde BaseEntity<TId> var mı diye arar, bulursa out param ile TId tipini döndürür.
         /// </summary>
