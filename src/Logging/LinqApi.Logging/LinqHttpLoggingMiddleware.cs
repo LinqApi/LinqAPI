@@ -19,10 +19,10 @@ namespace LinqApi.Logging
 
         public LinqHttpLoggingMiddleware(
             RequestDelegate next,
-            ILinqPayloadMasker? masker = null,
-            ICorrelationIdGenerator? correlationGenerator = null,
-            IOptions<LinqLoggingOptions>? options = null,
-            IServiceScopeFactory? scopeFactory = null)
+            ILinqPayloadMasker masker,
+            ICorrelationIdGenerator correlationGenerator,
+            IOptions<LinqLoggingOptions> options,    
+            IServiceScopeFactory scopeFactory)
         {
             _next = next;
             _masker = masker;

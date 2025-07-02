@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Configuration;
-
 namespace LinqApi.Logging
 {
     /// <summary>
@@ -10,12 +8,12 @@ namespace LinqApi.Logging
         /// <summary>
         /// The header name used for the correlation ID. Default is "X-Correlation-Id".
         /// </summary>
-        public string CorrelationHeaderName { get; set; } = "X-Correlation-Id";
+        public string CorrelationHeaderName { get; set; }
 
         /// <summary>
         /// The log category to disable internal logging (to prevent circular logging).
         /// </summary>
-        public string InternalLogCategory { get; set; } = "LinqLogging.Internal";
+        public string InternalLogCategory { get; set; }
 
         /// <summary>
         /// Flag to enable detailed view logging. If false, HTML view responses are not logged.

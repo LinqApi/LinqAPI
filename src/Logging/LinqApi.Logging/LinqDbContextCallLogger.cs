@@ -1,6 +1,5 @@
 using LinqApi.Logging.Log;
 using LinqApi.Correlation;
-using LinqApi.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace LinqApi.Logging
@@ -14,9 +13,9 @@ namespace LinqApi.Logging
     /// </summary>
     public class LinqDbContextCallLogger : ILinqLogger
     {
-        private readonly ILinqLoggingDbContextAdapter _db;
+        private readonly LinqLoggingDbContext _db;
 
-        public LinqDbContextCallLogger(ILinqLoggingDbContextAdapter db, ICorrelationIdGenerator correlationGenerator)
+        public LinqDbContextCallLogger(LinqLoggingDbContext db, ICorrelationIdGenerator correlationGenerator)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
         }
@@ -141,6 +140,8 @@ namespace LinqApi.Logging
         {
             if (log.IsInternal)
                 return;
+
+            
 
             switch (log)
             {

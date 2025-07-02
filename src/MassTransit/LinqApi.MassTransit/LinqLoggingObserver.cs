@@ -5,6 +5,7 @@ using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
+using MassTransit.AmazonSqsTransport;
 
 namespace LinqApi.MassTransit
 {
@@ -71,6 +72,15 @@ namespace LinqApi.MassTransit
         public async Task PrePublish<T>(PublishContext<T> context) where T : class
         {
             string correlationHeader = _options.Value.CorrelationHeaderName;
+
+            if (context is AmazonSqsMessageSendContext<ReceiveFault>)
+            {
+                var a = context as AmazonSqsMessageSendContext<ReceiveFault>;
+
+                var address = a.FaultAddress;
+            }
+            //MassTransit.AmazonSqsTransport.<MassTransit.ReceiveFault>
+
             if (!context.Headers.TryGetHeader(correlationHeader, out var existing))
             {
                 // Ensure a correlation exists; if not, generate one.
@@ -104,6 +114,7 @@ namespace LinqApi.MassTransit
         {
             var successLog = new LinqEventLog
             {
+                OperationName = $"Publish-{typeof(T).Name}",
                 RequestPayload = SerializeMessage(context.Message),
                 ResponsePayload = "Message published successfully",
                 QueueName = context.DestinationAddress?.ToString() ?? "Unknown",
@@ -129,6 +140,8 @@ namespace LinqApi.MassTransit
                 IsException = true,
                 CreatedAt = DateTime.UtcNow,
                 StackTrace = exception.StackTrace
+
+
             };
 
             await LogAsync(faultLog).ConfigureAwait(false);
@@ -242,5 +255,5 @@ namespace LinqApi.MassTransit
     }
 
 
-    
+
 }

@@ -39,26 +39,26 @@ namespace LinqApi.Logging.Module
 
     public class CompositeDbContext : DbContext
     {
-        private readonly IEnumerable<IDbContextModule> _modules;
+        private readonly IServiceProvider _sp;
 
-        public CompositeDbContext(
-          DbContextOptions<CompositeDbContext> opts,
-          IEnumerable<IDbContextModule> modules)
-          : base(opts)
+        public CompositeDbContext(DbContextOptions options, IServiceProvider sp)
+            : base(options)
         {
-            _modules = modules;
+            _sp = sp;
         }
+
 
         protected override void OnModelCreating(ModelBuilder mb)
         {
-            // 1) Discover & register tüm entity tipleri
-            var allTypes = _modules.SelectMany(m => m.GetEntityTypes()).Distinct();
-            foreach (var t in allTypes)
-                mb.Model.AddEntityType(t);
 
-            // 2) Uygula modül bazlı mapping’leri
-            foreach (var module in _modules)
-                module.ApplyModel(mb);
+            var modules = _sp.GetService<IEnumerable<IDbContextModule>>() ?? Enumerable.Empty<IDbContextModule>();
+            // 1) Discover & register tüm entity tipleri
+            //var allTypes = modules.SelectMany(m => m.GetEntityTypes()).Distinct();
+            //foreach (var t in allTypes)
+            //    mb.Model.AddEntityType(t);
+
+            //foreach (var module in modules)
+            //    module.ApplyModel(mb);
         }
     }
 }

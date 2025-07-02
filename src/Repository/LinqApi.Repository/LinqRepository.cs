@@ -102,7 +102,7 @@ namespace LinqApi.Repository
             // Bu metot sadece Id'yi çekiyor
             var idOnly = await DbSet
                 .Where(predicate)
-                .Select(x => x.Id) // veya x.Id ama EF.Property daha generic
+                .Select(x => x.Id) 
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (EqualityComparer<TId>.Default.Equals(idOnly, default))

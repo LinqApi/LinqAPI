@@ -22,7 +22,7 @@ namespace LinqApi.Logging
         /// <summary>
         /// Gets or sets the name of the operation performed (e.g., Publish-OrderCreated).
         /// </summary>
-        public string OperationName { get; set; }
+        public string? OperationName { get; set; }
 
         /// <summary>
         /// Gets or sets the payload sent during the request phase of the event.
@@ -33,11 +33,6 @@ namespace LinqApi.Logging
         /// Gets or sets the payload or message returned in response to the event.
         /// </summary>
         public string ResponsePayload { get; set; }
-
-        /// <summary>
-        /// Gets or sets the name of the machine that processed the event.
-        /// </summary>
-        public string MachineName { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the event operation was successful.

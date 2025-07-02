@@ -1,10 +1,12 @@
+using LinqApi.Localization.LinqApi.Localization.Extensions;
 using LinqApi.Logging;
 using LinqApi.Logging.Module;
-using LinqApi.Localization.LinqApi.Localization.Extensions;
 using LinqApi.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Concurrent;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqApi.Localization.Extensions
@@ -124,34 +126,57 @@ namespace LinqApi.Localization.Extensions
             return services;
         }
 
+        private static readonly ConcurrentDictionary<Type, List<(Type entityType, Type idType)>> _repositoryTypeCache = new();
+
         public static IServiceCollection AddLazyRepositoriesForDbContext<TDbContext>(this IServiceCollection services)
-               where TDbContext : DbContext
+            where TDbContext : DbContext
         {
             var dbContextType = typeof(TDbContext);
 
-            var dbSetProperties = dbContextType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(p => p.PropertyType.IsGenericType
-                            && p.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>));
-
-            foreach (var prop in dbSetProperties)
+            if (!_repositoryTypeCache.TryGetValue(dbContextType, out var repoInfoList))
             {
-                var entityType = prop.PropertyType.GetGenericArguments()[0];
+                repoInfoList = new List<(Type entityType, Type idType)>();
 
-                if (TryGetBaseEntityIdType(entityType, out var idType))
+                var dbSetProperties = dbContextType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                    .Where(p => p.PropertyType.IsGenericType
+                                && p.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>));
+
+                foreach (var prop in dbSetProperties)
                 {
-                    var repoInterface = typeof(ILinqRepository<,>).MakeGenericType(entityType, idType);
-                    var lazyRepoType = typeof(Lazy<>).MakeGenericType(repoInterface);
+                    var entityType = prop.PropertyType.GetGenericArguments()[0];
 
-                    services.AddScoped(lazyRepoType, sp =>
+                    if (TryGetBaseEntityIdType(entityType, out var idType))
                     {
-                        var inner = sp.GetRequiredService(repoInterface);
-                        return Activator.CreateInstance(lazyRepoType, new Func<object>(() => inner))!;
-                    });
+                        repoInfoList.Add((entityType, idType));
+                    }
                 }
+
+                _repositoryTypeCache[dbContextType] = repoInfoList;
+            }
+
+            foreach (var (entityType, idType) in repoInfoList)
+            {
+                var repoInterface = typeof(ILinqRepository<,>).MakeGenericType(entityType, idType);
+                var lazyRepoType = typeof(Lazy<>).MakeGenericType(repoInterface);
+
+                // Lazy<T> oluştur, ancak T çözümlenmesin Value çağrılmadan
+                services.AddScoped(lazyRepoType, sp =>
+                {
+                    var funcType = typeof(Func<>).MakeGenericType(repoInterface);
+                    var getServiceCall = Expression.Call(
+                        typeof(ServiceProviderServiceExtensions),
+                        nameof(ServiceProviderServiceExtensions.GetRequiredService),
+                        new[] { repoInterface },
+                        Expression.Constant(sp)
+                    );
+                    var lambda = Expression.Lambda(funcType, getServiceCall).Compile();
+                    return Activator.CreateInstance(lazyRepoType, lambda)!;
+                });
             }
 
             return services;
         }
+
 
 
         /// <summary>
@@ -201,34 +226,36 @@ namespace LinqApi.Localization.Extensions
                 opts.UseSqlServer(connectionString));
 
             // 4) Modülleri CompositeDbContext’e inject edecek
-            services.AddScoped<IEnumerable<IDbContextModule>>(sp =>
+            services.AddSingleton<IEnumerable<IDbContextModule>>(sp =>
                 registry.Modules);
 
             return services;
         }
 
 
-        public static IServiceCollection AddModularDbContext(
+        public static IServiceCollection AddModularDbContext<T>(
     this IServiceCollection services,
     IConfiguration configuration,
     string connectionString,
     Action<ModuleRegistry> configureModules,
     Action<IServiceProvider, DbContextOptionsBuilder>? configureOptions = null)
+            where T : CompositeDbContext
         {
             // 1) Module registry oluştur
             var registry = new ModuleRegistry();
             configureModules(registry);
+
 
             // 2) Her modülün kendi servislerini register et
             foreach (var module in registry.Modules)
                 module.RegisterServices(services, configuration);
 
             // 3) Add DbContext<CompositeDbContext> with extra config
-            services.AddDbContext<CompositeDbContext>((sp, opts) =>
+            services.AddDbContext<T>((sp, opts) =>
             {
                 opts.UseSqlServer(connectionString);
-
-                // Opsiyonel interceptor ve benzeri konfigürasyonlar
+                // composite db içinde kullanmak üzere serviceProvider'ı devir
+                
                 configureOptions?.Invoke(sp, opts);
             });
 

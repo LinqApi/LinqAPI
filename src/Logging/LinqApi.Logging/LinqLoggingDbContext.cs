@@ -3,7 +3,6 @@ using LinqApi.Logging.Log;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using System.Reflection.Emit;
 
 namespace LinqApi.Logging
 {

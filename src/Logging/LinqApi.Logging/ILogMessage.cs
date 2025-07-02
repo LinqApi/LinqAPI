@@ -5,16 +5,16 @@ namespace LinqApi.Logging
     /// </summary>
     public interface ILogMessage
     {
-        string CorrelationId { get; }
-        string ParentCorrelationId { get; }
+        string? CorrelationId { get; }
+        string? ParentCorrelationId { get; }
         /// <summary>
         /// A discriminator indicating the log type (e.g. "ApiLog", "HttpCallLog", "DbLog").
         /// </summary>
-        string MessageType { get; }
+        string? MessageType { get; }
         /// <summary>
         /// The payload of the log (can be JSON, XML, etc.).
         /// </summary>
-        string Payload { get; }
+        string? Payload { get; }
         DateTime CreatedAt { get; }
     }
 

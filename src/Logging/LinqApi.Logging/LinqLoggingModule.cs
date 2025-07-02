@@ -1,9 +1,7 @@
 using LinqApi.Correlation;
-using LinqApi.Logging;
 using LinqApi.Logging.LinqApi.Core;
 using LinqApi.Logging.Log;
 using LinqApi.Logging.Module;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,19 +20,15 @@ namespace LinqApi.Logging
 
         public void RegisterServices(IServiceCollection services, IConfiguration config)
         {
-            services.AddDbContext<LinqLoggingDbContext>(_configureDb);
+            //services.AddDbContext<LinqLoggingDbContext>(_configureDb);
             services.AddScoped<ILogRule, TimestampLogRule>();
-            services.AddScoped<ICorrelationIdGenerator, DefaultCorrelationIdGenerator>();
+            services.AddSingleton<ICorrelationIdGenerator, DefaultCorrelationIdGenerator>();
             services.AddScoped<LinqSqlLoggingInterceptor>();
             services.AddScoped<ILogRule, CreatedByLogRule>();
             services.AddScoped<LinqLoggingBehavior>();
             //services.AddScoped<LinqHttpLoggingMiddleware>();
-
-            services.AddScoped<LinqLoggingOptions>();
-
-
-
-            services.AddScoped<ILinqPayloadMasker, DefaultPayloadMasker>();
+            
+            services.AddTransient<ILinqPayloadMasker, DefaultPayloadMasker>();
             services.AddScoped<ILinqLogger, LinqDbContextCallLogger>();
 
             services.AddScoped<ILinqLoggingDbContextAdapter>(sp =>
