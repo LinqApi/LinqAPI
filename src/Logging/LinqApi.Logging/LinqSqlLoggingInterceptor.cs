@@ -57,12 +57,19 @@ namespace LinqApi.Logging
 
             // Synchronous executed methods:
             public override async ValueTask<DbDataReader> ReaderExecutedAsync(
-     DbCommand command,
-     CommandExecutedEventData eventData,
-     DbDataReader result, CancellationToken cancellationToken = default)
+         DbCommand command,
+         CommandExecutedEventData eventData,
+         DbDataReader result, CancellationToken cancellationToken = default)
             {
                 var duration = StopAndRemoveStopwatch(command);
-                await LogSql(command, duration, "Reader", eventData, cancellationToken);
+                var cmdType = "Reader";
+                if (command.Transaction == null)
+                {
+                    // Bu kısım, EFCoreSecondLevelCacheInterceptor devredeyken ve önbellek isabet ettiğinde ÇAĞRILMAYACAĞINI UNUTMAYIN.
+                    // Sadece gerçek veritabanı sorgularının Transaction'ı null olduğunda (yani implicit transaction veya hiç transaction yoksa) devreye girer.
+                    cmdType = "Cache";
+                }
+                await LogSql(command, duration, cmdType, eventData, cancellationToken);
                 return await base.ReaderExecutedAsync(command, eventData, result, cancellationToken);
             }
 
@@ -72,7 +79,12 @@ namespace LinqApi.Logging
                 int result, CancellationToken cancellationToken = default)
             {
                 var duration = StopAndRemoveStopwatch(command);
-                await LogSql(command, duration, "NonQuery", eventData, cancellationToken);
+                var cmdType = "NonQuery";
+                if (command.Transaction == null)
+                {
+                    cmdType = "Cache";
+                }
+                await LogSql(command, duration, cmdType, eventData, cancellationToken);
                 return await base.NonQueryExecutedAsync(command, eventData, result, cancellationToken);
             }
 
@@ -82,7 +94,12 @@ namespace LinqApi.Logging
                 object result, CancellationToken cancellationToken = default)
             {
                 var duration = StopAndRemoveStopwatch(command);
-                await LogSql(command, duration, "Scalar", eventData, cancellationToken);
+                var cmdType = "Scalar";
+                if (command.Transaction == null)
+                {
+                    cmdType = "Cache";
+                }
+                await LogSql(command, duration, cmdType, eventData, cancellationToken);
                 return await base.ScalarExecutedAsync(command, eventData, result, cancellationToken);
             }
 
@@ -105,6 +122,7 @@ namespace LinqApi.Logging
                 CancellationToken cancellationToken = default)
             {
                 StartStopwatch(command);
+               
                 return await base.NonQueryExecutingAsync(command, eventData, result, cancellationToken);
             }
 
@@ -152,6 +170,7 @@ namespace LinqApi.Logging
                     UserId = userContext.Id,
                     ExecutedAt = DateTime.UtcNow,
                     CommandType = commandType,
+                    
                 };
 
                 await _linqLogger.LogAsync(sqlLog, cancellationToken).ConfigureAwait(false);
