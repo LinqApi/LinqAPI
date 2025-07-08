@@ -102,7 +102,7 @@ namespace LinqApi.Repository
             // Bu metot sadece Id'yi çekiyor
             var idOnly = await DbSet
                 .Where(predicate)
-                .Select(x => x.Id) 
+                .Select(x => x.Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (EqualityComparer<TId>.Default.Equals(idOnly, default))
@@ -216,6 +216,21 @@ namespace LinqApi.Repository
                 Items = items,
                 TotalRecords = totalCount
             };
+        }
+
+        public async Task<TEntity?> FindWithIncludesAsync(
+    Expression<Func<TEntity, bool>> predicate,
+    Expression<Func<TEntity, object>>[] includes,
+    CancellationToken cancellationToken = default)
+        {
+            IQueryable<TEntity> query = DbSet;
+
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+
+            return await query.FirstOrDefaultAsync(predicate, cancellationToken);
         }
 
         /// <summary>

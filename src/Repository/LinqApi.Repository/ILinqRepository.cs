@@ -98,5 +98,10 @@ namespace LinqApi.Repository
         /// A tuple where <c>found</c> indicates if an entity was found, and <c>entity</c> contains the entity if found.
         /// </returns>
         Task<(bool found, TEntity? entity)> TryFindFastAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
+
+        Task<TEntity?> FindWithIncludesAsync(
+    Expression<Func<TEntity, bool>> predicate,
+    Expression<Func<TEntity, object>>[] includes,
+    CancellationToken cancellationToken = default);
     }
 }

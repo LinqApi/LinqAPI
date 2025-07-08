@@ -83,6 +83,7 @@ namespace LinqApi.Dynamic.Controller
         public string ControllerName { get; set; }
         public string RoutePrefix { get; set; } // e.g., "api/[controller]"
         public string AreaName { get; set; }    // e.g., "DynamicArea"
+        public List<object> Properties { get;  set; }
     }
 
     public class LinqApiControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
@@ -140,12 +141,16 @@ namespace LinqApi.Dynamic.Controller
                     ? $"api/[controller]"
                     : $"api/{_options.AreaName}/[controller]";
 
+                var propertySchema = ViewModelSchemaHelper.GetSchema(entityType);
+
                 LinqApiRegistry.Register(new DynamicApiInfo
                 {
                     EntityName = entityType.Name,
                     ControllerName = controllerName,
                     RoutePrefix = routePrefix,
-                    AreaName = _options.AreaName
+                    AreaName = _options.AreaName,
+                    Properties = propertySchema
+
                 });
             }
         }
@@ -317,12 +322,14 @@ namespace LinqApi.Dynamic.Controller
 
                 var customControllerType = DefineDynamicControllerType(baseControllerType, controllerName, AreaName);
                 feature.Controllers.Add(customControllerType.GetTypeInfo());
-
+                var propertySchema = ViewModelSchemaHelper.GetSchema(entityType);
                 LinqApiRegistry.Register(new DynamicApiInfo
                 {
                     EntityName = controllerName.Replace("Controller", string.Empty),
                     ControllerName = controllerName.Replace("Controller", string.Empty),
-                    RoutePrefix = AreaName
+                    RoutePrefix = AreaName,
+                    Properties = propertySchema
+
                 });
             }
         }

@@ -1,0 +1,262 @@
+# LinqApi MCP Server – Auto‑Generated API Guide
+
+> **Purpose**  Provide everything a human *and* a Large Language Model (Claude, GPT, etc.) needs to discover, understand and query any entity exposed by your **dynamic LinqApi MCP Server**.
+> The document is fully self‑contained: paste it into Claude Developer as the *System Prompt* or host it at an URL and reference it.
+> The *Entity Catalog* section is produced automatically at runtime by iterating over `LinqApiRegistry.Apis`.
+
+---
+
+\## 1 · How to Discover the API
+
+| HTTP Method | Route                      | What it returns                                                                                    |
+| ----------- | -------------------------- | -------------------------------------------------------------------------------------------------- |
+| **GET**     | `/mcp/apis`                | JSON array of every dynamic API with
+<br>  `entityName`, `routePrefix`, `controllerName`, `keyType` |
+| **GET**     | `/api/{entity}/properties` | JSON array describing every public field of the entity:
+<br>`name`, `type`, `default`, `isRequired` |
+
+Each dynamic controller also exposes CRUD & query endpoints (see Section 3).
+
+---
+
+\## 2 · The `LinqFilterModel` (Common Body Schema)
+
+| Field        | Type                       | Required | Description                                                                                                   |
+| ------------ | -------------------------- | -------- | ------------------------------------------------------------------------------------------------------------- |
+| `filter`     | `string`                   | **Yes**  | Dynamic‑LINQ expression.
+<br>Example: `id > 10 && userName.Contains("Ali")`                                    |
+| `orderBy`    | `string`                   | No       | Field(s) to sort by. Multiple allowed: `"name asc, createdAt desc"`                                           |
+| `desc`       | `bool`                     | No       | Quick way to flip single‑field sort. Ignored if `orderBy` already contains direction keywords.                |
+| `groupBy`    | `string`                   | No       | Field name to group on. Works with `select`.                                                                  |
+| `select`     | `string`                   | No       | Dynamic‑LINQ projection string.
+<br>Must start with `new(`.
+<br>Example: `new(Key as userName, Count() as cnt)` |
+| `properties` | `string[]`                 | No       | Explicit list of fields to return. Empty ⇒ return all scalar fields.                                          |
+| `includes`   | `IncludeModel[]`           | No       | Eager‑load navigation properties.
+<br>May be `[]` (empty).                                                     |
+| `pager`      | `{ pageNumber, pageSize }` | No       | Pagination. Defaults: `1 / 10`.                                                                               |
+
+\### Helper Types
+
+```jsonc
+IncludeModel {
+  propertyName: "orders",           // required
+  thenIncludes?: [                  // optional recursion
+    { childIncludes: [ { propertyName: "product" } ] }
+  ]
+}
+
+Pager {
+  pageNumber: 1,
+  pageSize: 10
+}
+```
+
+---
+
+\## 3 · Standard Endpoints per Entity
+
+| Verb     | Route                       | Body / Notes                |
+| -------- | --------------------------- | --------------------------- |
+| `GET`    | `/api/{entity}/properties`  | — returns field schema      |
+| `GET`    | `/api/{entity}/{id}`        | — single record             |
+| `POST`   | `/api/{entity}/filterpaged` | **Body:** `LinqFilterModel` |
+| `POST`   | `/api/{entity}`             | full entity JSON –Create    |
+| `PUT`    | `/api/{entity}/{id}`        | full entity JSON –Update    |
+| `DELETE` | `/api/{entity}/{id}`        | — Delete                    |
+
+---
+
+\## 4 · Filter Syntax Cheat‑Sheet
+
+| Category         | Examples                                                                       | Notes                                               |           |                                |
+| ---------------- | ------------------------------------------------------------------------------ | --------------------------------------------------- | --------- | ------------------------------ |
+| **Comparators**  | `age > 30`, `price <= 100`, `id == 42`                                         | Supports `> < >
+    = <= == !=` on numeric & date types  |           |                                |
+    | **String funcs** | `name.Contains("abc")`, `guid.StartsWith("c")`, `email.EndsWith("@@gmail.com")` | Case‑sensitive by default (depends on DB collation) |           |                                |
+    | **Logical ops**  | `&&`, \`                                                                       |                                                     | `, `!()\` | Use parentheses for precedence |
+    | **Date literal** | `createdAt > DateTime(2024,1,1)`                                               | or pass via parameterised string: `"2024-01-01"`    |           |                                |
+
+    ---
+
+    \## 5 · Grouping & Aggregates
+
+    1. Set `groupBy` to a single field name.
+    2. Provide a `select` that starts with `new(` and projects **aggregate functions**.
+
+    Common aggregates: `Count()`, `Sum(field)`, `Avg(field)`, `Min(field)`, `Max(field)`.
+
+    ```jsonc
+    {
+    "filter": "1 == 1",
+    "groupBy": "userName",
+    "select": "new(Key as userName, Count() as cnt)",
+    "orderBy": "cnt",
+    "desc": true,
+    "pager": { "pageNumber": 1, "pageSize": 10 },
+    "includes": [],
+    "properties": ["userName", "cnt"]
+    }
+    ```
+
+    ---
+
+    \## 6 · Ordering
+
+    * Single field quick sort: `orderBy = "id", desc = true`
+    * Multi‑field explicit: `orderBy = "userName asc, createdAt desc"` (ignore `desc` flag)
+
+    ---
+
+    \## 7 · Paging & Response Model
+
+    Request snippet
+
+    ```jsonc
+    "pager": { "pageNumber": 3, "pageSize": 50 }
+    ```
+
+    Response structure (wrapper around your projection):
+
+    ```jsonc
+    {
+    "items": [ /* array … */ ],
+    "totalRecords": 1234
+    }
+    ```
+
+    ---
+
+    \## 8 · End‑to‑End Example (Profiles entity)
+
+    \### Schema (`GET /api/Profiles/properties`)
+
+    ```json
+    [
+    { "name": "id",               "type": "Int64",            "default": 0,   "isRequired": false },
+    { "name": "cognitoId",        "type": "String",          "default": null, "isRequired": false },
+    { "name": "email",            "type": "String",          "default": null, "isRequired": false },
+    { "name": "privacyLevel",     "type": "Int16",           "default": 0,   "isRequired": false },
+    { "name": "notificationSetting","type": "Int16",          "default": 0,   "isRequired": false },
+    { "name": "userName",         "type": "String",          "default": null, "isRequired": false }
+    ]
+    ```
+
+    \### Retrieve records > id 15 with `userName` containing "c"
+
+    ```http
+    POST /api/Profiles/filterpaged
+    Content‑Type: application/json
+
+    {
+    "filter": "id > 15 && userName.Contains(\"c\")",
+    "orderBy": "id",
+    "desc": true,
+    "pager": { "pageNumber": 1, "pageSize": 10 },
+    "includes": []
+    }
+    ```
+
+    **Response**
+
+    ```json
+    {
+    "items": [
+    {
+    "id": 139,
+    "cognitoId": "14180468-5041-7068-55cb-83a2a3f9cd58",
+    "email": "cihan.dalgicdir@gmail.com",
+    "privacyLevel": 0,
+    "notificationSetting": 0,
+    "userName": "cihandalgicdir"
+    }
+    ],
+    "totalRecords": 1
+    }
+    ```
+
+    \### Grouping by `userName` and counting
+
+    ```http
+    POST /api/Profiles/filterpaged
+
+    {
+    "filter": "1 == 1",
+    "groupBy": "userName",
+    "select": "new(Key as userName, Count() as cnt)",
+    "orderBy": "cnt",
+    "desc": true,
+    "pager": { "pageNumber": 1, "pageSize": 10 }
+    }
+    ```
+
+    ---
+
+    \## 9 · Entity Catalog (Auto‑Generated)
+
+    > The following Razor snippet runs at startup and injects one section per entity.
+    > The same layout is used to build this markdown at runtime.
+
+    ````cshtml
+@using LinqApi.Dynamic.Controller
+@foreach (var api in LinqApiRegistry.Apis)
+{
+        <text>
+            ## @api.EntityName
+            Route Prefix : **@api.RoutePrefix**
+            Controller   : **@api.ControllerName**
+
+            | Field | Type | Required |
+            |-------|------|----------|
+            @foreach (var p in api.Properties)
+            {
+                var type = p.GetType();
+                var nameProp = type.GetProperty("Name");
+                var typeProp = type.GetProperty("Type");
+                var isRequiredProp = type.GetProperty("IsRequired");
+
+                if (nameProp != null && typeProp != null && isRequiredProp != null)
+                {
+                    var nameVal = nameProp.GetValue(p)?.ToString();
+                    var typeVal = typeProp.GetValue(p)?.ToString();
+                    var isRequiredVal = isRequiredProp.GetValue(p)?.ToString();
+
+                    <text>
+                        | @nameVal | @typeVal | @isRequiredVal |
+                    </text>
+                }
+            }
+            @{
+                // İlk kullanılabilir property'yi al (örnek filter için)
+                var firstProp = api.Properties
+                .FirstOrDefault(x => x.GetType().GetProperty("Name") != null);
+                var firstPropName = firstProp != null
+                ? (string)firstProp.GetType().GetProperty("Name")?.GetValue(firstProp)
+                : "id";
+            }
+        Example Query:
+        ```json
+        {
+        "filter": "@firstPropName != null",
+        "pager": { "pageNumber": 1, "pageSize": 10 },
+        "includes": []
+        }
+        ````
+
+        ```
+    </text>
+    
+
+    }
+
+    ```
+
+    *(When served statically, this MD is rendered with all entity sections pre‑expanded.)*
+
+    ---
+
+    # Happy Querying 🚀
+
+    Copy this guide into Claude Developer or link to its URL; Claude can now generate correct JSON bodies and call every endpoint of your MCP server without extra guidance.
+
+    ```

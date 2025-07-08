@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-builder.Services.AddDynamicLinqApi(string.Empty, "Data Source=.\\SQLEXPRESS;Database=eventiggcik10;Trusted_Connection=True;TrustServerCertificate=Yes");
+builder.Services.AddDynamicLinqApi(string.Empty, "Server=.;Database=eventiggcik100;Trusted_Connection=True;TrustServerCertificate=True;");
 
 builder.Services.AddHttpContextAccessor();
 

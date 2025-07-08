@@ -21,7 +21,7 @@ namespace LinqApi.Logging
             RequestDelegate next,
             ILinqPayloadMasker masker,
             ICorrelationIdGenerator correlationGenerator,
-            IOptions<LinqLoggingOptions> options,    
+            IOptions<LinqLoggingOptions> options,
             IServiceScopeFactory scopeFactory)
         {
             _next = next;
@@ -59,12 +59,24 @@ namespace LinqApi.Logging
             if (CorrelationContext.Current == null)
                 CorrelationContext.EnsureCorrelation(_correlationGenerator);
 
-            // Ek route verilerini al (Controller, Action, vb.)
-            var routingFeature = context.Features.Get<IRoutingFeature>();
-            var routeData = routingFeature?.RouteData;
+           
+            var routeValues = context.GetRouteData();
 
-            string controller = routeData?.Values["controller"]?.ToString() ?? string.Empty;
-            string action = routeData?.Values["action"]?.ToString() ?? string.Empty;
+            string controller = string.Empty;
+            string action = string.Empty;
+
+            if (routeValues != null)
+            {
+                if (routeValues.Values.TryGetValue("controller", out var ctrl) && ctrl != null)
+                {
+                    controller = ctrl.ToString();
+                }
+
+                if (routeValues.Values.TryGetValue("action", out var act) && act != null)
+                {
+                    action = act.ToString();
+                }
+            }
 
             // Response body'yi yakalamak için stream'i değiştir.
             var originalBodyStream = context.Response.Body;
@@ -122,8 +134,4 @@ namespace LinqApi.Logging
             }
         }
     }
-
-
-
 }
-

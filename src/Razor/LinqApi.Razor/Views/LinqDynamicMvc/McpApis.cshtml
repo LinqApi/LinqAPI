@@ -1,0 +1,50 @@
+@using LinqApi.Dynamic.Controller
+@foreach (var api in LinqApiRegistry.Apis)
+{
+    <text>
+        EntityName: **@api.EntityName**
+        Route Prefix: **@(!string.IsNullOrEmpty(api.RoutePrefix) ? api.RoutePrefix : "api")**
+        Controller   : **@api.ControllerName**
+
+        | Field | Type | Required |
+        |-------|------|----------|
+        @foreach (var p in api.Properties)
+        {
+            var type = p.GetType();
+            var nameProp = type.GetProperty("Name");
+            var typeProp = type.GetProperty("Type");
+            var isRequiredProp = type.GetProperty("IsRequired");
+
+            if (nameProp != null && typeProp != null && isRequiredProp != null)
+            {
+                var nameVal = nameProp.GetValue(p)?.ToString();
+                var typeVal = typeProp.GetValue(p)?.ToString();
+                var isRequiredVal = isRequiredProp.GetValue(p)?.ToString();
+
+                <text>
+                    | @nameVal | @typeVal | @isRequiredVal |
+                </text>
+            }
+        }
+        @{
+            // İlk kullanılabilir property'yi al (örnek filter için)
+            var firstProp = api.Properties
+            .FirstOrDefault(x => x.GetType().GetProperty("Name") != null);
+            var firstPropName = firstProp != null
+            ? (string)firstProp.GetType().GetProperty("Name")?.GetValue(firstProp)
+            : "id";
+        }
+        Example Query:
+        ```json
+        {
+        "filter": "id =5",
+        "pager": { "pageNumber": 1, "pageSize": 1 },
+        "includes": []
+        }
+        ````
+
+        ```
+    </text>
+
+
+}

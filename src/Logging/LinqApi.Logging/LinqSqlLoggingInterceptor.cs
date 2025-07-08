@@ -63,12 +63,7 @@ namespace LinqApi.Logging
             {
                 var duration = StopAndRemoveStopwatch(command);
                 var cmdType = "Reader";
-                if (command.Transaction == null)
-                {
-                    // Bu kısım, EFCoreSecondLevelCacheInterceptor devredeyken ve önbellek isabet ettiğinde ÇAĞRILMAYACAĞINI UNUTMAYIN.
-                    // Sadece gerçek veritabanı sorgularının Transaction'ı null olduğunda (yani implicit transaction veya hiç transaction yoksa) devreye girer.
-                    cmdType = "Cache";
-                }
+                
                 await LogSql(command, duration, cmdType, eventData, cancellationToken);
                 return await base.ReaderExecutedAsync(command, eventData, result, cancellationToken);
             }
@@ -80,10 +75,7 @@ namespace LinqApi.Logging
             {
                 var duration = StopAndRemoveStopwatch(command);
                 var cmdType = "NonQuery";
-                if (command.Transaction == null)
-                {
-                    cmdType = "Cache";
-                }
+                
                 await LogSql(command, duration, cmdType, eventData, cancellationToken);
                 return await base.NonQueryExecutedAsync(command, eventData, result, cancellationToken);
             }
@@ -95,10 +87,7 @@ namespace LinqApi.Logging
             {
                 var duration = StopAndRemoveStopwatch(command);
                 var cmdType = "Scalar";
-                if (command.Transaction == null)
-                {
-                    cmdType = "Cache";
-                }
+                
                 await LogSql(command, duration, cmdType, eventData, cancellationToken);
                 return await base.ScalarExecutedAsync(command, eventData, result, cancellationToken);
             }
