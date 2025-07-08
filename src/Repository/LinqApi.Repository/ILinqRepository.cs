@@ -53,6 +53,15 @@ namespace LinqApi.Repository
         Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// Retrieves all entities asynchronously.
+        /// </summary>
+        /// <param name="cancellationToken">A token that may be used to cancel the operation.</param>
+        /// <returns>An enumerable collection of all entities.</returns>
+        Task<IEnumerable<TEntity>> GetAllWithIncludesAndFilterAsync(Expression<Func<TEntity, bool>> predicate,
+    Expression<Func<TEntity, object>>[] includes,
+    CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Finds entities based on the specified predicate asynchronously.
         /// </summary>
         /// <param name="predicate">An expression to filter entities.</param>
@@ -103,5 +112,13 @@ namespace LinqApi.Repository
     Expression<Func<TEntity, bool>> predicate,
     Expression<Func<TEntity, object>>[] includes,
     CancellationToken cancellationToken = default);
+
+        Task<TEntity?> FindWithFilterAsync(
+      Expression<Func<TEntity, bool>> predicate,
+      IEnumerable<Func<IQueryable<TEntity>, IQueryable<TEntity>>> includeFunctions,
+      CancellationToken cancellationToken = default);
+
+        Task<int> DeleteWhereAsync(Expression<Func<TEntity, bool>> predicate,
+            CancellationToken cancellationToken = default);
     }
 }

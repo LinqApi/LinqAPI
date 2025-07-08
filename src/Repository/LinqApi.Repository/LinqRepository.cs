@@ -73,6 +73,22 @@ namespace LinqApi.Repository
             }
         }
 
+        public async Task<int> DeleteWhereAsync(
+    Expression<Func<TEntity, bool>> predicate,
+    CancellationToken cancellationToken = default)
+        {
+            // Predicate'e uyan tüm kayıtları çek
+            var entities = await DbSet.Where(predicate).ToListAsync(cancellationToken);
+
+            if (!entities.Any())
+                return 0;
+
+            // Toplu silme işlemi
+            DbSet.RemoveRange(entities);
+
+            // SaveChanges varsa burada ya da dışarıdan çağrılır
+            return await SaveChangesAsync(cancellationToken);
+        }
         /// <inheritdoc/>
         public async Task<TEntity> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
         {
@@ -87,6 +103,21 @@ namespace LinqApi.Repository
         /// <inheritdoc/>
         public async Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken = default) =>
             await DbSet.ToListAsync(cancellationToken).ConfigureAwait(false);
+
+        public async Task<IEnumerable<TEntity>> GetAllWithIncludesAndFilterAsync(
+    Expression<Func<TEntity, bool>> predicate,
+    Expression<Func<TEntity, object>>[] includes,
+    CancellationToken cancellationToken = default)
+        {
+            IQueryable<TEntity> query = DbSet;
+
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+
+            return await query.Where(predicate).ToListAsync(cancellationToken).ConfigureAwait(false);
+        }
 
         /// <inheritdoc/>
         public async Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default) =>
@@ -231,6 +262,26 @@ namespace LinqApi.Repository
             }
 
             return await query.FirstOrDefaultAsync(predicate, cancellationToken);
+        }
+
+        public async Task<TEntity?> FindWithFilterAsync(
+      Expression<Func<TEntity, bool>> predicate,
+      IEnumerable<Func<IQueryable<TEntity>, IQueryable<TEntity>>> includeFunctions,
+      CancellationToken cancellationToken = default)
+        {
+            IQueryable<TEntity> query = DbSet;
+
+            if (includeFunctions != null)
+            {
+                foreach (var include in includeFunctions)
+                {
+                    query = include(query);
+                }
+            }
+
+            return await query
+                .FirstOrDefaultAsync(predicate, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
