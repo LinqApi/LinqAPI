@@ -32,6 +32,8 @@ namespace LinqApi.Razor
         /// The method aggregates table information from all registered configurations. It supports keys
         /// formatted as "schema.table" or just "table", defaulting to the "dbo" schema when only a table name is provided.
         /// </remarks>
+
+        [HttpGet]
         public virtual IActionResult Index()
         
         {
@@ -51,6 +53,8 @@ namespace LinqApi.Razor
         /// The method aggregates table information from all registered configurations. It supports keys
         /// formatted as "schema.table" or just "table", defaulting to the "dbo" schema when only a table name is provided.
         /// </remarks>
+        /// 
+        [HttpGet]
         public virtual IActionResult Mcp()
 
         {
@@ -59,6 +63,7 @@ namespace LinqApi.Razor
             return View("Mcp");
         }
         [Route("LinqDynamicMvc/Mcp/Apis")]
+        [HttpGet]
         public virtual IActionResult McpApis()
 
         {
@@ -66,6 +71,7 @@ namespace LinqApi.Razor
             return View("McpApis");
         }
 
+        [HttpGet]
         public virtual IActionResult Select2()
 
         {
