@@ -1,19 +1,24 @@
 
 namespace LinqApi.Controller
 {
-    using Microsoft.AspNetCore.Mvc;
-    using System.Threading.Tasks;
-    using System.Collections.Generic;
-    using System;
-    using LinqApi.Repository;
-    using System.Reflection;
     using LinqApi.Logging;
+    using LinqApi.Repository;
+    using Microsoft.AspNetCore.Mvc;
+    using System;
     using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.ComponentModel.DataAnnotations;
+    using System.Data.SqlTypes;
+    using System.Reflection;
+    using System.Threading.Tasks;
 
     [ApiController]
     public class LinqController<TEntity, TId>(ILinqRepository<TEntity, TId> repo) : LinqReadonlyController<TEntity, TId>(repo)
      where TEntity : BaseEntity<TId>
     {
+
+
 
         [HttpPost]
         public virtual async Task<IActionResult> Create([FromBody] TEntity entity, CancellationToken cancellationToken)
@@ -52,30 +57,81 @@ namespace LinqApi.Controller
                 return cached;
 
             var instance = Activator.CreateInstance(type);
+
             var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Select(p => new
+                .Select(p =>
                 {
-                    Name = ToCamelCase(p.Name),
-                    Type = GetReadableTypeName(p.PropertyType),
-                    Default = p.GetValue(instance),
-                    IsRequired = p.GetCustomAttributes().Any(a => a.GetType().Name.Contains("Required"))
+                    var rawType = p.PropertyType;
+                    var isNullable = Nullable.GetUnderlyingType(rawType) != null;
+                    var actualType = isNullable
+                        ? Nullable.GetUnderlyingType(rawType)!
+                        : rawType;
+
+                    var isEnum = actualType.IsEnum;
+                    var rawName = ToCamelCase(p.Name);
+
+                    var displayAttr = p.GetCustomAttribute<DisplayAttribute>();
+                    var descAttr = p.GetCustomAttribute<DescriptionAttribute>();
+
+                    var display = new Dictionary<string, object?>
+                    {
+                        ["name"] = displayAttr?.Name ?? rawName
+                    };
+
+                    if (!string.IsNullOrWhiteSpace(descAttr?.Description))
+                        display["description"] = descAttr.Description;
+
+                    // Eğer enum ise, values dizisini ekle
+                    if (isEnum)
+                    {
+                        var values = Enum.GetValues(actualType)
+                            .Cast<object>()
+                            .Select(ev =>
+                            {
+                                var memInfo = actualType.GetMember(ev.ToString() ?? "").FirstOrDefault();
+                                var evDisplay = memInfo?.GetCustomAttribute<DisplayAttribute>();
+                                var evDesc = memInfo?.GetCustomAttribute<DescriptionAttribute>();
+
+                                return new
+                                {
+                                    name = ev.ToString(),
+                                    value = Convert.ToInt32(ev),
+                                    displayName = evDisplay?.Name,
+                                    description = evDesc?.Description
+                                };
+                            })
+                            .ToList();
+
+                        display["values"] = values;
+                    }
+
+                    return new
+                    {
+                        name = rawName,
+                        type = isEnum ? "Enum" : GetReadableTypeName(p.PropertyType),
+                        @default = p.GetValue(instance),
+                        isRequired = p.GetCustomAttributes().Any(a => a.GetType().Name.Contains("Required")),
+                        display
+                    };
                 })
                 .Cast<object>()
                 .ToList();
 
-            var displayAttr = type.GetCustomAttribute<DisplayPropertyAttribute>();
-            if (displayAttr != null)
+            var displayProp = type.GetCustomAttribute<DisplayPropertyAttribute>();
+            if (displayProp != null)
             {
                 props.Add(new
                 {
-                    Type = displayPropertyName,
-                    Properties = displayAttr.Properties
+                    type = displayPropertyName,
+                    properties = displayProp.Properties
                 });
             }
 
             _schemaCache.TryAdd(cacheKey, props);
             return props;
         }
+
+
 
         private static string ToCamelCase(string input)
         {
