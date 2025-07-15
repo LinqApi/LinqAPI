@@ -9,7 +9,6 @@ namespace LinqApi.Controller
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.ComponentModel.DataAnnotations;
-    using System.Data.SqlTypes;
     using System.Reflection;
     using System.Threading.Tasks;
 
@@ -17,9 +16,6 @@ namespace LinqApi.Controller
     public class LinqController<TEntity, TId>(ILinqRepository<TEntity, TId> repo) : LinqReadonlyController<TEntity, TId>(repo)
      where TEntity : BaseEntity<TId>
     {
-
-
-
         [HttpPost]
         public virtual async Task<IActionResult> Create([FromBody] TEntity entity, CancellationToken cancellationToken)
         {
@@ -131,8 +127,6 @@ namespace LinqApi.Controller
             return props;
         }
 
-
-
         private static string ToCamelCase(string input)
         {
             if (string.IsNullOrEmpty(input) || char.IsLower(input[0]))
@@ -140,7 +134,6 @@ namespace LinqApi.Controller
 
             return char.ToLowerInvariant(input[0]) + input.Substring(1);
         }
-
 
         public static string GetReadableTypeName(Type type)
         {

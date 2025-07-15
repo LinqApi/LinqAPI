@@ -157,7 +157,7 @@ namespace LinqApi.Logging
                     QueryText = command.CommandText,
                     DurationMs = durationMs,
                     UserId = userContext.Id,
-                    ExecutedAt = DateTime.UtcNow,
+                    ExecutedAt = DateTime.Now,
                     CommandType = commandType,
                     
                 };

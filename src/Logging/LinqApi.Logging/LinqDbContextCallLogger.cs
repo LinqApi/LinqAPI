@@ -1,50 +1,62 @@
 using LinqApi.Logging.Log;
 using LinqApi.Correlation;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace LinqApi.Logging
 {
-
-    /// <summary>
-    /// Default implementation for logging to Sql using EF Core.
-    /// </summary>
-    /// <summary>
-    /// Default implementation for logging to Sql using EF Core.
-    /// </summary>
     public class LinqDbContextCallLogger : ILinqLogger
     {
         private readonly LinqLoggingDbContext _db;
+        private readonly IOptions<LinqLoggingOptions> _options;
 
-        public LinqDbContextCallLogger(LinqLoggingDbContext db, ICorrelationIdGenerator correlationGenerator)
+        public LinqDbContextCallLogger(
+            LinqLoggingDbContext db,
+            ICorrelationIdGenerator correlationGenerator,
+            IOptions<LinqLoggingOptions> options)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
+            _options = options;
         }
 
         public virtual IDisposable BeginScope<TState>(TState state) where TState : notnull
             => new LoggerScope(() => { });
 
-        public virtual bool IsEnabled(LogLevel logLevel) =>
-            logLevel >= LogLevel.Information;
-
-        /// <summary>
-        /// Synchronous log metodu. Hata varsa ilgili hata logunu (ör. LinqDatabaseErrorLog, LinqConsumeErrorLog veya LinqPublishErrorLog)
-        /// oluşturur, aksi halde standart HTTP call logu (LinqHttpCallLog) üretir.
-        /// </summary>
-        public virtual void Log<TState>(LogLevel logLevel, EventId eventId, TState state,
-            Exception exception, Func<TState, Exception, string> formatter)
+        public virtual bool IsEnabled(LogLevel logLevel)
         {
+            // Eğer sadece Error loglamak isteniyorsa
+            if (_options.Value.LogLevel.Equals("Error", StringComparison.OrdinalIgnoreCase))
+                return logLevel >= LogLevel.Error;
+
+            // Aksi halde Information ve üzerini logla
+            return logLevel >= LogLevel.Information;
+        }
+
+        public virtual void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception exception,
+            Func<TState, Exception, string> formatter)
+        {
+            // Eğer bu seviyede loglamaya izin yoksa
             if (!IsEnabled(logLevel))
                 return;
 
+            // Eğer "Error" modundaysa ve exception yoksa çık
+            if (_options.Value.LogLevel.Equals("Error", StringComparison.OrdinalIgnoreCase)
+                && exception == null)
+                return;
+
             string message = formatter(state, exception);
-            string currentCorrelation = CorrelationContext.Current?.ParentId.ToString() ?? Guid.NewGuid().ToString();
+            string currentCorrelation = CorrelationContext.Current?.ParentId.ToString()
+                                         ?? Guid.NewGuid().ToString();
 
             LinqLogEntity logEntry;
 
             if (exception != null)
             {
-                // Özel durumlara göre hata türünü belirlemek için ilave kontroller ekleyebilirsiniz.
-                // Aşağıdaki örnekte, mesaj içeriğine bağlı olarak consume veya publish error logu üretimi yapılıyor.
+                // Hata logları
                 if (message.Contains("consume", StringComparison.OrdinalIgnoreCase))
                 {
                     logEntry = new LinqConsumeErrorLog
@@ -54,9 +66,8 @@ namespace LinqApi.Logging
                         StackTrace = exception.StackTrace,
                         IsException = true,
                         DurationMs = 0,
-                        CreatedAt = DateTime.UtcNow,
+                        CreatedAt = DateTime.Now,
                         IsInternal = true,
-
                     };
                 }
                 else if (message.Contains("publish", StringComparison.OrdinalIgnoreCase))
@@ -68,7 +79,7 @@ namespace LinqApi.Logging
                         StackTrace = exception.StackTrace,
                         IsException = true,
                         DurationMs = 0,
-                        CreatedAt = DateTime.UtcNow,
+                        CreatedAt = DateTime.Now,
                         IsInternal = true
                     };
                 }
@@ -81,14 +92,14 @@ namespace LinqApi.Logging
                         StackTrace = exception.StackTrace,
                         IsException = true,
                         DurationMs = 0,
-                        CreatedAt = DateTime.UtcNow,
+                        CreatedAt = DateTime.Now,
                         IsInternal = true
                     };
                 }
             }
             else
             {
-                // Hata yoksa standart HTTP call logu üretelim.
+                // Normal HTTP-LOG (Information) logu
                 logEntry = new LinqHttpCallLog
                 {
                     ParentCorrelationId = currentCorrelation,
@@ -99,77 +110,43 @@ namespace LinqApi.Logging
                     DurationMs = 0,
                     Exception = null,
                     IsException = false,
-                    CreatedAt = DateTime.UtcNow,
+                    CreatedAt = DateTime.Now,
                     IsInternal = true,
                 };
             }
 
-            // Log tipine göre doğru DbSet'e ekleyelim.
+            // Doğru DbSet'e ekle
             switch (logEntry)
             {
-                case LinqHttpCallLog httpLog:
-                    _db.HttpCallLogs.Add(httpLog);
-                    break;
-                case LinqSqlErrorLog dbError:
-                    _db.LinqDatabaseErrorLogs.Add(dbError);
-                    break;
-                case LinqConsumeErrorLog consumeError:
-                    _db.LinqConsumeErrorLogs.Add(consumeError);
-                    break;
-                case LinqPublishErrorLog publishError:
-                    _db.LinqPublishErrorLogs.Add(publishError);
-                    break;
-                case LinqEventLog eventLog:
-                    _db.EventLogs.Add(eventLog);
-                    break;
-                case LinqSqlLog databaseLog:
-                    _db.SqlLogs.Add(databaseLog);
-                    break;
-                default:
-                    //_db.Logs.Add(logEntry);
-                    break;
+                case LinqHttpCallLog httpLog: _db.HttpCallLogs.Add(httpLog); break;
+                case LinqSqlErrorLog dbError: _db.LinqDatabaseErrorLogs.Add(dbError); break;
+                case LinqConsumeErrorLog consumeErr: _db.LinqConsumeErrorLogs.Add(consumeErr); break;
+                case LinqPublishErrorLog publishErr: _db.LinqPublishErrorLogs.Add(publishErr); break;
+                case LinqEventLog eventLog: _db.EventLogs.Add(eventLog); break;
+                case LinqSqlLog sqlLog: _db.SqlLogs.Add(sqlLog); break;
+                default: break;
             }
 
             _db.SaveChanges();
         }
 
-        /// <summary>
-        /// Asenkron log metodunda, gönderilen LinqLogEntity örneğini uygun DbSet'e ekler.
-        /// </summary>
         public virtual async Task LogAsync(LinqLogEntity log, CancellationToken cancellationToken)
         {
             if (log.IsInternal)
                 return;
 
-            
-
             switch (log)
             {
-                case LinqHttpCallLog httpLog:
-                    await _db.HttpCallLogs.AddAsync(httpLog);
-                    break;
-                case LinqSqlErrorLog dbError:
-                    await _db.LinqDatabaseErrorLogs.AddAsync(dbError);
-                    break;
-                case LinqConsumeErrorLog consumeError:
-                    await _db.LinqConsumeErrorLogs.AddAsync(consumeError);
-                    break;
-                case LinqPublishErrorLog publishError:
-                    await _db.LinqPublishErrorLogs.AddAsync(publishError);
-                    break;
-                case LinqEventLog eventLog:
-                    await _db.EventLogs.AddAsync(eventLog);
-                    break;
-                case LinqSqlLog linqSqlLog:
-                    await _db.SqlLogs.AddAsync(linqSqlLog);
-                    break;
-
-                default:
-                    //TODO P1
-                    break;
+                case LinqHttpCallLog httpLog: await _db.HttpCallLogs.AddAsync(httpLog, cancellationToken); break;
+                case LinqSqlErrorLog dbError: await _db.LinqDatabaseErrorLogs.AddAsync(dbError, cancellationToken); break;
+                case LinqConsumeErrorLog consumeErr: await _db.LinqConsumeErrorLogs.AddAsync(consumeErr, cancellationToken); break;
+                case LinqPublishErrorLog publishErr: await _db.LinqPublishErrorLogs.AddAsync(publishErr, cancellationToken); break;
+                case LinqEventLog eventLog: await _db.EventLogs.AddAsync(eventLog, cancellationToken); break;
+                case LinqSqlLog sqlLog: await _db.SqlLogs.AddAsync(sqlLog, cancellationToken); break;
+                default: break;
             }
+
             await _db.SaveChangesAsync(cancellationToken);
         }
     }
 }
-

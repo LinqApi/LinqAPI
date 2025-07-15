@@ -10,7 +10,6 @@ namespace LinqApi.Logging
     {
         void Apply(EntityEntry<LinqLogEntity> entry);
     }
-
     public sealed class TimestampLogRule : ILogRule
     {
         private readonly IEpochProvider _epochProvider;
@@ -24,12 +23,11 @@ namespace LinqApi.Logging
         {
             if (entry.State == EntityState.Added)
             {
-                entry.Entity.CreatedAt = DateTime.UtcNow;
+                entry.Entity.CreatedAt = DateTime.Now;
                 entry.Entity.Epoch = _epochProvider.GetEpoch(entry.Entity.CreatedAt);
             }
         }
     }
-
     public sealed class CreatedByLogRule : ILogRule
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -49,7 +47,6 @@ namespace LinqApi.Logging
             }
         }
     }
-
     public sealed class LinqLoggingBehavior
     {
         private readonly IEnumerable<ILogRule> _rules;

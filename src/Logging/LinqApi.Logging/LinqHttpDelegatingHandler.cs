@@ -93,7 +93,7 @@ namespace LinqApi.Logging
                         DurationMs = sw.ElapsedMilliseconds,
                         Exception = ex?.ToString() ?? string.Empty,
                         IsException = ex != null,
-                        CreatedAt = DateTime.UtcNow,
+                        CreatedAt = DateTime.Now,
                         UserAgent = request.Headers.UserAgent?.ToString() ?? string.Empty,
                         Controller = string.Empty, // Outbound çağrılarda controller/action yoktur.
                         Action = string.Empty

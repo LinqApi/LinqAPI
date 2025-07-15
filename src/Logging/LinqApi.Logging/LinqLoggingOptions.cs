@@ -19,6 +19,8 @@ namespace LinqApi.Logging
         /// Flag to enable detailed view logging. If false, HTML view responses are not logged.
         /// </summary>
         public bool LogViewContent { get; set; } = false;
+
+        public string LogLevel { get; set; } = "Information";
     }
 
 

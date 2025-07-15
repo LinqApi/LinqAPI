@@ -111,7 +111,7 @@ namespace LinqApi.Logging
                     DurationMs = sw.ElapsedMilliseconds,
                     Exception = exception?.ToString() ?? string.Empty,
                     IsException = exception != null,
-                    CreatedAt = DateTime.UtcNow,
+                    CreatedAt = DateTime.Now,
                     // Inbound çağrı için CallType ayarlanabilir.
                     UserAgent = context.Request.Headers["User-Agent"].ToString() ?? string.Empty,
                     Controller = controller,
