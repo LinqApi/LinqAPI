@@ -24,7 +24,7 @@ namespace LinqApi.Epoch
             if (!_cache.TryGetValue(EpochCacheKey, out long epoch))
             {
                 // Yeni epoch değeri hesapla
-                double totalSeconds = (DateTime.UtcNow - _baseEpoch).TotalSeconds;
+                double totalSeconds = (DateTime.Now - _baseEpoch).TotalSeconds;
                 epoch = (long)(totalSeconds / SecondsPerEpoch);
 
                 // Şu anki periyodun bitimine kadar cache'de saklayalım

@@ -97,7 +97,7 @@ namespace LinqApi.MassTransit
                 ResponsePayload = string.Empty,
                 QueueName = context.DestinationAddress?.ToString() ?? "Unknown",
                 Success = false,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             await LogAsync(preLog).ConfigureAwait(false);
@@ -119,7 +119,7 @@ namespace LinqApi.MassTransit
                 ResponsePayload = "Message published successfully",
                 QueueName = context.DestinationAddress?.ToString() ?? "Unknown",
                 Success = true,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             await LogAsync(successLog).ConfigureAwait(false);
@@ -138,7 +138,7 @@ namespace LinqApi.MassTransit
             var faultLog = new LinqPublishErrorLog
             {
                 IsException = true,
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.Now,
                 StackTrace = exception.StackTrace
 
 
@@ -177,7 +177,7 @@ namespace LinqApi.MassTransit
                 ResponsePayload = string.Empty,
                 QueueName = context.ReceiveContext.InputAddress?.ToString() ?? "Unknown",
                 Success = false,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             await LogAsync(preLog).ConfigureAwait(false);
@@ -199,7 +199,7 @@ namespace LinqApi.MassTransit
                 ResponsePayload = "Message consumed successfully",
                 QueueName = context.ReceiveContext.InputAddress?.ToString() ?? "Unknown",
                 Success = true,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             await LogAsync(successLog).ConfigureAwait(false);
@@ -218,7 +218,7 @@ namespace LinqApi.MassTransit
             var faultLog = new LinqConsumeErrorLog
             {
                 IsException = true,
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.Now,
                 StackTrace = exception.StackTrace
             };
 
