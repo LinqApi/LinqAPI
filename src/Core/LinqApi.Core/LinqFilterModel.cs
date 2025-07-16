@@ -81,10 +81,6 @@ namespace LinqApi.Logging
     /// </summary>
     public class ThenIncludeModel
     {
-        /// <summary>
-        /// Gets or sets the parent property that contains the child includes.
-        /// </summary>
-        public string ParentProperty { get; set; }
 
         /// <summary>
         /// Gets or sets the list of child includes under the parent navigation.
