@@ -65,7 +65,7 @@ namespace LinqApi.Repository
         /// <inheritdoc/>
         public async Task DeleteAsync(TId id, CancellationToken cancellationToken = default)
         {
-            var entity = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+            var entity = await GetByIdAsync(id, null,cancellationToken).ConfigureAwait(false);
             if (entity != null)
             {
                 DbContext.Entry(entity).State = EntityState.Deleted;
@@ -91,14 +91,24 @@ namespace LinqApi.Repository
             return await SaveChangesAsync(cancellationToken);
         }
         /// <inheritdoc/>
-        public async Task<TEntity> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
+        public async Task<TEntity?> GetByIdAsync(
+     TId id,
+     IEnumerable<Func<IQueryable<TEntity>, IQueryable<TEntity>>>? includeFunctions = null,
+     CancellationToken cancellationToken = default)
         {
-            var entity = await DbSet.FindAsync(new object[] { id }, cancellationToken).ConfigureAwait(false);
-            if (entity != null)
+            IQueryable<TEntity> query = DbSet.AsQueryable();
+
+            if (includeFunctions != null)
             {
-                // Raise event for external observers
+                foreach (var include in includeFunctions)
+                {
+                    query = include(query);
+                }
             }
-            return entity;
+
+            // FindAsync yerine filtreli FirstOrDefault
+            return await query.FirstOrDefaultAsync(x => x.Id!.Equals(id), cancellationToken)
+                              .ConfigureAwait(false);
         }
 
         /// <inheritdoc/>

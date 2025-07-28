@@ -38,7 +38,7 @@ namespace LinqApi.Controller
         [HttpGet("{id}")]
         public virtual async Task<IActionResult> GetById(TId id, CancellationToken cancellation)
         {
-            var entity = await _repo.GetByIdAsync(id, cancellation);
+            var entity = await _repo.GetByIdAsync(id,null, cancellation);
             return entity == null ? NotFound() : Ok(entity);
         }
 

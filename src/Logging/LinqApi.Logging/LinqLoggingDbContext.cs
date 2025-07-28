@@ -125,8 +125,6 @@ namespace LinqApi.Logging
     {
         public static void ApplyLoggingModel(this ModelBuilder mb, string schema)
         {
-            mb.HasDefaultSchema(schema);
-
             mb.Entity<LinqEventLog>().ToTable("EventLogs", schema);
             mb.Entity<LinqSqlLog>().ToTable("SqlLogs", schema);
             mb.Entity<LinqSqlErrorLog>().ToTable("SqlErrorLogs", schema);

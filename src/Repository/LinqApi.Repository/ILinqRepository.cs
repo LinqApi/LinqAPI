@@ -16,7 +16,10 @@ namespace LinqApi.Repository
         Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default);
         Task DeleteAsync(TId id, CancellationToken cancellationToken = default);
         Task<int> DeleteWhereAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
-        Task<TEntity?> GetByIdAsync(TId id, CancellationToken cancellationToken = default);
+        Task<TEntity?> GetByIdAsync(
+     TId id,
+     IEnumerable<Func<IQueryable<TEntity>, IQueryable<TEntity>>>? includeFunctions = null,
+     CancellationToken cancellationToken = default);
         Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken = default);
 
         /// <summary>

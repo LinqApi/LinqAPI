@@ -37,7 +37,6 @@ namespace LinqApi.Localization
     {
         public static void ApplyLocalizationModel(this ModelBuilder mb, string schema)
         {
-            mb.HasDefaultSchema(schema);
             mb.Entity<LinqLocalizationEntity>()
               .ToTable("Localizations",schema :schema);
         }
