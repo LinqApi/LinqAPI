@@ -54,6 +54,12 @@ namespace LinqApi.Repository
         }
 
         /// <inheritdoc/>
+        public IQueryable<TEntity> Query()
+        {
+            return DbSet.AsQueryable();
+        }
+
+        /// <inheritdoc/>
         public async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             DbContext.Entry(entity).State = EntityState.Modified;

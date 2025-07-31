@@ -57,6 +57,11 @@ namespace LinqApi.Repository
         Task<PaginationModel<dynamic>> GetFilterPagedAsync(LinqFilterModel filterModel, CancellationToken cancellationToken = default);
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Sorgu yazabilmek için IQueryable olarak sunar.
+        /// </summary>
+        IQueryable<TEntity> Query();
     }
 
 }
