@@ -128,54 +128,42 @@ namespace LinqApi.Localization.Extensions
 
         private static readonly ConcurrentDictionary<Type, List<(Type entityType, Type idType)>> _repositoryTypeCache = new();
 
-        public static IServiceCollection AddLazyRepositoriesForDbContext<TDbContext>(this IServiceCollection services)
-            where TDbContext : DbContext
-        {
-            var dbContextType = typeof(TDbContext);
+    //    public static IServiceCollection AddLazyRepositoriesForDbContext<TDbContext>(this IServiceCollection services)
+    //where TDbContext : DbContext
+    //    {
+    //        // ... Reflection ve cache kısmı aynı kalabilir ...
+    //        var dbContextType = typeof(TDbContext);
 
-            if (!_repositoryTypeCache.TryGetValue(dbContextType, out var repoInfoList))
-            {
-                repoInfoList = new List<(Type entityType, Type idType)>();
+    //        // Bu cache'i burada tutmak yerine reflection sonucunu cache'lemek daha doğru.
+    //        if (!_repositoryTypeCache.TryGetValue(dbContextType, out var repoInfoList))
+    //        {
+    //            // ... reflection ile repoInfoList'i doldurma kodun burada ...
+    //            // Bu kısım doğru.
+    //        }
 
-                var dbSetProperties = dbContextType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                    .Where(p => p.PropertyType.IsGenericType
-                                && p.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>));
+    //        // Her bir bulunan repository için lazy registration yapalım.
+    //        foreach (var (entityType, idType) in repoInfoList)
+    //        {
+    //            var repoInterface = typeof(ILinqRepository<,>).MakeGenericType(entityType, idType);
+    //            var lazyRepoType = typeof(Lazy<>).MakeGenericType(repoInterface);
 
-                foreach (var prop in dbSetProperties)
-                {
-                    var entityType = prop.PropertyType.GetGenericArguments()[0];
+    //            // ÖNCEKİ YANLIŞ KOD:
+    //            // services.AddScoped(lazyRepoType, sp => { ... });
 
-                    if (TryGetBaseEntityIdType(entityType, out var idType))
-                    {
-                        repoInfoList.Add((entityType, idType));
-                    }
-                }
+    //            services.AddScoped(lazyRepoType, sp =>
+    //            {
+    //                // Bu, Lazy<T>'nin .Value çağrıldığında çalıştıracağı fabrika metodudur.
+    //                // Bu içteki lambda, dışarıdaki 'sp' değişkenini "yakalar" (closure).
+    //                Func<object> valueFactory = () => sp.GetRequiredService(repoInterface);
 
-                _repositoryTypeCache[dbContextType] = repoInfoList;
-            }
+    //                // Lazy<T>'yi, bir instance ile değil, fabrika metodu ile oluşturuyoruz.
+    //                // Activator, Lazy<T>'nin (Func<T> valueFactory) constructor'ını çağıracak.
+    //                return Activator.CreateInstance(lazyRepoType, valueFactory)!;
+    //            });
+    //        }
 
-            foreach (var (entityType, idType) in repoInfoList)
-            {
-                var repoInterface = typeof(ILinqRepository<,>).MakeGenericType(entityType, idType);
-                var lazyRepoType = typeof(Lazy<>).MakeGenericType(repoInterface);
-
-                // Lazy<T> oluştur, ancak T çözümlenmesin Value çağrılmadan
-                services.AddScoped(lazyRepoType, sp =>
-                {
-                    var funcType = typeof(Func<>).MakeGenericType(repoInterface);
-                    var getServiceCall = Expression.Call(
-                        typeof(ServiceProviderServiceExtensions),
-                        nameof(ServiceProviderServiceExtensions.GetRequiredService),
-                        new[] { repoInterface },
-                        Expression.Constant(sp)
-                    );
-                    var lambda = Expression.Lambda(funcType, getServiceCall).Compile();
-                    return Activator.CreateInstance(lazyRepoType, lambda)!;
-                });
-            }
-
-            return services;
-        }
+    //        return services;
+    //    }
 
 
 

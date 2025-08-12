@@ -20,13 +20,11 @@ namespace LinqApi.Logging
 
         public void RegisterServices(IServiceCollection services, IConfiguration config)
         {
-            //services.AddDbContext<LinqLoggingDbContext>(_configureDb);
             services.AddScoped<ILogRule, TimestampLogRule>();
             services.AddSingleton<ICorrelationIdGenerator, DefaultCorrelationIdGenerator>();
             services.AddScoped<LinqSqlLoggingInterceptor>();
             services.AddScoped<ILogRule, CreatedByLogRule>();
             services.AddScoped<LinqLoggingBehavior>();
-            //services.AddScoped<LinqHttpLoggingMiddleware>();
             
             services.AddTransient<ILinqPayloadMasker, DefaultPayloadMasker>();
             services.AddScoped<ILinqLogger, LinqDbContextCallLogger>();

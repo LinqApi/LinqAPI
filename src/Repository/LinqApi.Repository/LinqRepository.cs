@@ -259,6 +259,18 @@ namespace LinqApi.Repository
             // 🔟 Get the total record count.
             int totalCount = await castQuery.CountAsync(cancellationToken).ConfigureAwait(false);
 
+            // ----------------------------------------------------
+            // ✅ Development: count 0 ise erken dönüş yapıyoruz
+            // ----------------------------------------------------
+            if (totalCount == 0)
+            {
+                return new PaginationModel<dynamic>
+                {
+                    Items = new List<dynamic>(),
+                    TotalRecords = 0
+                };
+            }
+
             // 1️⃣1️⃣ Apply paging.
             int skip = (filterModel.Pager.PageNumber - 1) * filterModel.Pager.PageSize;
             var pagedQuery = castQuery.Skip(skip).Take(filterModel.Pager.PageSize);
