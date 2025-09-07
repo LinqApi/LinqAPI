@@ -50,15 +50,23 @@ namespace LinqApi.Logging
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            foreach (var entry in ChangeTracker.Entries<LinqLogEntity>())
-            {
+	        if (false)
+	        {
+		        foreach (var entry in ChangeTracker.Entries<LinqLogEntity>())
+		        {
 
-                UpdateLogTimestampsAndEpoch(entry);
-                ModifiedDoes(entry);
-            }
+			        UpdateLogTimestampsAndEpoch(entry);
+			        ModifiedDoes(entry);
+		        }
 
 
-            return await base.SaveChangesAsync(cancellationToken); // eski hali yanlış
+		        return await base.SaveChangesAsync(cancellationToken); // eski hali yanlış
+
+	        }
+	        else
+	        {
+		        return await Task.FromResult(1);
+	        }
         }
 
         private void ModifiedDoes(EntityEntry<LinqLogEntity> entry)

@@ -165,6 +165,7 @@ export class QueryBuilder {
     }
 
     _updateUI() {
+        if (!this.filterInput) return; 
         // Reflect the current query state in the UI controls.
         this.filterInput.value = (this.query && this.query.filter && this.query.filter.toString()) || "1=1";
         this.selectInput.value = (this.query && this.query.select) || "";
