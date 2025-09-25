@@ -15,7 +15,7 @@ namespace LinqApi.Controller
         where TEntity : BaseEntity<TId>
     {
         protected readonly ILinqRepository<TEntity, TId> _repo;
-        protected LinqReadonlyController(ILinqRepository<TEntity, TId> repo)
+        protected  LinqReadonlyController(ILinqRepository<TEntity, TId> repo)
         {
             _repo = repo;
         }

@@ -1,4 +1,3 @@
-
 namespace LinqApi.Controller
 {
     using LinqApi.Logging;
@@ -11,6 +10,7 @@ namespace LinqApi.Controller
     using System.ComponentModel.DataAnnotations;
     using System.Reflection;
     using System.Threading.Tasks;
+    using System.Collections; // <-- Make sure this is at the top
 
     [ApiController]
     public class LinqController<TEntity, TId>(ILinqRepository<TEntity, TId> repo) : LinqReadonlyController<TEntity, TId>(repo)
@@ -46,88 +46,116 @@ namespace LinqApi.Controller
         private const string displayPropertyName = "displayProperty";
         private static readonly ConcurrentDictionary<string, List<object>> _schemaCache = new();
 
-        public static List<object> GetSchema(Type type)
-        {
-            var cacheKey = $"Schema_{type.FullName}";
-            if (_schemaCache.TryGetValue(cacheKey, out var cached))
-                return cached;
+		public static List<object> GetSchema(Type type)
+		{
+			var cacheKey = $"Schema_{type.FullName}";
+			if (_schemaCache.TryGetValue(cacheKey, out var cached))
+				return cached;
 
-            var instance = Activator.CreateInstance(type);
+			var instance = Activator.CreateInstance(type);
 
-            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Select(p =>
-                {
-                    var rawType = p.PropertyType;
-                    var isNullable = Nullable.GetUnderlyingType(rawType) != null;
-                    var actualType = isNullable
-                        ? Nullable.GetUnderlyingType(rawType)!
-                        : rawType;
+			var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+				.Select<PropertyInfo, object>(p =>
+				{
+					var rawType = p.PropertyType;
+					var isNullable = Nullable.GetUnderlyingType(rawType) != null;
+					var actualType = isNullable ? Nullable.GetUnderlyingType(rawType)! : rawType;
+					var rawName = ToCamelCase(p.Name);
 
-                    var isEnum = actualType.IsEnum;
-                    var rawName = ToCamelCase(p.Name);
+					// <-- YENİ: Koleksiyon tiplerini (complexList) tespit etme
+					// string olmayan tüm IEnumerable tiplerini koleksiyon olarak kabul ediyoruz.
+					var isCollection = typeof(IEnumerable).IsAssignableFrom(rawType) && rawType != typeof(string);
 
-                    var displayAttr = p.GetCustomAttribute<DisplayAttribute>();
-                    var descAttr = p.GetCustomAttribute<DescriptionAttribute>();
+					if (isCollection)
+					{
+						// Koleksiyonun içindeki asıl tipi (T) buluyoruz. Örn: ICollection<SpotifyAlbum> -> SpotifyAlbum
+						var baseType = actualType.IsGenericType ? actualType.GetGenericArguments()[0] : null;
 
-                    var display = new Dictionary<string, object?>
-                    {
-                        ["name"] = displayAttr?.Name ?? rawName
-                    };
+						return new
+						{
+							name = rawName,
+							kind = "complexList", // <-- Frontend için kritik bilgi
+							baseType = baseType?.Name,   // <-- Frontend için kritik bilgi
+							type = GetReadableTypeName(rawType)
+						};
+					}
 
-                    if (!string.IsNullOrWhiteSpace(descAttr?.Description))
-                        display["description"] = descAttr.Description;
+					// <-- YENİ: Enum veya Primitive olmayan tekil nesneleri (complex) tespit etme
+					var isSimpleType = actualType.IsPrimitive || actualType.IsEnum || actualType == typeof(string) || actualType == typeof(decimal) || actualType == typeof(DateTime);
 
-                    // Eğer enum ise, values dizisini ekle
-                    if (isEnum)
-                    {
-                        var values = Enum.GetValues(actualType)
-                            .Cast<object>()
-                            .Select(ev =>
-                            {
-                                var memInfo = actualType.GetMember(ev.ToString() ?? "").FirstOrDefault();
-                                var evDisplay = memInfo?.GetCustomAttribute<DisplayAttribute>();
-                                var evDesc = memInfo?.GetCustomAttribute<DescriptionAttribute>();
+					if (!isSimpleType)
+					{
+						return new
+						{
+							name = rawName,
+							kind = "complex", // <-- Frontend için kritik bilgi (bire-bir ilişkiler için)
+							baseType = actualType.Name, // <-- Frontend için kritik bilgi
+							type = GetReadableTypeName(rawType)
+						};
+					}
 
-                                return new
-                                {
-                                    name = ev.ToString(),
-                                    value = Convert.ToInt32(ev),
-                                    displayName = evDisplay?.Name,
-                                    description = evDesc?.Description
-                                };
-                            })
-                            .ToList();
+					// --- Buradan sonrası basit (string, int, bool, enum) tipler için mevcut kodunuz ---
+					var isEnum = actualType.IsEnum;
+					var displayAttr = p.GetCustomAttribute<DisplayAttribute>();
+					var descAttr = p.GetCustomAttribute<DescriptionAttribute>();
 
-                        display["values"] = values;
-                    }
+					var display = new Dictionary<string, object?>();
+					display["name"] = displayAttr?.Name ?? rawName;
 
-                    return new
-                    {
-                        name = rawName,
-                        type = isEnum ? "Enum" : GetReadableTypeName(p.PropertyType),
-                        @default = p.GetValue(instance),
-                        isRequired = p.GetCustomAttributes().Any(a => a.GetType().Name.Contains("Required")),
-                        display
-                    };
-                })
-                .Cast<object>()
-                .ToList();
+					if (!string.IsNullOrWhiteSpace(descAttr?.Description))
+						display["description"] = descAttr.Description;
 
-            var displayProp = type.GetCustomAttribute<DisplayPropertyAttribute>();
-            if (displayProp != null)
-            {
-                props.Add(new
-                {
-                    type = displayPropertyName,
-                    properties = displayProp.Properties
-                });
-            }
+					if (isEnum)
+					{
+						var values = Enum.GetValues(actualType)
+							.Cast<object>()
+							.Select(ev =>
+							{
+								var memInfo = actualType.GetMember(ev.ToString() ?? "").FirstOrDefault();
+								var evDisplay = memInfo?.GetCustomAttribute<DisplayAttribute>();
+								var evDesc = memInfo?.GetCustomAttribute<DescriptionAttribute>();
+								return new
+								{
+									name = ev.ToString(),
+									value = Convert.ToInt32(ev),
+									displayName = evDisplay?.Name,
+									description = evDesc?.Description
+								};
+							})
+							.ToList();
+						display["values"] = values;
+					}
 
-            _schemaCache.TryAdd(cacheKey, props);
-            return props;
-        }
+					return new
+					{
+						name = rawName,
+						// <-- DÜZENLENDİ: kind alanını basit tipler için de ekliyoruz
+						kind = isEnum ? "enum" : "simple",
+						type = GetReadableTypeName(p.PropertyType), // 'type' adını isEnum kontrolünden bağımsız hale getirdik
+						@default = p.GetValue(instance),
+						isRequired = p.GetCustomAttributes().Any(a => a.GetType().Name.Contains("Required")),
+						isPrimaryKey = p.GetCustomAttribute<KeyAttribute>() != null, // <-- BU SATIRI EKLEYİN
+						display
+					};
+				})
+				.Cast<object>()
+				.ToList();
 
-        private static string ToCamelCase(string input)
+			var displayProp = type.GetCustomAttribute<DisplayPropertyAttribute>();
+			if (displayProp != null)
+			{
+				props.Add(new
+				{
+					type = displayPropertyName,
+					properties = displayProp.Properties
+				});
+			}
+
+			_schemaCache.TryAdd(cacheKey, props);
+			return props;
+		}
+
+		private static string ToCamelCase(string input)
         {
             if (string.IsNullOrEmpty(input) || char.IsLower(input[0]))
                 return input;

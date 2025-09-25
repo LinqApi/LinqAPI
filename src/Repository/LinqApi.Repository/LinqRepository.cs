@@ -54,7 +54,7 @@ namespace LinqApi.Repository
         }
 
         /// <inheritdoc/>
-        public IQueryable<TEntity> Query()
+        public virtual IQueryable<TEntity> Query()
         {
             return DbSet.AsQueryable();
         }
@@ -102,7 +102,7 @@ namespace LinqApi.Repository
      IEnumerable<Func<IQueryable<TEntity>, IQueryable<TEntity>>>? includeFunctions = null,
      CancellationToken cancellationToken = default)
         {
-            IQueryable<TEntity> query = DbSet.AsQueryable();
+	        IQueryable<TEntity> query = Query();
 
             if (includeFunctions != null)
             {
@@ -189,7 +189,7 @@ namespace LinqApi.Repository
             }
 
             // 1️⃣ Create an IQueryable<TEntity> from the DbSet.AsNoTracking().
-            IQueryable<TEntity> query = DbSet.AsNoTracking().AsQueryable();
+            IQueryable<TEntity> query = Query();
 
             // 2️⃣ Parameterize the filter string.
             (string paramFilter, List<object> parameters) = ParameterizeFilterString(filterModel.Filter);
@@ -255,6 +255,7 @@ namespace LinqApi.Repository
 
             // 9️⃣ Cast dynamicQuery to IQueryable<dynamic>.
             var castQuery = dynamicQuery.Cast<dynamic>();
+
 
             // 🔟 Get the total record count.
             int totalCount = await castQuery.CountAsync(cancellationToken).ConfigureAwait(false);

@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace LinqApi.Logging
 {
     /// <summary>
@@ -9,6 +11,7 @@ namespace LinqApi.Logging
         /// <summary>
         /// Gets or sets the unique identifier for the entity.
         /// </summary>
+        [Key]
         public virtual TId Id { get; set; }
     }
 }
