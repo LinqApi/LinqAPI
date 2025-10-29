@@ -12,6 +12,7 @@ namespace LinqApi.Controller
     using System.Threading.Tasks;
     using System.Collections; // <-- Make sure this is at the top
 
+    [Route("api/[controller]")]
     [ApiController]
     public class LinqController<TEntity, TId>(ILinqRepository<TEntity, TId> repo) : LinqReadonlyController<TEntity, TId>(repo)
      where TEntity : BaseEntity<TId>
