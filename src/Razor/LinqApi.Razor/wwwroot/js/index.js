@@ -4,4 +4,4 @@ export * from './core/models.js';
 export * from './core/state.js';
 export * from './ui/queryBuilder.js';
 export * from './ui/linqDataTable.js';
-export * from './ui/linqASelect2.js';
+export * from './ui/linqSelect2.js';

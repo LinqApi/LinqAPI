@@ -2,7 +2,7 @@ import { StateManager } from "../core/state.js";
 import { QueryBuilder } from "./queryBuilder.js";
 import { defaults, fetchProperties, fetchPagedData, FormManager } from "./linqUtil.js";
 import { Query, LogicalFilter, Pager } from "../core/models.js";
-import { LinqSelect2 } from "./linqASelect2.js";
+import { LinqSelect2 } from "./linqSelect2.js";
 /**
  * Ana LinqDataTable bileşeni.
  * Tabloyu oluşturur, verileri sunucudan çeker ve kullanıcı etkileşimlerini (sayfalama, sıralama, düzenleme vb.) yönetir.
