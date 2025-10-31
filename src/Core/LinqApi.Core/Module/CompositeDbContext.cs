@@ -20,12 +20,7 @@ namespace LinqApi.Logging.Module
         /// </summary>
         void ApplyModel(ModelBuilder builder);
 
-        /// <summary>
-        /// Module, hangi entity tiplerini expose ettiğini bildirir.
-        /// Bu sayede DbContext, migration ve discovery aşamasında tüm tipleri
-        /// modelBuilder.Entity(...) ile ekleyebilir.
-        /// </summary>
-        IEnumerable<Type> GetEntityTypes();
+
     }
     public class ModuleRegistry
     {
@@ -52,13 +47,7 @@ namespace LinqApi.Logging.Module
         {
 
             var modules = _sp.GetService<IEnumerable<IDbContextModule>>() ?? Enumerable.Empty<IDbContextModule>();
-            // 1) Discover & register tüm entity tipleri
-            //var allTypes = modules.SelectMany(m => m.GetEntityTypes()).Distinct();
-            //foreach (var t in allTypes)
-            //    mb.Model.AddEntityType(t);
 
-            //foreach (var module in modules)
-            //    module.ApplyModel(mb);
         }
     }
 }
