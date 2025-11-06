@@ -1,3 +1,4 @@
+using LinqApi.Core;
 using LinqApi.Localization.LinqApi.Localization.Extensions;
 using LinqApi.Logging;
 using LinqApi.Logging.Module;

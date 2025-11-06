@@ -1,3 +1,4 @@
+using LinqApi.Core;
 using LinqApi.Correlation;
 using System.Diagnostics.CodeAnalysis;
 

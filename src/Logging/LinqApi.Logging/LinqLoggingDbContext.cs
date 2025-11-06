@@ -12,7 +12,7 @@ namespace LinqApi.Logging
         private readonly IEpochProvider _epochProvider;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public LinqLoggingDbContext(
+        public LinqLoggingDbContext (
      DbContextOptions<LinqLoggingDbContext> options,
      IEpochProvider epochProvider,
      IHttpContextAccessor? httpContextAccessor = null
@@ -30,14 +30,14 @@ namespace LinqApi.Logging
         public DbSet<LinqSqlLog> SqlLogs { get; set; }
         public DbSet<LinqSqlErrorLog> LinqDatabaseErrorLogs { get; set; }
 
-        private long? GetUserProfileId()
+        private long? GetUserProfileId ()
         {
             var user = _httpContextAccessor?.HttpContext?.User;
             var claim = user?.FindFirst("userprofile.id")?.Value;
             return long.TryParse(claim, out var id) ? id : null;
         }
 
-        public override int SaveChanges()
+        public override int SaveChanges ()
         {
             foreach (var entry in ChangeTracker.Entries<LinqLogEntity>())
             {
@@ -48,28 +48,21 @@ namespace LinqApi.Logging
             return base.SaveChanges();
         }
 
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        public override async Task<int> SaveChangesAsync (CancellationToken cancellationToken = default)
         {
-	        if (false)
-	        {
-		        foreach (var entry in ChangeTracker.Entries<LinqLogEntity>())
-		        {
 
-			        UpdateLogTimestampsAndEpoch(entry);
-			        ModifiedDoes(entry);
-		        }
+            foreach (var entry in ChangeTracker.Entries<LinqLogEntity>())
+            {
+
+                UpdateLogTimestampsAndEpoch(entry);
+                ModifiedDoes(entry);
+            }
 
 
-		        return await base.SaveChangesAsync(cancellationToken); // eski hali yanlış
-
-	        }
-	        else
-	        {
-		        return await Task.FromResult(1);
-	        }
+            return await base.SaveChangesAsync(cancellationToken); // eski hali yanlış
         }
 
-        private void ModifiedDoes(EntityEntry<LinqLogEntity> entry)
+        private void ModifiedDoes (EntityEntry<LinqLogEntity> entry)
         {
             if (entry.State == EntityState.Modified)
             {
@@ -86,7 +79,7 @@ namespace LinqApi.Logging
             }
         }
 
-        private void UpdateLogTimestampsAndEpoch(EntityEntry<LinqLogEntity> entry)
+        private void UpdateLogTimestampsAndEpoch (EntityEntry<LinqLogEntity> entry)
         {
             if (entry.State == EntityState.Added)
             {
@@ -95,7 +88,7 @@ namespace LinqApi.Logging
             }
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating (ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
@@ -126,12 +119,12 @@ namespace LinqApi.Logging
         DbSet<LinqSqlLog> SqlLogs { get; }
         DbSet<LinqSqlErrorLog> LinqDatabaseErrorLogs { get; }
 
-        int SaveChanges();
-        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+        int SaveChanges ();
+        Task<int> SaveChangesAsync (CancellationToken cancellationToken = default);
     }
     public static class ModelBuilderExtensions
     {
-        public static void ApplyLoggingModel(this ModelBuilder mb, string schema)
+        public static void ApplyLoggingModel (this ModelBuilder mb, string schema)
         {
             mb.Entity<LinqEventLog>().ToTable("EventLogs", schema);
             mb.Entity<LinqSqlLog>().ToTable("SqlLogs", schema);

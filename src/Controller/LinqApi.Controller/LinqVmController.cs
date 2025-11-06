@@ -1,3 +1,4 @@
+using LinqApi.Core;
 using LinqApi.Logging;
 using LinqApi.Repository;
 using Microsoft.AspNetCore.Mvc;
