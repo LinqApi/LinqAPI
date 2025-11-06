@@ -1,4 +1,0 @@
-namespace LinqApi.Controller
-{
-   
-}
