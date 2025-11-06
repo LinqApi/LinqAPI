@@ -35,47 +35,8 @@ namespace LinqApi.Razor
 
         [HttpGet]
         public virtual IActionResult Index()
-        
         {
-
-
             return View("Index");
-        }
-
-        /// <summary>
-        /// Gets the dynamic entity table information and returns the corresponding view.
-        /// </summary>
-        /// <returns>
-        /// A view result named "LinqMvc" with a list of <see cref="TableInfo"/> items representing
-        /// the available dynamic entities.
-        /// </returns>
-        /// <remarks>
-        /// The method aggregates table information from all registered configurations. It supports keys
-        /// formatted as "schema.table" or just "table", defaulting to the "dbo" schema when only a table name is provided.
-        /// </remarks>
-        /// 
-        [HttpGet]
-        public virtual IActionResult Mcp()
-
-        {
-
-
-            return View("Mcp");
-        }
-        [Route("LinqDynamicMvc/Mcp/Apis")]
-        [HttpGet]
-        public virtual IActionResult McpApis()
-
-        {
-
-            return View("McpApis");
-        }
-
-        [HttpGet]
-        public virtual IActionResult Select2()
-
-        {
-            return View("Select2");
         }
     }
 }

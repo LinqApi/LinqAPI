@@ -55,9 +55,6 @@ namespace LinqApi.Controller // isimlendirme sana kalmış
             }
         }
 
-        /// <summary>
-        /// entityType gerçekten BaseEntity&lt;TId&gt;'den mi geliyor?
-        /// </summary>
         private static bool IsBasedOnBaseEntity(Type entityType)
         {
             var t = entityType;
@@ -95,7 +92,7 @@ namespace LinqApi.Controller // isimlendirme sana kalmış
     }
 
 
-public class LinqRouteConvention : IApplicationModelConvention
+    public class LinqRouteConvention : IApplicationModelConvention
     {
         private readonly string _prefix;
         private readonly string _suffix;
@@ -122,18 +119,10 @@ public class LinqRouteConvention : IApplicationModelConvention
                 var entityType = controllerType.GetGenericArguments()[0];
                 var entityName = entityType.Name;
 
-                // prefix/suffix uygula
-                // örn prefix = "api/admin", suffix = "s" => "api/admin/Tours"
                 var finalSegment = entityName + _suffix;
                 var fullRoute = string.IsNullOrWhiteSpace(_prefix)
                     ? finalSegment            // "Tours"
                     : $"{_prefix}/{finalSegment}"; // "api/admin/Tours"
-
-                //
-                // ŞİMDİ KRİTİK KISIM:
-                // Controller.Selectors boş olabilir veya içinde AttributeRouteModel olmayan selector olabilir.
-                // Biz garantiye alacağız: en az 1 selector olacak ve onda AttributeRouteModel atanacak.
-                //
 
                 if (controller.Selectors == null || controller.Selectors.Count == 0)
                 {
@@ -154,6 +143,4 @@ public class LinqRouteConvention : IApplicationModelConvention
             }
         }
     }
-
-
 }
