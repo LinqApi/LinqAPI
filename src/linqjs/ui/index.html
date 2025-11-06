@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>LinqDataTable • Playground Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Bootstrap / Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+
+  <style>
+    :root{
+      --bg-page:#0f172a; --bg-side:#0b1223; --bg-card:#121a2c; --border:#223054; --muted:#93a3bf;
+      --radius:14px; --shadow:0 24px 64px -12px rgba(0,0,0,.6);
+      --g-gap: 1rem;
+      --hdr-h: 0px; /* gerekirse header varsa buradan düşebilirsin */
+    }
+
+    /* ==== Full viewport layout ==== */
+    html, body { height: 100vh; }
+    body { margin: 0; padding: 0; overflow: hidden; background: var(--bg-page); color: #fff; }
+
+    .app {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      grid-template-rows: 1fr;
+      gap: var(--g-gap);
+      height: 100vh;
+      padding: var(--g-gap);
+      box-sizing: border-box;
+    }
+    .app.sidebar-collapsed { grid-template-columns: 1fr !important; }
+
+    /* ==== Sidebar ==== */
+    .side {
+      background: var(--bg-side);
+      color: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex; flex-direction: column;
+      min-width: 0; overflow: hidden;
+      position: relative;
+    }
+    .side-header {
+      padding: .75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .side-scroll {
+      padding: 1rem;
+      overflow: auto;
+      height: 100%;
+    }
+    .cfg .form-label, .cfg label { color: #cdd5e7; }
+    .cfg .form-control, .cfg .form-select { background:#0b1324; color:#fff; border-color:#1d2b4b }
+    .cfg .form-control::placeholder { color:#7f8db2 }
+    .cfg .form-check-label { color:#cdd5e7 }
+
+    /* Accordion dark theme */
+    .accordion-item { background: transparent; border:1px solid #1d2b4b; border-radius:10px; overflow:hidden; margin-bottom:.65rem; }
+    .accordion-button { background:transparent; color:#e2e8f0; box-shadow:none !important; }
+    .accordion-button::after { filter: invert(1) opacity(.7); }
+    .accordion-button:not(.collapsed){ background:#0f1a33; color:#fff; }
+    .accordion-body{ background:#0b1324; border-top:1px solid #1d2b4b; }
+
+    /* ==== Main ==== */
+    .main {
+      display: flex; flex-direction: column; gap: var(--g-gap);
+      min-width: 0; overflow: hidden;
+    }
+    .cardish {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex; flex-direction: column;
+      min-height: 0; /* iç scroll için önemli */
+    }
+
+    /* Workbench */
+    .tabs { display:flex; gap:.5rem; padding: 1rem 1rem 0; overflow:auto; }
+    .tab { background:#0b1324; border:1px solid #1d2b4b; color:#dbe4ff; padding:.35rem .6rem; border-radius:999px; display:flex; align-items:center; gap:.4rem; font-size:.8rem; white-space: nowrap; }
+    .tab.active { background:#1f2a44 }
+    .tab .close { opacity:.7; cursor:pointer }
+    .workbench { padding: 1rem; flex:1 1 auto; min-height: 0; overflow:auto; }
+
+    /* Datatable shell: yükseklik hesabı ana kartın içinde */
+    .dt-shell {
+      background:#fff; color:#111827; border-radius:12px; border:1px solid #e5e7eb; overflow:hidden;
+      display: flex; flex-direction: column;
+      height: 100%; /* ebeveyn workbench bölgesi kadar */
+      min-height: 360px;
+    }
+    .dt-head {
+      display:flex; justify-content:space-between; gap:.5rem; align-items:center;
+      padding:.6rem .8rem; border-bottom:1px solid #e5e7eb;
+      background:linear-gradient(90deg,#f8fafc,#eef2ff);
+      flex: 0 0 auto;
+    }
+    .dt-head .meta{font-size:.75rem; color:#475569}
+    .dt-body { padding:1rem; flex: 1 1 auto; min-height: 0; overflow:auto; }
+
+    /* İç tabloda sticky thead */
+    .dt-body .table thead th { position: sticky; top: 0; background: #f8fafc; z-index: 2; }
+
+    /* Debug drawer + floating */
+    .debug-fab {
+      position: fixed; right: 16px; bottom: 16px; z-index: 1300;
+    }
+    .debug-fab .btn { border-radius: 999px; }
+
+    .debug-float {
+      position: fixed;
+      right: 16px; bottom: 64px;
+      width: 480px; height: 320px;
+      z-index: 1299;
+      display: none;
+      resize: both; overflow: hidden;
+      border: 1px solid #1d2b4b; border-radius: 10px; box-shadow: var(--shadow);
+      background: var(--bg-card);
+    }
+    .debug-float.active { display: flex; flex-direction: column; }
+    .debug-float .head {
+      cursor: move; user-select: none;
+      padding: .5rem .75rem; border-bottom: 1px solid #1d2b4b;
+      display: flex; align-items: center; justify-content: space-between;
+      background: #0f1a33;
+    }
+    .debug-float pre {
+      margin: 0; padding: .75rem; color:#00ff6a;
+      background:#0a0f1a; flex: 1 1 auto; overflow:auto;
+    }
+    .debug-docked-bottom {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      height: 32vh; min-height: 180px; z-index: 1298;
+      background: var(--bg-card); border-top: 1px solid var(--border);
+      display: none; flex-direction: column;
+    }
+    .debug-docked-bottom.active { display: flex; }
+    .debug-docked-bottom .head {
+      padding:.5rem .75rem; border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .debug-docked-bottom pre { margin:0; padding:.75rem; overflow:auto; flex:1 1 auto; }
+
+    /* Readonly helpers */
+    .readonly [data-action="create"],
+    .readonly [data-action="edit"],
+    .readonly [data-action="delete"],
+    .readonly [data-action="inline-edit"],
+    .readonly [data-modal-save]{ pointer-events:none; opacity:.4 }
+
+    /* Actions overflow fix (table içi) */
+    .dt-body .btn-group { flex-wrap: wrap; gap: .25rem; }
+    .dt-body td .btn-group .btn { margin: 0 !important; }
+    .dt-body td { vertical-align: middle; }
+
+    /* Sidebar collapsed (gizle) */
+    .side.collapsed { width:0 !important; padding:0 !important; border:0 !important; overflow:hidden !important; }
+
+    /* Compact header in main cards */
+    .cardish .card-head {
+      padding: .75rem 1rem; border-bottom: 1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar toggle (always visible) -->
+  <div class="debug-fab">
+    <div class="btn-group dropup">
+      <button id="btnDebugToggle" class="btn btn-primary btn-sm" title="Debug Console">
+        <i class="bi bi-terminal"></i>
+      </button>
+      <button class="btn btn-primary btn-sm dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"></button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li><button class="dropdown-item" id="dockBottom"><i class="bi bi-layout-split"></i> Dock Bottom</button></li>
+        <li><button class="dropdown-item" id="floatPanel"><i class="bi bi-arrows-move"></i> Float</button></li>
+        <li><button class="dropdown-item" id="hideDebug"><i class="bi bi-eye-slash"></i> Hide</button></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Floating Debug -->
+  <section class="debug-float" id="debugFloat">
+    <div class="head">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-terminal"></i><span>Debug (Floating)</span>
+      </div>
+      <div class="d-flex gap-2">
+        <button id="btnClearLogFloat" class="btn btn-outline-light btn-sm">Temizle</button>
+        <button id="btnCloseFloat" class="btn btn-outline-light btn-sm"><i class="bi bi-x"></i></button>
+      </div>
+    </div>
+    <pre id="debugFloatPre"></pre>
+  </section>
+
+  <!-- Docked Debug (Bottom) -->
+  <section class="debug-docked-bottom" id="debugDock">
+    <div class="head">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-terminal"></i><span>Debug (Docked)</span>
+      </div>
+      <div class="d-flex gap-2">
+        <button id="btnClearLogDock" class="btn btn-outline-light btn-sm">Temizle</button>
+        <button id="btnHideDock" class="btn btn-outline-light btn-sm"><i class="bi bi-chevron-down"></i></button>
+      </div>
+    </div>
+    <pre id="debugDockPre"></pre>
+  </section>
+
+  <div class="app" id="appGrid">
+    <!-- SIDE: Configurator -->
+    <aside class="side cfg" id="sidePanel">
+      <div class="side-header">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-sliders2"></i>
+          <strong>Playground Config</strong>
+        </div>
+        <div class="d-flex gap-2">
+          <button id="btnSideToggle" class="btn btn-outline-light btn-sm" title="Paneli Gizle/Göster">
+            <i class="bi bi-layout-sidebar-inset"></i>
+          </button>
+          <button id="btnPreset" class="btn btn-outline-light btn-sm"><i class="bi bi-magic"></i> Preset</button>
+        </div>
+      </div>
+
+      <div class="side-scroll">
+        <div class="accordion accordion-flush" id="cfgAccordion">
+
+          <!-- Endpoint -->
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed bg-transparent text-white" type="button" data-bs-toggle="collapse" data-bs-target="#secEndpoint">
+                <i class="bi bi-globe me-2"></i> Endpoint
+              </button>
+            </h2>
+            <div id="secEndpoint" class="accordion-collapse collapse show" data-bs-parent="#cfgAccordion">
+              <div class="accordion-body">
+                <div class="mb-2">
+                  <label class="form-label">Controller</label>
+                  <input id="cfg-controller" class="form-control form-control-sm" value="userprofile"/>
+                </div>
+                <div class="mb-2">
+                  <label class="form-label">API Prefix</label>
+                  <input id="cfg-prefix" class="form-control form-control-sm" value="https://eventigg.cihanai.com/api/Cikboard"/>
+                </div>
+                <div class="mb-2">
+                  <label class="form-label">Controller Suffix</label>
+                  <input id="cfg-suffix" class="form-control form-control-sm" value="Linq"/>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Features -->
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed bg-transparent text-white" type="button" data-bs-toggle="collapse" data-bs-target="#secFeatures">
+                <i class="bi bi-gear me-2"></i> Features
+              </button>
+            </h2>
+            <div id="secFeatures" class="accordion-collapse collapse show" data-bs-parent="#cfgAccordion">
+              <div class="accordion-body">
+                <div class="row g-2 align-items-end">
+                  <div class="col-7">
+                    <label class="form-label">Selection Mode</label>
+                    <select id="cfg-selectionMode" class="form-select form-select-sm">
+                      <option value="off">Off</option>
+                      <option value="single" selected>Single (radio)</option>
+                      <option value="multi">Multi (checkbox)</option>
+                    </select>
+                  </div>
+                  <div class="col-5">
+                    <div class="form-check form-switch mt-4">
+                      <input class="form-check-input" type="checkbox" id="cfg-showSelectionCol">
+                      <label class="form-check-label" for="cfg-showSelectionCol">Show column</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-check mt-2">
+                  <input class="form-check-input" type="checkbox" id="cfg-select2" checked>
+                  <label class="form-check-label" for="cfg-select2">Select2 columns (enum/relation)</label>
+                </div>
+                <div class="form-check mt-1">
+                  <input class="form-check-input" type="checkbox" id="cfg-readonly">
+                  <label class="form-check-label" for="cfg-readonly">Readonly UI</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Query -->
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed bg-transparent text-white" type="button" data-bs-toggle="collapse" data-bs-target="#secQuery">
+                <i class="bi bi-funnel me-2"></i> Query (optional)
+              </button>
+            </h2>
+            <div id="secQuery" class="accordion-collapse collapse" data-bs-parent="#cfgAccordion">
+              <div class="accordion-body">
+                <div class="mb-2">
+                  <label class="form-label">Filter</label>
+                  <input id="cfg-filter" class="form-control form-control-sm" placeholder="Id = 1 OR Name ~ 'ali'"/>
+                </div>
+                <div class="mb-2">
+                  <label class="form-label">Includes (comma)</label>
+                  <input id="cfg-includes" class="form-control form-control-sm" placeholder="Roles,Company"/>
+                </div>
+                <div class="row g-2">
+                  <div class="col-6">
+                    <label class="form-label">Group By</label>
+                    <input id="cfg-groupby" class="form-control form-control-sm"/>
+                  </div>
+                  <div class="col-6">
+                    <label class="form-label">Select</label>
+                    <input id="cfg-select" class="form-control form-control-sm"/>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plugins -->
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed bg-transparent text-white" type="button" data-bs-toggle="collapse" data-bs-target="#secPlugins">
+                <i class="bi bi-puzzle me-2"></i> Plugins
+              </button>
+            </h2>
+            <div id="secPlugins" class="accordion-collapse collapse show" data-bs-parent="#cfgAccordion">
+              <div class="accordion-body">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="pl-location" checked>
+                  <label class="form-check-label" for="pl-location">Location</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="pl-media" checked>
+                  <label class="form-check-label" for="pl-media">MediaAsset</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="pl-relation" checked>
+                  <label class="form-check-label" for="pl-relation">Relation</label>
+                </div>
+                <div class="mt-2 small text-secondary">Yeni plugin eklemek için ➜ <span class="kbd">plugins/</span> klasörüne koy ve burada işaretle.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-3 d-grid gap-2">
+          <button id="btnSpawn" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-circle"></i> Yeni DataTable Aç
+          </button>
+          <button id="btnShowConfig" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-braces"></i> Yapılandırmayı Göster
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <section class="cardish">
+        <div class="card-head">
+          <div>
+            <h6 class="m-0">Workbench</h6>
+            <div class="text-secondary small">Birden fazla tabloyu sekmeler halinde yönet.</div>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-light btn-sm" id="btnDestroyAll"><i class="bi bi-x-circle"></i> Hepsini Kapat</button>
+          </div>
+        </div>
+        <div class="tabs" id="tabs"></div>
+        <div class="workbench" id="workbench">
+          <!-- dt-shell’ler buraya eklenir -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Global app config (Location/Media upload demos)
+    window.APP_CONFIG = {
+      geoApiBaseUrl: "http://localhost:7549/api/location",
+      cdnBaseUrl: "https://dhdjxe5at9cw0.cloudfront.net",
+      uploadApi: {
+        presign: "http://localhost:7549/api/upload/presigned",
+        status:  "http://localhost:7549/api/upload/status"
+      }
+    };
+  </script>
+
+  <!-- App Modules -->
+  <script type="module">
+      import { createFieldRegistry } from '/js/index.js';
+      import { LinqDataTable } from '/js/index.js';
+      import { DebugView } from '/js/index.js';
+
+    const pluginLoaders = {
+      location: () => import('../plugins/location.js'),
+      media:    () => import('../plugins/mediaAsset.js'),
+       relation: () => import('../plugins/relationPicker.js') // ← yeni
+    };
+
+    // Debug: iki hedefe yazabilen proxy (floating / docked)
+    class DualDebugView {
+      constructor({ floatEl, dockEl, maxEntries=400 }) {
+        this.floatView = new DebugView({ targetEl: floatEl, maxEntries });
+        this.dockView  = new DebugView({ targetEl: dockEl,  maxEntries });
+        this.enabled = true;
+      }
+      log(level, title, data){ if(!this.enabled) return; this.floatView.log(level,title,data); this.dockView.log(level,title,data); }
+      clear(){ this.floatView.clear(); this.dockView.clear(); }
+    }
+
+    const debugFloatPre = document.getElementById('debugFloatPre');
+    const debugDockPre  = document.getElementById('debugDockPre');
+    const debug = new DualDebugView({ floatEl: debugFloatPre, dockEl: debugDockPre });
+
+    // Workbench state
+    const workbench = document.getElementById('workbench');
+    const tabs = document.getElementById('tabs');
+    const tables = new Map(); // id -> { shell, dt, meta }
+    let activeId = null;
+    const uid = ()=> 't' + Math.random().toString(36).slice(2);
+
+    function buildDtShell(meta){
+      const shell = document.createElement('section');
+      shell.className = 'dt-shell';
+      shell.dataset.id = meta.id;
+      const endpointUrl = `${meta.apiPrefix.replace(/\/$/, '')}/${meta.controller}${meta.controllerSuffix}`;
+      shell.innerHTML = `
+        <div class="dt-head ${meta.readonly? 'readonly':''}">
+          <div>
+            <div class="fw-semibold">${escapeHtml(meta.controller+meta.controllerSuffix)}</div>
+            <div class="meta">${escapeHtml(endpointUrl)}</div>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary" data-action="refresh"><i class="bi bi-arrow-repeat"></i> Yenile</button>
+            <button class="btn btn-sm btn-outline-danger" data-action="close"><i class="bi bi-x-circle"></i> Kapat</button>
+          </div>
+        </div>
+        <div class="dt-body ${meta.readonly? 'readonly':''}">
+          <div id="${meta.mountId}"></div>
+        </div>`;
+      return shell;
+    }
+
+    function makeTab(meta){
+      const el = document.createElement('button');
+      el.className = 'tab';
+      el.dataset.id = meta.id;
+      el.innerHTML = `<i class="bi bi-database"></i><span>${escapeHtml(meta.controller)}</span><i class="bi bi-x close" title="Kapat"></i>`;
+      el.addEventListener('click', (e)=>{
+        if (e.target.classList.contains('close')) { destroyTable(meta.id); return; }
+        activate(meta.id);
+      });
+      return el;
+    }
+
+    function activate(id){
+      if (!tables.has(id)) return;
+      activeId = id;
+      tabs.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.id===id));
+      workbench.querySelectorAll('.dt-shell').forEach(s=>s.style.display = (s.dataset.id===id? 'flex':'none'));
+    }
+
+    async function spawn(meta){
+      // 1) per-table registry
+      const registry = createFieldRegistry();
+
+      // 2) plugins
+      const wants = [];
+      if (meta.plugins.location) wants.push(pluginLoaders.location());
+      if (meta.plugins.media)    wants.push(pluginLoaders.media());
+      if (meta.plugins.relation)  wants.push(pluginLoaders.relation());
+      const mods = await Promise.allSettled(wants);
+      for (const m of mods) if (m.status === 'fulfilled' && typeof m.value?.install === 'function') {
+        try { m.value.install(registry); } catch {}
+      }
+
+      // 3) shell + tab
+      const id = uid();
+      meta.id = id;
+      meta.mountId = `mount_${id}`;
+
+      const shell = buildDtShell(meta);
+      const tab   = makeTab(meta);
+      tabs.appendChild(tab);
+      workbench.appendChild(shell);
+
+      // 4) datatable
+      const dt = new LinqDataTable({
+        controller: meta.controller,
+        container:  shell.querySelector('#'+meta.mountId),
+        apiPrefix:  meta.apiPrefix,
+        controllerSuffix: meta.controllerSuffix,
+        select2Columns: !!meta.select2Columns,
+        features: {
+          selection: meta.selectionMode !== 'off',
+          selectionMode: meta.selectionMode === 'off' ? 'single' : meta.selectionMode,
+          showSelectionColumn: !!meta.showSelectionColumn
+        },
+        registry,
+        beforeSend:   (payload, ctx) => { debug.log('info','➡️ Request',{ctx,payload}); return payload; },
+        afterReceive: (resp, ctx)   => { debug.log('info','⬅️ Response',{ctx,resp});   return resp;   },
+        beforeError:  (err, ctx)    => { debug.log('error','🚨 Error',{ctx,err}); },
+        onError:      (errMsg)      => { debug.log('error','❌ Controller error',{errMsg}); },
+        onDataLoaded: (rows)        => { debug.log('info','✅ Data loaded',{rows: rows.length, controller: meta.controller}); }
+      });
+
+      await dt.init();
+
+      // 5) optional initial query
+      const hasQB = meta.filter || meta.includes?.length || meta.groupBy || meta.select;
+      if (hasQB) {
+        const includes = (meta.includes||[]).filter(Boolean);
+        dt.controller.applyQueryFromBuilder({
+          filter: meta.filter||'', groupBy: meta.groupBy||'', select: meta.select||'', includes
+        });
+      }
+
+      // 6) readonly soften
+      if (meta.readonly) {
+        shell.querySelector('.dt-head')?.classList.add('readonly');
+        shell.querySelector('.dt-body')?.classList.add('readonly');
+      }
+
+      // 7) actions
+      shell.querySelector('[data-action="refresh"]').addEventListener('click', ()=> dt.refresh());
+      shell.querySelector('[data-action="close"]').addEventListener('click', ()=> destroyTable(id));
+
+      tables.set(id, { shell, dt, meta });
+      activate(id);
+    }
+
+    function destroyTable(id){
+      const node = tables.get(id);
+      if (!node) return;
+      try { node.dt.destroy?.(); } catch {}
+      node.shell.remove();
+      tabs.querySelector(`.tab[data-id="${id}"]`)?.remove();
+      tables.delete(id);
+      const first = tabs.querySelector('.tab');
+      if (first) activate(first.dataset.id); else activeId = null;
+    }
+
+    // Sidebar toggle
+    const appEl  = document.getElementById('appGrid');
+    const sideEl = document.getElementById('sidePanel');
+    document.getElementById('btnSideToggle').addEventListener('click', ()=>{
+      const collapsed = sideEl.classList.toggle('collapsed');
+      appEl.classList.toggle('sidebar-collapsed', collapsed);
+      const i = document.querySelector('#btnSideToggle i');
+      if (i) i.className = collapsed ? 'bi bi-layout-sidebar' : 'bi bi-layout-sidebar-inset';
+    });
+
+    // Debug controls
+    const debugFloat = document.getElementById('debugFloat');
+    const debugDock  = document.getElementById('debugDock');
+    const btnDebugToggle = document.getElementById('btnDebugToggle');
+    const dockBottom = document.getElementById('dockBottom');
+    const floatPanel = document.getElementById('floatPanel');
+    const hideDebug  = document.getElementById('hideDebug');
+
+    const btnCloseFloat = document.getElementById('btnCloseFloat');
+    const btnClearLogFloat = document.getElementById('btnClearLogFloat');
+    const btnHideDock = document.getElementById('btnHideDock');
+    const btnClearLogDock = document.getElementById('btnClearLogDock');
+
+    function showFloat(){ debugDock.classList.remove('active'); debugFloat.classList.add('active'); }
+    function showDock(){ debugFloat.classList.remove('active'); debugDock.classList.add('active'); }
+    function hideAll(){ debugFloat.classList.remove('active'); debugDock.classList.remove('active'); }
+
+    btnDebugToggle.addEventListener('click', ()=>{
+      // toggle last mode
+      if (debugDock.classList.contains('active')) hideAll(); else showDock();
+    });
+    dockBottom.addEventListener('click', showDock);
+    floatPanel.addEventListener('click', showFloat);
+    hideDebug.addEventListener('click', hideAll);
+
+    btnCloseFloat.addEventListener('click', hideAll);
+    btnHideDock.addEventListener('click', hideAll);
+    btnClearLogFloat.addEventListener('click', ()=> debug.clear());
+    btnClearLogDock.addEventListener('click', ()=> debug.clear());
+
+    // Floating drag
+    (function makeDraggable(panel){
+      let isDown=false, sx=0, sy=0, ox=0, oy=0;
+      const head = panel.querySelector('.head');
+      head.addEventListener('mousedown', (e)=>{ isDown=true; sx=e.clientX; sy=e.clientY; const r=panel.getBoundingClientRect(); ox=r.left; oy=r.top; e.preventDefault(); });
+      window.addEventListener('mousemove', (e)=>{ if(!isDown) return; const nx=ox+(e.clientX-sx); const ny=oy+(e.clientY-sy); panel.style.left=nx+'px'; panel.style.top=ny+'px'; panel.style.right='auto'; panel.style.bottom='auto'; });
+      window.addEventListener('mouseup', ()=> isDown=false);
+    })(debugFloat);
+
+    // Toolbar
+    document.getElementById('btnDestroyAll').addEventListener('click', ()=> {
+      Array.from(tables.keys()).forEach(destroyTable);
+    });
+
+    function readConfig(){
+      const ctrl = document.getElementById('cfg-controller').value.trim();
+      const prefix = document.getElementById('cfg-prefix').value.trim();
+      const suffix = document.getElementById('cfg-suffix').value.trim()||'Linq';
+      const selectionMode = document.getElementById('cfg-selectionMode').value;
+      const showSelectionColumn = document.getElementById('cfg-showSelectionCol').checked;
+      const select2Columns = document.getElementById('cfg-select2').checked;
+      const readonly = document.getElementById('cfg-readonly').checked;
+      const filter = document.getElementById('cfg-filter').value.trim();
+      const includes = (document.getElementById('cfg-includes').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+      const groupBy = document.getElementById('cfg-groupby').value.trim();
+      const select = document.getElementById('cfg-select').value.trim();
+      const plugins = {
+        location: document.getElementById('pl-location').checked,
+        media: document.getElementById('pl-media').checked,
+        relation: document.getElementById('pl-relation').checked
+      };
+      return {
+        controller: ctrl, apiPrefix: prefix, controllerSuffix: suffix,
+        selectionMode, showSelectionColumn, select2Columns, readonly,
+        filter, includes, groupBy, select, plugins
+      };
+    }
+
+    document.getElementById('btnSpawn').addEventListener('click', async ()=>{
+      const meta = readConfig();
+      if (!meta.controller || !meta.apiPrefix){ alert('Controller ve API Prefix gerekli.'); return; }
+      await spawn(meta);
+    });
+
+    document.getElementById('btnPreset').addEventListener('click', ()=>{
+      document.getElementById('cfg-controller').value = 'userprofile';
+      document.getElementById('cfg-prefix').value = 'https://eventigg.cihanai.com/api/Cikboard';
+      document.getElementById('cfg-suffix').value = 'Linq';
+      document.getElementById('cfg-selectionMode').value = 'single';
+      document.getElementById('cfg-showSelectionCol').checked = true;
+      document.getElementById('cfg-select2').checked = true;
+      document.getElementById('cfg-readonly').checked = false;
+      document.getElementById('cfg-filter').value = '';
+      document.getElementById('cfg-includes').value = '';
+      document.getElementById('cfg-groupby').value = '';
+      document.getElementById('cfg-select').value = '';
+    });
+
+    document.getElementById('btnShowConfig').addEventListener('click', ()=>{
+      const meta = readConfig();
+      const json = JSON.stringify(meta, null, 2);
+      const w = window.open();
+      w.document.write(`<pre>${escapeHtml(json)}</pre>`);
+    });
+
+    // First table auto
+    (async ()=>{ await spawn(readConfig()); })();
+
+    function escapeHtml(v){
+      return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+    }
+  </script>
+</body>
+</html>

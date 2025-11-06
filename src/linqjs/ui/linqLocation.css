@@ -1,0 +1,31 @@
+/* linqLocation.css */
+
+.linqlocation-widget {
+    position: relative;
+}
+
+    .linqlocation-widget .lnkloc-map {
+        display: none;
+        position: relative;
+        z-index: 0; /* haritanın alt katmanda kalması için */
+        height: 200px;
+        margin-top: .5rem;
+    }
+
+    .linqlocation-widget .btn-map-toggle {
+        position: relative;
+        z-index: 1; /* buton haritanın üstünde */
+    }
+
+.linq-location-widget .linq-location-map-container {
+    width: 100%;
+    border-radius: var(--bs-card-inner-border-radius, 0.375rem);
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    overflow: hidden; /* Haritanın köşelerini yuvarlatmak için */
+}
+
+/* Harita kütüphanesinin kendi UI elemanlarının düzgün görünmesi için */
+.linq-location-map-container .maplibregl-ctrl-group button {
+    width: 30px !important;
+    height: 30px !important;
+}

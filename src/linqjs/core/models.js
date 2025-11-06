@@ -1,103 +1,168 @@
-// core/models.js
-
-export class Query {
-  constructor(controller = "", {
-    filter = new LogicalFilter("AND"),
-    pager = new Pager(),
-    orderBy = "id",
-    desc = true,
-    groupBy = "",
-    select = "",
-    includes = [],
-  } = {}) {
-    this.controller = controller;
-    this.filter = filter;
-    this.pager = pager;
-    this.orderBy = orderBy;
-    this.desc = desc;
-    this.groupBy = groupBy;
-    this.select = select;
-    this.includes = includes;
-  }
-
-  toPayload() {
-    return {
-      filter: this.filter.toString(),
-      pager: this.pager,
-      orderBy: this.orderBy,
-      desc: this.desc,
-      groupBy: this.groupBy,
-      select: this.select,
-      includes: this.includes.map(i => i.toPayload()),
-    };
-  }
-}
-
-export class Include {
-  constructor(propertyName, pager = new Pager(), thenIncludes = []) {
-    this.propertyName = propertyName;
-    this.pager = pager;
-    this.thenIncludes = thenIncludes;
-  }
-
-  toPayload() {
-    return {
-      propertyName: this.propertyName,
-      pager: this.pager,
-      thenIncludes: this.thenIncludes.map(ti => ti.toPayload()),
-    };
-  }
-}
-
-export class ThenInclude {
-  constructor(parentProperty, childIncludes = [], pager = new Pager()) {
-    this.parentProperty = parentProperty;
-    this.childIncludes = childIncludes;
-    this.pager = pager;
-  }
-
-  toPayload() {
-    return {
-      parentProperty: this.parentProperty,
-      childIncludes: this.childIncludes,
-      pager: this.pager,
-    };
-  }
-}
+﻿// core/models.js
+//
+// Backend'in beklediği payload şemasına uygun sade modeller.
+// Burada özellikle "filter" string olacak.
+// includes formatı backend uyumlu tutuluyor.
+//
+// Not: Eğer projede zaten models.js varsa, sadece aşağıdaki
+// Query ve Pager sınıflarını bu mantığa göre güncellemen yeterli.
 
 export class Pager {
-  constructor(pageNumber = 1, pageSize = 10) {
-    this.pageNumber = pageNumber;
-    this.pageSize = pageSize;
-  }
+    constructor({ pageNumber = 1, pageSize = 20 } = {}) {
+        // IMPORTANT:
+        // Eğer backend ilk sayfayı 0 bekliyorsa,
+        // DataTableController payload üretirken (pageNumber - 1) gönderecek.
+        this.pageNumber = pageNumber;
+        this.pageSize = pageSize;
+    }
 }
 
-export class Filter {
-  toString() { return ""; }
+export class Query {
+    constructor(controllerName) {
+        this.controllerName = controllerName || "";
+
+        // backend şu formatı bekliyor:
+        // {
+        //   "filter": "string",
+        //   "pager": { "pageNumber": X, "pageSize": Y },
+        //   "orderBy": "string",
+        //   "desc": true,
+        //   "groupBy": "string",
+        //   "select": "string",
+        //   "includes": [...]
+        // }
+
+        // default values:
+        this.filter = "1=1";     // string olmalı
+        this.orderBy = "";       // örn "id"
+        this.desc = false;       // boolean
+        this.groupBy = "";       // opsiyonel
+        this.select = "";        // opsiyonel
+
+        // includes örnek formatı:
+        // [
+        //   {
+        //     propertyName: "Orders",
+        //     pager: { pageNumber: 1, pageSize: 10 },
+        //     thenIncludes: [{ childIncludes: ["Product"] }]
+        //   }
+        // ]
+        this.includes = [];
+    }
+
+    setFilter(filterString) {
+        // dışarıdan QueryBuilder bu methodla string filter set eder
+        this.filter = filterString || "1=1";
+    }
+
+    setOrderBy(columnName, desc = false) {
+        this.orderBy = columnName || "";
+        this.desc = !!desc;
+    }
+
+    setGroupBy(groupByExpr) {
+        this.groupBy = groupByExpr || "";
+    }
+
+    setSelect(selectExpr) {
+        this.select = selectExpr || "";
+    }
+
+    setIncludes(includesArr) {
+        // beklenen formatta bir array geldiğini varsayıyoruz
+        this.includes = Array.isArray(includesArr) ? includesArr : [];
+    }
+
+    // Bu method artık doğrudan backend şemasını dönebilir.
+    // Controller isterse bunu kullanabilir.
+toPayload(pagerState, sortColumnOverride, sortDescOverride) {
+    // override > current state fallback
+    const orderBy = (sortColumnOverride != null)
+        ? sortColumnOverride
+        : this.orderBy;
+
+    const desc = (sortColumnOverride != null)
+        ? !!sortDescOverride
+        : !!this.desc;
+
+    // başlangıç payload (minimum zorunlu alanlar)
+    const payload = {
+        filter: this.filter || "1=1",
+        pager: {
+            pageNumber: pagerState.pageNumber,
+            pageSize: pagerState.pageSize
+        }
+    };
+
+    // orderBy varsa ekle
+    if (orderBy && orderBy.trim() !== "") {
+        payload.orderBy = orderBy;
+        payload.desc = !!desc;
+    }
+
+    // groupBy varsa ekle
+    if (this.groupBy && this.groupBy.trim() !== "") {
+        payload.groupBy = this.groupBy;
+    }
+
+    // select varsa ekle
+    if (this.select && this.select.trim() !== "") {
+        payload.select = this.select;
+    }
+
+    // includes varsa ekle
+    const normInc = normalizeIncludes(this.includes);
+    if (Array.isArray(normInc) && normInc.length > 0) {
+        payload.includes = normInc;
+    }
+
+    return payload;
 }
 
-export class LogicalFilter extends Filter {
-  constructor(operator = "AND", filters = []) {
-    super();
-    this.operator = operator;
-    this.filters = filters;
-  }
-
-  toString() {
-    if (!this.filters.length) return "1=1";
-    return `(${this.filters.map(f => f.toString()).join(` ${this.operator} `)})`;
-  }
 }
 
-export class ComparisonFilter extends Filter {
-  constructor(field, operator, value) {
-    super();
-    this.field = field;
-    this.operator = operator;
-    this.value = value;
-  }
+// internal helper to normalize includes shape
+function normalizeIncludes(rawIncludes) {
+    if (!Array.isArray(rawIncludes)) return [];
 
-  toString() {
-    return `${this.field} ${this.operator} ${this.value}`;
-  }
+    return rawIncludes.map(inc => {
+        const propertyName = inc.propertyName || inc.name || inc.prop || "";
+
+        // child pager (varsayılan 1/10)
+        const childPager = inc.pager || {};
+        const childPageNumber = (typeof childPager.pageNumber === "number")
+            ? childPager.pageNumber
+            : 1;
+        const childPageSize = (typeof childPager.pageSize === "number")
+            ? childPager.pageSize
+            : 10;
+
+        // thenIncludes formatı
+        let thenIncludes = [];
+        if (Array.isArray(inc.thenIncludes)) {
+            thenIncludes = inc.thenIncludes.map(t => {
+                if (Array.isArray(t.childIncludes)) {
+                    return { childIncludes: t.childIncludes.slice() };
+                }
+                if (Array.isArray(t)) {
+                    return { childIncludes: t.slice() };
+                }
+                return { childIncludes: [] };
+            });
+        } else if (Array.isArray(inc.childIncludes)) {
+            // eski style: ["Roles","Permissions"]
+            thenIncludes = [
+                { childIncludes: inc.childIncludes.slice() }
+            ];
+        }
+
+        return {
+            propertyName,
+            pager: {
+                pageNumber: childPageNumber,
+                pageSize: childPageSize
+            },
+            thenIncludes
+        };
+    });
 }

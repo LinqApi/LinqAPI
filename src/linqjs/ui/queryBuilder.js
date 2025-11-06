@@ -1,148 +1,185 @@
-import { Query, Include, LogicalFilter, Pager } from "../core/models.js";
-import { StateManager } from "../core/state.js";
-import { getSuggestions } from "../core/intellisense.js";
+import { defaults, fetchProperties } from "./linqUtil.js";
+import { Query, Pager } from "../core/models.js";
 
 export class QueryBuilder {
-    constructor(config) {
-        const defaults = {
-            container: null,
-            controller: "",
-            intellisense: true,
-            showInclude: true,
-            showGroupBy: true,
-            showSelect: true,
-            stateManager: new StateManager({}),
-            debug: false
-        };
 
-        this.cfg = { ...defaults, ...config };
-        this.state = this.cfg.stateManager;
-        this.container = this.cfg.container;
-        this.intellisenseOn = this.cfg.intellisense;
-        this.query = new Query(this.cfg.controller);
-        this.properties = [];
-        this.complexProperties = [];
+    /**
+     * @param {Object} options
+     * @param {HTMLElement|string} options.container - UI container.
+     * @param {StateManager} options.stateManager - Shared state manager.
+     * @param {string} options.controller - Relevant controller name.
+     * @param {string} [options.apiPrefix="/api"] - API prefix.
+     * @param {Array} [options.properties=null] - List of properties if provided.
+     */
+    // QueryBuilder.js
 
-        this.init();
-    }
+    constructor({ container, stateManager, controller, apiPrefix = "/api", properties = null, onFilter = () => { } }) {
+        this.containerElm = (typeof container === "string")
+            ? document.querySelector(container)
+            : container;
 
-    log(...args) {
-        if (this.cfg.debug) console.debug("[QueryBuilder]", ...args);
-    }
-
-    async init() {
-        if (this.intellisenseOn) {
-            await this.fetchProperties();
+        if (!this.containerElm) {
+            throw new Error("QueryBuilder: Geçersiz veya bulunamayan bir container belirtildi.");
         }
-        this.render();
+
+        this.stateManager = stateManager;
+        this.controller = controller;
+        this.apiPrefix = apiPrefix;
+        this.onFilter = onFilter;
+        this.properties = properties;
+
+        // DÜZELTME 1: Tüm UI elemanlarını başlangıçta null olarak tanımla.
+        // Bu, _render çalışmadan önce onlara erişilirse hata almayı engeller.
+        this.filterInput = null;
+        this.selectInput = null;
+        this.groupByInput = null;
+        this.orderByInput = null;
+        this.descInput = null;
+        this.applyBtn = null;
+
+        // State'ten gelen başlangıç query'sini al
+        this.query = this.stateManager.getState("query") || new Query(controller);
+
+        // State değişikliklerini dinle
+        this.stateManager.subscribe("query", (newQuery) => {
+            if (newQuery) {
+                this.query = newQuery;
+                this._updateUI(); // Bu çağrı _render'dan önce gelebilir, bu yüzden _updateUI'da koruma olmalı.
+            }
+        });
     }
 
-    async fetchProperties() {
-        const url = `/api/${this.cfg.controller}/properties`;
-        try {
-            const res = await fetch(url);
-            if (!res.ok) throw new Error("Properties fetch failed");
-            const result = await res.json();
-            this.properties = result.filter(p => !p.type.includes("Collection") && !p.type.startsWith("System.Object"));
-            this.complexProperties = result.filter(p => p.type.includes("Collection") || p.type.includes("IEnumerable") || p.type.includes("ICollection"));
-            this.log("Properties loaded:", this.properties, this.complexProperties);
-        } catch (err) {
-            console.warn(err);
-            this.intellisenseOn = false;
+    // QueryBuilder.js içindeki _render metodunu bu yeni versiyonla değiştirin
+
+    // QueryBuilder.js
+
+    _render() {
+        if (this.applyBtn) {
+            this._updateUI();
+            return;
         }
-    }
 
-    render() {
-        this.container.innerHTML = `
-            <div class="card p-3 shadow-sm mb-3">
-                ${this.intellisenseOn ? `<button id="toggleIntellisenseBtn" class="btn btn-sm btn-secondary mb-3">Intellisense: ON</button>` : ''}
-                
-                <input id="filter-input" class="form-control mb-2" placeholder="Filter..." value="${this.query.filter.toString()}">
-
-                ${this.cfg.showInclude ? `
-                <select id="include-select" class="form-select mb-2">
-                    <option value="">Include...</option>
-                    ${this.complexProperties.map(p => `<option>${p.name}</option>`).join('')}
-                </select>` : ''}
-                
-                ${this.cfg.showGroupBy ? `<input id="groupby-input" class="form-control mb-2" placeholder="GroupBy...">` : ''}
-                ${this.cfg.showSelect ? `<input id="select-input" class="form-control mb-2" placeholder="Select...">` : ''}
-
-                <input id="orderby-input" class="form-control mb-2" placeholder="OrderBy..." value="${this.query.orderBy}">
-                <div class="form-check mb-3">
-                    <input id="desc-input" type="checkbox" class="form-check-input" ${this.query.desc ? "checked" : ""}>
-                    <label class="form-check-label">Desc?</label>
+        const complexProps = (this.properties || []).filter(p => p.kind === 'complex' || p.kind === 'complexList');
+        let includesHtml = '';
+        if (complexProps.length > 0) {
+            let optionsHtml = complexProps.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+            includesHtml = `
+                <div class="col-12">
+                    <div class="form-floating">
+                        <select class="form-select" data-qb="includesSelect" multiple style="height: 120px;"></select>
+                        <label>İlişkisel Veri (Includes)</label>
+                    </div>
                 </div>
+            `;
+        }
 
-                <button id="generate-query-btn" class="btn btn-primary">Generate Query</button>
+        // Bootstrap 5'in modern form elemanları ve esnek grid yapısı ile yeni HTML
+        this.containerElm.innerHTML = `
+            <div class="row row-cols-1 row-cols-lg-2 g-3">
+                <div class="col">
+                    <div class="form-floating">
+                        <input type="text" class="form-control form-control-sm" data-qb="filterInput" placeholder="Filter">
+                        <label>Filter</label>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-floating">
+                        <input type="text" class="form-control form-control-sm" data-qb="selectInput" placeholder="Select">
+                        <label>Select</label>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-floating">
+                        <input type="text" class="form-control form-control-sm" data-qb="groupByInput" placeholder="GroupBy">
+                        <label>GroupBy</label>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-floating">
+                        <input type="text" class="form-control form-control-sm" data-qb="orderByInput" placeholder="OrderBy">
+                        <label>OrderBy</label>
+                    </div>
+                </div>
+                ${includesHtml}
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" data-qb="descInput" id="qb-desc-check">
+                    <label class="form-check-label" for="qb-desc-check">Azalan Sırada (Desc)</label>
+                </div>
+                <button class="btn btn-primary" data-qb="applyBtn">
+                    <i class="bi bi-funnel-fill me-2"></i>Filtreyi Uygula
+                </button>
             </div>
         `;
 
-        this.setupEventHandlers();
-    }
-
-    setupEventHandlers() {
-        const filterInput = this.container.querySelector("#filter-input");
-        const includeSelect = this.container.querySelector("#include-select");
-        const groupByInput = this.container.querySelector("#groupby-input");
-        const selectInput = this.container.querySelector("#select-input");
-        const orderByInput = this.container.querySelector("#orderby-input");
-        const descInput = this.container.querySelector("#desc-input");
-        const generateQueryBtn = this.container.querySelector("#generate-query-btn");
-        const toggleIntellisenseBtn = this.container.querySelector("#toggleIntellisenseBtn");
-
-        if (toggleIntellisenseBtn) {
-            toggleIntellisenseBtn.onclick = () => {
-                this.intellisenseOn = !this.intellisenseOn;
-                toggleIntellisenseBtn.textContent = `Intellisense: ${this.intellisenseOn ? 'ON' : 'OFF'}`;
-                if (this.intellisenseOn && !this.properties.length) this.fetchProperties();
-            };
+        // Includes options'ı doldur (eğer varsa)
+        if (this.containerElm.querySelector('[data-qb="includesSelect"]')) {
+            this.containerElm.querySelector('[data-qb="includesSelect"]').innerHTML = complexProps.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
         }
 
-        generateQueryBtn.onclick = () => {
-            this.query.filter = new LogicalFilter("AND", [filterInput.value]);
-            this.query.orderBy = orderByInput.value;
-            this.query.desc = descInput.checked;
-            this.query.groupBy = groupByInput?.value || "";
-            this.query.select = selectInput?.value || "";
+        // Elemanları class özelliklerine ata
+        this.filterInput = this.containerElm.querySelector('[data-qb="filterInput"]');
+        this.selectInput = this.containerElm.querySelector('[data-qb="selectInput"]');
+        this.groupByInput = this.containerElm.querySelector('[data-qb="groupByInput"]');
+        this.orderByInput = this.containerElm.querySelector('[data-qb="orderByInput"]');
+        this.descInput = this.containerElm.querySelector('[data-qb="descInput"]');
+        this.applyBtn = this.containerElm.querySelector('[data-qb="applyBtn"]');
+        this.includesSelect = this.containerElm.querySelector('[data-qb="includesSelect"]');
 
-            if (includeSelect && includeSelect.value) {
-                this.query.includes.push(new Include(includeSelect.value));
-            }
+        this.applyBtn.addEventListener("click", () => this._applyQuery());
+        this._updateUI();
+    }
 
-            this.state.setState({ query: this.query });
-            this.log("Generated query:", this.query);
+    // _applyQuery metodunu stateManager yerine onFilter'ı çağıracak şekilde değiştirin:
+    _applyQuery() {
+        // DÜZELTME 3: Filtre ayarlarını doğrudan input değerlerinden al ve string olarak gönder.
+        const filterString = this.filterInput.value || "1=1";
+        const selectedIncludes = this.includesSelect && this.includesSelect.selectedOptions.length > 0
+            ? Array.from(this.includesSelect.selectedOptions).map(opt => new Include(opt.value))
+            : []; // Seçim yoksa boş dizi gönder
+        const newFilterSettings = {
+            filter: filterString,
+            select: this.selectInput.value || "",
+            groupBy: this.groupByInput.value || "",
+            orderBy: this.orderByInput.value || "id",
+            includes: selectedIncludes,
+            desc: this.descInput.checked
         };
 
-        if (this.intellisenseOn) {
-            filterInput.addEventListener('keyup', (e) => {
-                if (e.ctrlKey && e.code === 'Space') {
-                    this.showIntellisense(filterInput);
-                }
-            });
-        }
+        // Değişiklikleri ana bileşene (LinqDataTable) bildir.
+        this.onFilter(newFilterSettings);
     }
 
-    showIntellisense(inputEl) {
-        const dropdown = document.createElement("div");
-        dropdown.className = "list-group position-absolute w-100 shadow";
-        dropdown.style.zIndex = 9999;
+    _updateUI() {
+        if (!this.filterInput) {
+            this.filterInput 
+        }
+        // DÜZELTME 2: Arayüz elemanlarının varlığını kesin olarak kontrol et.
+        // Bu, constructor'daki subscribe'ın _render'dan önce çalışması durumunda hata vermesini engeller.
+        if (!this.filterInput || !this.applyBtn) {
+            return;
+        }
 
-        this.properties.forEach(prop => {
-            const item = document.createElement("button");
-            item.type = "button";
-            item.className = "list-group-item list-group-item-action";
-            item.textContent = prop.name;
-            item.onclick = () => {
-                inputEl.value += prop.name;
-                dropdown.remove();
-            };
-            dropdown.appendChild(item);
-        });
+        // Query'nin bir Query sınıfı örneği olduğundan emin ol
+        if (!(this.query instanceof Query)) {
+            this.query = new Query(this.controller, this.query);
+        }
 
-        inputEl.parentElement.style.position = "relative";
-        inputEl.parentElement.appendChild(dropdown);
+        this.filterInput.value = this.query.filter.toString();
+        this.selectInput.value = this.query.select || "";
+        this.groupByInput.value = this.query.groupBy || "";
+        this.orderByInput.value = this.query.orderBy || "id";
+        this.descInput.checked = this.query.desc ?? true;
+    }
 
-        document.addEventListener('click', () => dropdown.remove(), { once: true });
+    onQueryUpdated(newQuery) {
+        // Optionally update the query manually if needed.
+        this.query = newQuery;
+        this.query.select = this.selectInput.value;
+        this.query.groupBy = this.groupByInput.value;
+        this.query.orderBy = this.orderByInput.value;
+        this.query.desc = this.descInput.checked;
+        this.query.pager = newQuery.Pager;
     }
 }
