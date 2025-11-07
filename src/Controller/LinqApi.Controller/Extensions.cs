@@ -92,6 +92,82 @@ namespace LinqApi.Controller // isimlendirme sana kalmış
         }
     }
 
+    public class LinqReadonlyControllerFeatureProvider<TDbContext>
+    : IApplicationFeatureProvider<ControllerFeature>
+    where TDbContext : DbContext
+    {
+        public void PopulateFeature (
+            IEnumerable<ApplicationPart> parts,
+            ControllerFeature feature)
+        {
+            // 1. DbContext içindeki tüm public DbSet<TEntity> property'lerini bul
+            var entityTypes = typeof(TDbContext)
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p =>
+                    p.PropertyType.IsGenericType &&
+                    p.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>))
+                .Select(p => p.PropertyType.GetGenericArguments()[0]) // TEntity
+                .Distinct()
+                .ToList();
+
+            foreach (var entityType in entityTypes)
+            {
+                // 2. Bu tip BaseEntity<TId> tabanlı mı? değilse geç
+                if (!IsBasedOnBaseEntity(entityType))
+                    continue;
+
+                // 3. Id tipini bul (BaseEntity<TId>'den)
+                var idType = GetIdTypeFromBaseEntity(entityType);
+
+                // 4. Generic controller'ı kapat: LinqController<TEntity,TId>
+                var closedControllerType = typeof(LinqReadonlyController<,>)
+                    .MakeGenericType(entityType, idType);
+
+                var controllerTypeInfo = closedControllerType.GetTypeInfo();
+
+                // 5. Daha önce eklenmiş mi kontrol et
+                if (!feature.Controllers.Contains(controllerTypeInfo))
+                {
+                    feature.Controllers.Add(controllerTypeInfo);
+                }
+            }
+        }
+
+        private static bool IsBasedOnBaseEntity (Type entityType)
+        {
+            var t = entityType;
+            while (t != null && t != typeof(object))
+            {
+                if (t.IsGenericType &&
+                    t.GetGenericTypeDefinition() == typeof(BaseEntity<>))
+                    return true;
+
+                t = t.BaseType!;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// BaseEntity&lt;TId&gt;'deki TId tipini bul.
+        /// Bulamazsa default int döner (senin repo zaten öyle davranıyordu).
+        /// </summary>
+        private static Type GetIdTypeFromBaseEntity (Type entityType)
+        {
+            var t = entityType;
+            while (t != null && t != typeof(object))
+            {
+                if (t.IsGenericType &&
+                    t.GetGenericTypeDefinition() == typeof(BaseEntity<>))
+                {
+                    return t.GetGenericArguments()[0];
+                }
+
+                t = t.BaseType!;
+            }
+
+            return typeof(int);
+        }
+    }
 
     public class LinqRouteConvention : IApplicationModelConvention
     {
