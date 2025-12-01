@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.3.14" />
+    <PackageReference Include="AWSSDK.Rekognition" Version="4.0.3.5" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.3.1" />
+    <PackageReference Include="MassTransit" Version="8.5.0" />
+    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.3.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\OpenSource\LinqAPI\src\Core\LinqApi.Core\LinqApi.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\OpenSource\LinqAPI\src\Repository\LinqApi.Repository\LinqApi.Repository.csproj" />
+  </ItemGroup>
+
+</Project>

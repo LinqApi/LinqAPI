@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.LocationService" Version="4.0.3.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\OpenSource\LinqAPI\src\Core\LinqApi.Core\LinqApi.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\OpenSource\LinqAPI\src\Repository\LinqApi.Repository\LinqApi.Repository.csproj" />
+    <ProjectReference Include="..\..\S3\LinqApi.S3\LinqApi.S3.csproj" />
+  </ItemGroup>
+
+</Project>
