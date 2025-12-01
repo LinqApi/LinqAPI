@@ -1,9 +1,9 @@
-using LinqApi.Logging.Log;
+using LinqApi.Core.Log;
 using LinqApi.Correlation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace LinqApi.Logging
+namespace LinqApi.Core
 {
     public class LinqDbContextCallLogger : ILinqLogger
     {

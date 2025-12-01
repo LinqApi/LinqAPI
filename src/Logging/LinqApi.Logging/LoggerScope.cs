@@ -1,4 +1,4 @@
-namespace LinqApi.Logging
+namespace LinqApi.Core
 {
     /// <summary>
     /// Simple disposable scope helper.

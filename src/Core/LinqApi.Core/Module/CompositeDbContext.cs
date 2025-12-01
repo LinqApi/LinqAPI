@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace LinqApi.Logging.Module
+namespace LinqApi.Core.Module
 {
 
     /// <summary>

@@ -1,7 +1,7 @@
-using LinqApi.Logging.Log;
+using LinqApi.Core.Log;
 using Microsoft.Extensions.Logging;
 
-namespace LinqApi.Logging
+namespace LinqApi.Core
 {
     /// <summary>
     /// Interface for logging HTTP call information.

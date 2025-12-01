@@ -1,12 +1,12 @@
 using LinqApi.Correlation;
-using LinqApi.Logging.LinqApi.Core;
-using LinqApi.Logging.Log;
-using LinqApi.Logging.Module;
+using LinqApi.Core.LinqApi.Core;
+using LinqApi.Core.Log;
+using LinqApi.Core.Module;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace LinqApi.Logging
+namespace LinqApi.Core
 {
     public class LinqLoggingModule : IDbContextModule
     {

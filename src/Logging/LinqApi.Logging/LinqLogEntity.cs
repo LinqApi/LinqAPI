@@ -2,7 +2,7 @@ using LinqApi.Core;
 using LinqApi.Correlation;
 using System.Diagnostics.CodeAnalysis;
 
-namespace LinqApi.Logging.Log
+namespace LinqApi.Core.Log
 {
     // Base log model (soyut)
     public abstract class LinqLogEntity : BaseEntity<long>

@@ -1,7 +1,6 @@
 namespace LinqApi.Localization
 {
     using global::LinqApi.Core;
-    using global::LinqApi.Logging;
     using System.ComponentModel.DataAnnotations;
 
     namespace LinqApi.Localization
@@ -19,9 +18,15 @@ namespace LinqApi.Localization
             [MaxLength(500)]
             public string Description { get; set; }
 
-            public string Culture { get; set; }
-
+            public Culture Culture { get; set; }
+            public int CultureId { get; set; }
             public string Value { get; set; }
+        }
+
+        public class Culture : BaseEntity<long>
+        {
+            public string Name { get; set; }
+            public bool IsRtl { get; set; }
         }
     }
 }

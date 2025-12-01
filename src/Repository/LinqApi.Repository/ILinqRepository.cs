@@ -1,5 +1,5 @@
 using LinqApi.Core;
-using LinqApi.Logging;
+using LinqApi.Core;
 using System.Linq.Expressions;
 
 namespace LinqApi.Repository

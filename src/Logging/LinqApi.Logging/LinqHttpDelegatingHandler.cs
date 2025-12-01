@@ -3,7 +3,7 @@ using Microsoft.Extensions.Options;
 
 using System.Diagnostics;
 
-namespace LinqApi.Logging
+namespace LinqApi.Core
 {
 
 

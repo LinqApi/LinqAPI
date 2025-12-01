@@ -1,6 +1,6 @@
-using LinqApi.Logging.Log;
+using LinqApi.Core.Log;
 
-namespace LinqApi.Logging
+namespace LinqApi.Core
 {
     /// <summary>
     /// Represents a SQL log entry.

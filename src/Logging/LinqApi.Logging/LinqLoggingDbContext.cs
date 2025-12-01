@@ -1,10 +1,10 @@
 using LinqApi.Epoch;
-using LinqApi.Logging.Log;
+using LinqApi.Core.Log;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
-namespace LinqApi.Logging
+namespace LinqApi.Core
 {
     public class LinqLoggingDbContext : DbContext, ILinqLoggingDbContextAdapter
     {

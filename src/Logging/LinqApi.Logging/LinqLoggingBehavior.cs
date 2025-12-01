@@ -1,10 +1,10 @@
-using LinqApi.Logging.Log;
+using LinqApi.Core.Log;
 using LinqApi.Epoch;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
-namespace LinqApi.Logging
+namespace LinqApi.Core
 {
     public interface ILogRule
     {
