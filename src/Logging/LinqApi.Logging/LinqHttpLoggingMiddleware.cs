@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 using System.Diagnostics;
 using System.Text;
 
-namespace LinqApi.Logging
+namespace LinqApi.Core
 {
     public class LinqHttpLoggingMiddleware
     {

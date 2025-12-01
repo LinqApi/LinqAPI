@@ -1,4 +1,4 @@
-namespace LinqApi.Logging
+namespace LinqApi.Core
 {
     // Örneğin, Publish error log
     public class LinqPublishErrorLog : LinqErrorLog

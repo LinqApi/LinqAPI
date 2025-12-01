@@ -1,4 +1,4 @@
-namespace LinqApi.Logging
+namespace LinqApi.Core
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class DisplayPropertyAttribute : Attribute

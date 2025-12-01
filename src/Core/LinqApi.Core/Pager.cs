@@ -1,4 +1,4 @@
-namespace LinqApi.Logging
+namespace LinqApi.Core
 {
     /// <summary>
     /// Represents pagination input parameters without internal validation.

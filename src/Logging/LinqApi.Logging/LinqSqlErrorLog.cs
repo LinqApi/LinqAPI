@@ -1,4 +1,4 @@
-namespace LinqApi.Logging
+namespace LinqApi.Core
 {
     // Örneğin, Database error log
     public class LinqSqlErrorLog : LinqErrorLog

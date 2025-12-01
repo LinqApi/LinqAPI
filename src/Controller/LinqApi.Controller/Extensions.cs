@@ -1,5 +1,5 @@
 using LinqApi.Core;
-using LinqApi.Logging;
+using LinqApi.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;

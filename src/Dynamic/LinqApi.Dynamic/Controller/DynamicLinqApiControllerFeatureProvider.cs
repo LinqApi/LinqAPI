@@ -6,7 +6,7 @@ using System.Collections.Concurrent;
 using System.Reflection.Emit;
 using System.Reflection;
 using LinqApi.Controller;
-using LinqApi.Logging;
+using LinqApi.Core;
 using Microsoft.EntityFrameworkCore;
 using LinqApi.Core;
 

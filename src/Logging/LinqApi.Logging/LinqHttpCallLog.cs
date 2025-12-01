@@ -1,7 +1,7 @@
-using LinqApi.Logging.Log;
+using LinqApi.Core.Log;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace LinqApi.Logging
+namespace LinqApi.Core
 {
     // HTTP log
     /// <summary>

@@ -1,4 +1,4 @@
-namespace LinqApi.Logging
+namespace LinqApi.Core
 {
     using Microsoft.EntityFrameworkCore.Diagnostics;
     using System.Collections.Concurrent;

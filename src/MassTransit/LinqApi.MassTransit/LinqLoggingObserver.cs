@@ -1,6 +1,6 @@
-using LinqApi.Logging.Log;
+using LinqApi.Core.Log;
 using LinqApi.Correlation;
-using LinqApi.Logging;
+using LinqApi.Core;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;

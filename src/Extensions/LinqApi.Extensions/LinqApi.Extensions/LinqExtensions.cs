@@ -1,7 +1,7 @@
 using LinqApi.Core;
 using LinqApi.Localization.LinqApi.Localization.Extensions;
-using LinqApi.Logging;
-using LinqApi.Logging.Module;
+using LinqApi.Core;
+using LinqApi.Core.Module;
 using LinqApi.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

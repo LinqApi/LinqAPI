@@ -1,4 +1,4 @@
-namespace LinqApi.Logging
+namespace LinqApi.Core
 {
     /// <summary>
     /// Represents a log entry for errors that occur during the consumption of a message from a queue.

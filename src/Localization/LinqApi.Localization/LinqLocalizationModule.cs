@@ -1,4 +1,4 @@
-using LinqApi.Logging.Module;
+using LinqApi.Core.Module;
 using LinqApi.Localization.LinqApi.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

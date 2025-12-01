@@ -1,4 +1,4 @@
-namespace LinqApi.Logging
+namespace LinqApi.Core
 {
     /// <summary>
     /// Represents the default implementation of the <see cref="ILinqPayloadMasker"/> interface.

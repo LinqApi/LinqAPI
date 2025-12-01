@@ -1,5 +1,5 @@
 using LinqApi.Core;
-using LinqApi.Logging;
+using LinqApi.Core;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Linq.Dynamic.Core;
